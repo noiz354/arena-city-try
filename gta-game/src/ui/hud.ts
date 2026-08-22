@@ -13,12 +13,14 @@ export class HUD {
   private damageFlash = 0
   private hitFlash = 0
   private pickupFlash = 0
+  private dialogueTimer = 0
+  private dialogueText = ''
 
   constructor() {
     this.el = document.createElement('div')
     this.el.className = 'hud'
     this.el.innerHTML = `
-      <div class="hud__title">CITY RUSH — Phase 4: Combat & Weapons</div>
+      <div class="hud__title">CITY RUSH — Phase 5: NPCs & Traffic</div>
       <div class="hud__stats">
         <span class="hud__health"><span id="hud-health-fill" class="hud__health-fill"></span></span>
         <span id="hud-fps">FPS: --</span>
@@ -37,9 +39,11 @@ export class HUD {
       </div>
 
       <div id="hud-crosshair" class="hud__crosshair" style="display:none"></div>
+      <div id="hud-wanted" class="hud__wanted"></div>
       <div id="hud-vignette" class="hud__vignette"></div>
       <div id="hud-hit" class="hud__hit"></div>
       <div id="hud-pickup" class="hud__pickup"></div>
+      <div id="hud-dialogue" class="hud__dialogue"></div>
       <div id="hud-prompt" class="hud__prompt"></div>
       <div class="hud__hint" id="hud-hint">WASD move · LMB shoot · 1-4 weapons · R reload · E enter car · LMB-drag look · WHEEL zoom</div>
     `
@@ -58,6 +62,11 @@ export class HUD {
     const el = document.getElementById('hud-pickup')!
     el.textContent = text
     this.pickupFlash = 1.2
+  }
+
+  showDialogue(line: string): void {
+    this.dialogueText = line
+    this.dialogueTimer = 3.2
   }
 
   update(delta: number, game: Game): void {
@@ -119,6 +128,18 @@ export class HUD {
     } else {
       prompt.textContent = ''
     }
+
+    // wanted stars
+    const wantedEl = document.getElementById('hud-wanted')!
+    const stars = game.wanted.stars
+    wantedEl.textContent = stars > 0 ? 'WANTED ' + '★'.repeat(stars) : ''
+    wantedEl.style.opacity = stars > 0 ? '1' : '0'
+
+    // dialogue bubble
+    this.dialogueTimer = Math.max(0, this.dialogueTimer - delta)
+    const dlg = document.getElementById('hud-dialogue')!
+    dlg.textContent = this.dialogueTimer > 0 ? `"${this.dialogueText}"` : ''
+    dlg.style.opacity = this.dialogueTimer > 0 ? '1' : '0'
 
     // damage vignette + hit marker + pickup toast
     this.damageFlash = Math.max(0, this.damageFlash - delta)

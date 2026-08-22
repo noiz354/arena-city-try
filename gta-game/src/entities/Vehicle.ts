@@ -36,6 +36,8 @@ export class Vehicle {
 
   wrecked = false
   occupied = false
+  /** Hijacked from traffic — AI never resumes driving it. */
+  stolen = false
   private lastCollided = false
 
   private readonly wheels: Mesh[] = []
@@ -109,18 +111,7 @@ export class Vehicle {
     const steerEffect = MathUtils.clamp(Math.abs(speed) / 6, 0, 1)
     this.yaw += controls.steer * this.config.turnRate * Math.sign(speed) * steerEffect * dt
 
-    // --- integrate ---
-    this.position.x += Math.sin(this.yaw) * this.speed * dt
-    this.position.z += Math.cos(this.yaw) * this.speed * dt
-
-    // --- visual roll tilt + wheels ---
-    const roll = -controls.steer * this.config.rollFactor * steerEffect * Math.sign(speed)
-    this.group.rotation.y = this.yaw
-    this.group.rotation.z = MathUtils.damp(this.group.rotation.z, roll, 10, dt)
-    for (const wheel of this.wheels) {
-      wheel.rotation.x += (this.speed / this.config.wheelRadius) * dt
-    }
-
+    this.integrate(dt, -controls.steer * this.config.rollFactor * steerEffect * Math.sign(speed))
     this.resolveCollisions(collidables)
     this.resolveWorldBounds()
 
@@ -129,6 +120,43 @@ export class Vehicle {
     if (impact > IMPACT_DAMAGE_THRESHOLD) {
       const dmg = (impact - IMPACT_DAMAGE_THRESHOLD) * IMPACT_DAMAGE_SCALE
       this.takeDamage(dmg * dt * 60) // frame-rate independent-ish
+    }
+  }
+
+  /**
+   * AI driving (traffic): steer toward a target heading, accelerate toward a
+   * target speed, then integrate + collide like a normal vehicle.
+   */
+  aiDrive(dt: number, targetYaw: number, targetSpeed: number, collidables: Collidable[]): void {
+    if (this.wrecked) targetSpeed = 0
+    // steer toward targetYaw
+    let diff = targetYaw - this.yaw
+    while (diff > Math.PI) diff -= Math.PI * 2
+    while (diff < -Math.PI) diff += Math.PI * 2
+    const maxTurn = this.config.turnRate * 0.7 * dt
+    this.yaw += MathUtils.clamp(diff, -maxTurn, maxTurn)
+
+    // accelerate toward target speed
+    if (this.speed < targetSpeed) {
+      this.speed = Math.min(targetSpeed, this.speed + this.config.acceleration * 0.8 * dt)
+    } else {
+      this.speed = Math.max(targetSpeed, this.speed - this.config.brakeForce * 0.8 * dt)
+    }
+
+    this.integrate(dt, 0)
+    this.resolveCollisions(collidables)
+    this.resolveWorldBounds()
+  }
+
+  /** Shared position/visual integration used by both player and AI driving. */
+  private integrate(dt: number, rollTarget: number): void {
+    this.position.x += Math.sin(this.yaw) * this.speed * dt
+    this.position.z += Math.cos(this.yaw) * this.speed * dt
+
+    this.group.rotation.y = this.yaw
+    this.group.rotation.z = MathUtils.damp(this.group.rotation.z, rollTarget, 10, dt)
+    for (const wheel of this.wheels) {
+      wheel.rotation.x += (this.speed / this.config.wheelRadius) * dt
     }
   }
 

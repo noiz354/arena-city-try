@@ -20,6 +20,8 @@ const MOVE_SPEED = 3.6 // m/s
 const HIT_RADIUS = 0.62
 const RADIUS = 0.45
 
+export type EnemyRole = 'thug' | 'cop'
+
 export class Enemy {
   readonly group = new Group()
   health = 100
@@ -27,6 +29,8 @@ export class Enemy {
   attackCooldown = 0
   hitRadius = HIT_RADIUS
   respawnTimer = 0
+  readonly role: EnemyRole
+  readonly attackDamage: number
   private wanderAngle: number
   private readonly wanderSpeed: number
   private state: 'idle' | 'chase' = 'idle'
@@ -36,10 +40,14 @@ export class Enemy {
     x: number,
     z: number,
     private readonly rng: () => number,
+    role: EnemyRole = 'thug',
   ) {
+    this.role = role
+    this.attackDamage = role === 'cop' ? 5 : 8
     this.group.position.set(x, 0, z)
     this.wanderAngle = rng() * Math.PI * 2
     this.wanderSpeed = 0.5 + rng() * 0.8
+    if (role === 'cop') this.state = 'chase' // police never idle-wander
     this.buildBody()
   }
 
@@ -102,7 +110,7 @@ export class Enemy {
 
     if (this.state === 'idle') {
       if (hasLOS && dist < CHASE_DIST) this.state = 'chase'
-    } else if (!hasLOS && dist > LOSE_DIST) {
+    } else if (this.role === 'thug' && !hasLOS && dist > LOSE_DIST) {
       this.state = 'idle'
     }
 
@@ -171,12 +179,15 @@ export class Enemy {
   }
 
   private buildBody(): void {
+    const isCop = this.role === 'cop'
     const skin = new Color(0x9a7d5c).offsetHSL(0, 0, (this.rng() - 0.5) * 0.1)
-    const cloth = new Color(0x3a2f45).offsetHSL(0, 0, (this.rng() - 0.5) * 0.12)
+    const cloth = isCop
+      ? new Color(0x1f3a5f)
+      : new Color(0x3a2f45).offsetHSL(0, 0, (this.rng() - 0.5) * 0.12)
     const skinMat = new MeshStandardMaterial({ color: skin, roughness: 0.8 })
     const clothMat = new MeshStandardMaterial({ color: cloth, roughness: 0.85 })
     const darkMat = new MeshStandardMaterial({ color: 0x222226, roughness: 0.9 })
-    const bandMat = new MeshStandardMaterial({ color: 0xc0392b, roughness: 0.7 })
+    const bandMat = new MeshStandardMaterial({ color: isCop ? 0xffd700 : 0xc0392b, roughness: 0.7 })
 
     const body = new Mesh(new BoxGeometry(0.6, 0.75, 0.34), clothMat)
     body.position.y = 1.0
@@ -188,7 +199,7 @@ export class Enemy {
     head.castShadow = true
     this.group.add(head)
 
-    // cap + band (thug look)
+    // cap + band (blue uniform + gold badge for cops, thug band otherwise)
     const cap = new Mesh(new BoxGeometry(0.38, 0.1, 0.38), darkMat)
     cap.position.y = 1.75
     this.group.add(cap)
@@ -287,6 +298,25 @@ export class EnemySystem {
     const killed = enemy.takeDamage(damage)
     if (killed) this.onEnemyDeath?.(enemy)
     return killed
+  }
+
+  /** Spawn a police officer (used by the wanted system). */
+  spawnCop(x: number, z: number): Enemy {
+    const cop = new Enemy(x, z, this.rng, 'cop')
+    this.enemies.push(cop)
+    this.spawnPoints.push([x, z])
+    this.group.add(cop.group)
+    return cop
+  }
+
+  /** Remove a police officer (wanted level cleared). */
+  removeEnemy(enemy: Enemy): void {
+    const i = this.enemies.indexOf(enemy)
+    if (i >= 0) {
+      this.enemies.splice(i, 1)
+      this.spawnPoints.splice(i, 1)
+    }
+    this.group.remove(enemy.group)
   }
 
   /** Deterministic spawn points on roads, spread over the city. */

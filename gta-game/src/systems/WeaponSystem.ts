@@ -28,9 +28,16 @@ interface TransientEffect {
   maxLife: number
 }
 
+/** Soft targets (pedestrians) that can also be shot. */
+export interface ShootableTarget {
+  position: Vector3
+  hitRadius: number
+  takeDamage(amount: number): boolean // returns true when killed
+}
+
 export interface WeaponHooks {
   onHit?: () => void
-  onKill?: () => void
+  onKill?: (kind: 'enemy' | 'civilian') => void
   onShoot?: (weapon: WeaponDef) => void
 }
 
@@ -57,6 +64,7 @@ export class WeaponSystem {
     private readonly enemies: EnemySystem,
     private readonly getCollidables: () => Collidable[],
     readonly hooks: WeaponHooks = {},
+    private readonly getExtraTargets: () => ShootableTarget[] = () => [],
   ) {
     for (const def of Object.values(WEAPONS)) {
       this.ammo.set(def.id, {
@@ -170,6 +178,7 @@ export class WeaponSystem {
     const collidables = this.getCollidables()
     let anyHit = false
     let anyKill = false
+    let lastKillKind: 'enemy' | 'civilian' = 'enemy'
 
     for (let p = 0; p < def.pellets; p++) {
       const dir = baseDir.clone()
@@ -195,12 +204,31 @@ export class WeaponSystem {
         }
       }
 
+      // extra soft targets (pedestrians) — nearest wins over enemies
+      let bestExtra: ShootableTarget | null = null
+      for (const target of this.getExtraTargets()) {
+        const t = raySphere(origin, dir, target.position, target.hitRadius, bestT)
+        if (t !== null && t < bestT) {
+          bestT = t
+          bestExtra = target
+          bestEnemy = null
+        }
+      }
+
       const hitPoint = origin.clone().addScaledVector(dir, bestT)
       if (bestEnemy) {
         const killed = this.enemies.damageEnemy(bestEnemy, def.damage)
         this.spawnEffect('blood', hitPoint, 0.35)
         anyHit = true
         if (killed) anyKill = true
+      } else if (bestExtra) {
+        const killed = bestExtra.takeDamage(def.damage)
+        this.spawnEffect('blood', hitPoint, 0.35)
+        anyHit = true
+        if (killed) {
+          anyKill = true
+          lastKillKind = 'civilian'
+        }
       } else if (envT < def.range - 0.05) {
         this.spawnEffect('spark', hitPoint, 0.12)
       }
@@ -209,7 +237,7 @@ export class WeaponSystem {
     }
 
     if (anyHit) this.hooks.onHit?.()
-    if (anyKill) this.hooks.onKill?.()
+    if (anyKill) this.hooks.onKill?.(lastKillKind)
   }
 
   private finishReload(): void {

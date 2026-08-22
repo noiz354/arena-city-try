@@ -14,6 +14,7 @@ game.onUpdate(delta => hud.update(delta, game))
 game.onPlayerDamaged = () => hud.showDamage()
 game.onWeaponHit = () => hud.showHit()
 game.onPickup = msg => hud.showPickup(msg)
+game.onDialogue = line => hud.showDialogue(line)
 
 // Expose for debugging from the browser console
 ;(window as unknown as { game: Game }).game = game

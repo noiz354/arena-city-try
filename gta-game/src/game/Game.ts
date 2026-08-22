@@ -16,6 +16,9 @@ import { VehicleManager } from '../systems/VehicleManager'
 import { EnemySystem } from '../systems/EnemySystem'
 import { WeaponSystem } from '../systems/WeaponSystem'
 import { PickupSystem } from '../systems/PickupSystem'
+import { PedestrianSystem } from '../systems/PedestrianSystem'
+import { TrafficSystem } from '../systems/TrafficSystem'
+import { WantedSystem } from '../systems/WantedSystem'
 import { WEAPON_LIST } from '../data/weapons'
 
 export interface GameOptions {
@@ -27,7 +30,6 @@ type PlayerMode = 'foot' | 'driving'
 const SPAWN_X = 0
 const SPAWN_Z = 0
 const ATTACK_RANGE = 2.4
-const ENEMY_ATTACK_DAMAGE = 8
 
 /**
  * Core game shell — adapted from the mavonengine-core BaseGame/Game pattern.
@@ -47,6 +49,9 @@ export class Game {
   readonly enemies: EnemySystem
   readonly weapons: WeaponSystem
   readonly pickups: PickupSystem
+  readonly pedestrians: PedestrianSystem
+  readonly traffic: TrafficSystem
+  readonly wanted: WantedSystem
 
   mode: PlayerMode = 'foot'
   vehicle: Vehicle | null = null
@@ -57,6 +62,7 @@ export class Game {
   onPlayerDamaged?: () => void
   onWeaponHit?: () => void
   onPickup?: (message: string) => void
+  onDialogue?: (line: string) => void
   private readonly exitOffset = new Vector3()
 
   private readonly updateCallbacks = new Set<(delta: number) => void>()
@@ -104,6 +110,15 @@ export class Game {
     this.enemies = new EnemySystem()
     this.scene.add(this.enemies.group)
 
+    // --- Pedestrians + traffic + wanted ---
+    this.pedestrians = new PedestrianSystem()
+    this.scene.add(this.pedestrians.group)
+
+    this.traffic = new TrafficSystem()
+    for (const car of this.traffic.cars) this.scene.add(car.vehicle.group)
+
+    this.wanted = new WantedSystem(this.enemies)
+
     // --- Weapons ---
     this.weapons = new WeaponSystem(
       this.scene,
@@ -113,10 +128,26 @@ export class Game {
       () => this.world.getCollidables().concat(this.vehicles.getCollidables()),
       {
         onHit: () => this.onWeaponHit?.(),
-        onKill: () => {
+        onShoot: () => {
+          const p = this.player.position
+          this.pedestrians.panicNear(p, 40)
+          // firing near police officers counts as a crime
+          for (const e of this.enemies.enemies) {
+            if (e.role !== 'cop' || e.dead) continue
+            const dx = e.position.x - p.x
+            const dz = e.position.z - p.z
+            if (dx * dx + dz * dz < 55 * 55) {
+              this.wanted.reportCrime(1, p)
+              break
+            }
+          }
+        },
+        onKill: kind => {
           this.kills++
+          if (kind === 'civilian') this.wanted.reportCrime(2, this.player.position)
         },
       },
+      () => this.pedestrians.alive,
     )
 
     // --- Pickups ---
@@ -136,6 +167,7 @@ export class Game {
     )
     this.enemies.onEnemyDeath = enemy => {
       this.pickups.spawnAmmo(enemy.position.x, enemy.position.z)
+      if (enemy.role === 'cop') this.wanted.reportCrime(3, this.player.position)
     }
     this.spawnInitialPickups()
 
@@ -168,6 +200,8 @@ export class Game {
     window.removeEventListener('resize', this.resize)
     this.world.dispose()
     this.vehicles.dispose()
+    this.traffic.dispose()
+    this.wanted.dispose()
     this.renderer.dispose()
   }
 
@@ -187,15 +221,25 @@ export class Game {
     this.vehicles.update(px, pz)
 
     const buildings = this.world.getCollidables()
+    const allCollidables = buildings.concat(this.vehicles.getCollidables())
 
     this.enemies.update(delta, this.player.position, buildings)
+    this.pedestrians.update(delta, buildings)
+    this.traffic.update(delta, px, pz, allCollidables)
     this.pickups.update(delta)
     this.weapons.update(delta)
 
     if (this.mode === 'foot') {
       this.updateOnFoot(delta, buildings)
+      this.wanted.update(delta, this.player.position)
     } else {
       this.updateDriving(delta)
+    }
+
+    // civilian dialogue
+    if (this.mode === 'foot' && this.player.health > 0) {
+      const line = this.pedestrians.maybeSpeak(this.player.position)
+      if (line) this.onDialogue?.(line)
     }
 
     this.handlePlayerDeath(delta)
@@ -219,18 +263,21 @@ export class Game {
     }
     if (this.input.wasPressed('KeyR')) this.weapons.startReload()
 
-    // enemy melee attacks
+    // enemy melee attacks (thugs 8, cops 5)
     for (const enemy of this.enemies.alive) {
       if (!enemy.lastAttacked) continue
       const dx = enemy.position.x - this.player.position.x
       const dz = enemy.position.z - this.player.position.z
       if (dx * dx + dz * dz < ATTACK_RANGE * ATTACK_RANGE) {
-        this.player.takeDamage(ENEMY_ATTACK_DAMAGE)
+        this.player.takeDamage(enemy.attackDamage)
         this.onPlayerDamaged?.()
       }
     }
 
-    this.nearestVehicle = this.vehicles.getNearest(this.player.position.x, this.player.position.z)
+    // nearest enterable vehicle: parked or traffic
+    this.nearestVehicle =
+      this.vehicles.getNearest(this.player.position.x, this.player.position.z) ??
+      this.traffic.getNearest(this.player.position.x, this.player.position.z)
     if (this.nearestVehicle && this.input.wasPressed('KeyE')) {
       this.enterVehicle(this.nearestVehicle)
     }
@@ -255,6 +302,7 @@ export class Game {
   private enterVehicle(v: Vehicle): void {
     this.vehicle = v
     v.occupied = true
+    v.stolen = true
     v.speed = 0
     this.mode = 'driving'
     this.player.group.visible = false

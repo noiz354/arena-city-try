@@ -12,6 +12,12 @@ export const CHUNK_COUNT = Math.ceil(CITY_SIZE / CHUNK_SIZE) + 2 // 20 + margin 
 export const CHUNK_GRID_HALF = (CHUNK_COUNT * CHUNK_SIZE) / 2 // 176
 export const CHUNK_CENTER = Math.floor(CHUNK_GRID_HALF / CHUNK_SIZE) // center chunk index
 
+/** Road center lines per axis (between blocks). */
+export const ROADS_X: number[] = Array.from({ length: BLOCK_COUNT - 1 }, (_, i) =>
+  i * CELL - CITY_HALF + BLOCK_SIZE + ROAD_WIDTH / 2,
+)
+export const ROADS_Z: number[] = [...ROADS_X]
+
 /** Deterministic PRNG (mulberry32) so chunk content is stable across activations. */
 export function seededRng(seed: number): () => number {
   let a = seed >>> 0
