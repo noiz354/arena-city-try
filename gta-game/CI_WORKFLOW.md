@@ -63,6 +63,32 @@ jobs:
         with:
           name: dist
           path: gta-game/dist
+
+  visual-smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: gta-game
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: gta-game/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Visual smoke test (boot + render + zero console errors)
+        run: npm run test:visual
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: gta-game/artifacts/
+          if-no-files-found: ignore
 ```
 
 ## 2. Continuous Deployment — GitHub Pages — `.github/workflows/deploy-pages.yml`

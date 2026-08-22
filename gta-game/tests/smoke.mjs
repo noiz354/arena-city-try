@@ -24,6 +24,11 @@ import { Tracker } from '../src/analytics/tracker.ts'
 import { initErrorHandling } from '../src/utils/errors.ts'
 import { WEAPONS } from '../src/data/weapons.ts'
 
+// ChunkManager.update() builds CanvasTextures — stub the DOM bits three needs.
+const fakeCtx = new Proxy({}, { get: (t, k) => (k === 'canvas' ? fakeCanvas : () => {}), set: () => true })
+const fakeCanvas = { width: 0, height: 0, getContext: () => fakeCtx }
+globalThis.document = { createElement: () => fakeCanvas }
+
 let pass = 0
 let fail = 0
 const ok = (name, cond) => {
@@ -42,6 +47,19 @@ let visited = 0
 cm.forEachNear(0, 0, 50, () => visited++)
 ok('forEachNear empty grid no-op', visited === 0)
 ok('queryCircle empty grid', cm.queryCircle(0, 0, 50).length === 0)
+
+// --- A-3: instanced LOD activation (with DOM stub above) ---
+const cmInst = new ChunkManager()
+ok('update activates full+simple rings', cmInst.update(0, 0) === true && cmInst.activeCount === 25)
+let instanced = 0
+for (const c of cmInst['chunks'].values()) if (c.simpleInstances) instanced++
+ok('every active chunk has an InstancedMesh', instanced === 25)
+cmInst.update(10000, 10000)
+ok('teleport far deactivates everything', cmInst.activeCount === 0)
+const meshCount = [...cmInst['chunks'].values()].reduce((a, c) => a + c.buildingsGroup.children.length, 0)
+cmInst.update(0, 0)
+const meshCountAfter = [...cmInst['chunks'].values()].reduce((a, c) => a + c.buildingsGroup.children.length, 0)
+ok('reactivation does not duplicate meshes', meshCountAfter === meshCount && meshCount > 0)
 
 // --- Phase 2: chunks ---
 let totalB = 0

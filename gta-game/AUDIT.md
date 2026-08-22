@@ -27,8 +27,10 @@
 | — | Analytics | ✅ **Ditambahkan** — `src/analytics/tracker.ts` (queue+persist+beacon, zero-loss flush) + `gameTelemetry.ts` (gameplay events + FPS reports), wired ke hooks Game; endpoint opsional via `VITE_ANALYTICS_ENDPOINT` |
 | — | Error handler | ✅ **Ditambahkan** — `utils/logger.ts` (leveled) + `utils/errors.ts` (onerror/unhandledrejection/WebGL-loss, dev overlay, boot-failure screen) |
 | — | CD / GitHub Pages | ✅ **Ditambahkan** — `deploy-pages.yml` (via setup script) + branch `gh-pages` ter-publish (`/arena-city-try/`, base otomatis `GH_PAGES=1`); tinggal aktifkan di Settings → Pages |
+| A-3 | InstancedMesh bangunan | ✅ **Ditambahkan** — LOD ring menengah (level 1) kini **1 InstancedMesh per chunk** (instance colors) → ±100+ draw call turun jadi ~16; ring dekat (level 2) tetap mesh individual + windows texture; test: 25 chunk aktif semua punya InstancedMesh, reactivate tanpa duplikat mesh |
+| — | Playwright visual smoke | ✅ **Ditambahkan** — `tests/visual.spec.ts` + `playwright.config.ts` (preview build, webServer otomatis); boot → loading hilang → HUD → canvas sized → FPS hidup → **zero console/page errors** + screenshot artifact; dijalankan di CI (`npx playwright install --with-deps chromium`); browser tak bisa diinstall di sandbox ini (CDN diblokir) |
 
-**Baseline baru:** `npm test` 30/30 lolos · `tsc --noEmit` bersih · build OK (167 kB gzip)
+**Baseline baru:** `npm test` 34/34 lolos · `tsc --noEmit` bersih · build OK (168 kB gzip)
 
 ---
 
@@ -193,10 +195,9 @@ pada posisi player/camera (jarak senjata, mesin mobil).
 ### P0 — selesai ✅ (B-1, B-2)
 ### P1 — selesai ✅ (P-1, P-2 sebagian)
 ### P2 — selesai ✅ (I-2, I-3, I-4, I-5, A-4, A-5, A-6)
-### P3 — selesai ✅ (A-2, I-1, CI) · sisa:
-1. **A-1** — refactor Game.ts lebih lanjut (mode controller; SaveManager sudah diekstrak)
-2. **A-3** — InstancedMesh bangunan (draw call ↓)
-3. Playwright visual smoke (browser tidak bisa diinstall di sandbox ini — template siap via threejs-game-skills)
+### P3 — selesai ✅ (A-2, I-1, CI, A-3, Playwright) · sisa kecil:
+1. **A-1** — refactor Game.ts lebih lanjut (mode controller; SaveManager & pause sudah diekstrak)
+2. (opsional) analytics endpoint nyata / dashboard
 
 ---
 

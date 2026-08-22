@@ -64,6 +64,7 @@ npm run dev        # dev server on 0.0.0.0:5173
 npm run build      # type-check + production build
 npm test           # headless smoke tests for core systems
 npm run check      # type-check + tests (CI does the same)
+npm run test:visual # Playwright browser smoke test (needs browsers installed)
 ```
 
 ## CI / CD / Deployment
