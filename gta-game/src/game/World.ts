@@ -1,5 +1,6 @@
 import {
   AmbientLight,
+  Box3,
   BoxGeometry,
   CanvasTexture,
   Color,
@@ -19,6 +20,11 @@ import {
 
 const WORLD_SIZE = 100 // 100x100 ground per Phase 0 spec
 
+/** Axis-aligned collidable (building box) for player/camera collision. */
+export interface Collidable {
+  box: Box3
+}
+
 /**
  * Phase 0 world: sky, fog, lights with shadows, ground plane, and a few
  * placeholder boxes to verify lighting/shadow rendering. The procedural city
@@ -30,6 +36,12 @@ export class World {
   readonly fog = new Fog(new Color(0x87ceeb), 80, 400)
 
   private readonly disposables: Array<{ dispose(): void }> = []
+  private readonly collidables: Collidable[] = []
+
+  /** Axis-aligned building boxes for player/camera collision. */
+  getCollidables(): Collidable[] {
+    return this.collidables
+  }
 
   constructor() {
     this.buildEnvironment()
@@ -140,6 +152,9 @@ export class World {
       mesh.receiveShadow = true
       this.root.add(mesh)
       this.disposables.push(geo, mat)
+
+      // register AABB for collision (buildings never rotate)
+      this.collidables.push({ box: new Box3().setFromObject(mesh) })
     }
   }
 

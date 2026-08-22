@@ -1,6 +1,15 @@
-import { Clock, PerspectiveCamera, Scene, WebGLRenderer, ACESFilmicToneMapping, PCFSoftShadowMap } from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import {
+  ACESFilmicToneMapping,
+  Clock,
+  PCFSoftShadowMap,
+  PerspectiveCamera,
+  Scene,
+  WebGLRenderer,
+} from 'three'
 import { World } from './World'
+import { Player } from '../entities/Player'
+import { CameraRig } from '../systems/CameraRig'
+import { InputManager } from '../utils/InputManager'
 
 export interface GameOptions {
   container: HTMLElement
@@ -8,7 +17,7 @@ export interface GameOptions {
 
 /**
  * Core game shell — adapted from the mavonengine-core BaseGame/Game pattern.
- * Owns renderer, camera, scene, debug controls, and the animation loop.
+ * Owns renderer, camera, scene, input, and the animation loop.
  * Systems register `onUpdate` callbacks (physics, AI, etc. hook in here later).
  */
 export class Game {
@@ -16,8 +25,10 @@ export class Game {
   readonly scene = new Scene()
   readonly camera: PerspectiveCamera
   readonly renderer: WebGLRenderer
-  readonly controls: OrbitControls
   readonly world: World
+  readonly player: Player
+  readonly cameraRig: CameraRig
+  readonly input: InputManager
 
   private readonly updateCallbacks = new Set<(delta: number) => void>()
   private animationId = 0
@@ -40,19 +51,22 @@ export class Game {
     this.camera.position.set(28, 22, 38)
     this.camera.lookAt(0, 2, 0)
 
-    // --- Debug controls (replaced by player camera in Phase 1) ---
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.controls.target.set(0, 2, 0)
-    this.controls.enableDamping = true
-    this.controls.maxPolarAngle = Math.PI / 2 - 0.05
-    this.controls.minDistance = 3
-    this.controls.maxDistance = 150
+    // --- Input ---
+    this.input = new InputManager()
+    this.input.attach(container)
 
     // --- World ---
     this.world = new World()
     this.scene.fog = this.world.fog
     this.scene.background = this.world.skyColor
     this.scene.add(this.world.root)
+
+    // --- Player + third-person camera rig ---
+    this.player = new Player()
+    this.player.group.position.set(0, 0.95, 0)
+    this.scene.add(this.player.group)
+
+    this.cameraRig = new CameraRig(this.camera)
 
     // --- Resize ---
     window.addEventListener('resize', this.resize)
@@ -77,6 +91,7 @@ export class Game {
 
   destroy(): void {
     this.stop()
+    this.input.detach()
     window.removeEventListener('resize', this.resize)
     this.world.dispose()
     this.renderer.dispose()
@@ -86,14 +101,22 @@ export class Game {
     if (!this.running) return
     this.animationId = requestAnimationFrame(this.loop)
 
-    const delta = this.clock.getDelta()
+    const delta = Math.min(this.clock.getDelta(), 0.05) // clamp large gaps (tab switch)
     this.update(delta)
   }
 
   private update(delta: number): void {
-    this.controls.update()
+    const collidables = this.world.getCollidables()
+
+    // gameplay update
+    this.player.update(delta, this.input, this.cameraRig.yaw, collidables)
+    this.cameraRig.update(delta, this.input, this.player.position, collidables)
+
+    // external systems + render
     this.updateCallbacks.forEach(cb => cb(delta))
     this.renderer.render(this.scene, this.camera)
+
+    this.input.endFrame()
   }
 
   private resize = (): void => {
