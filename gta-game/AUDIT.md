@@ -201,12 +201,13 @@ pada posisi player/camera (jarak senjata, mesin mobil).
 
 | Metrik | Nilai |
 |---|---|
-| Total kode | ~5.250 baris (30 file src + 1 test) |
-| Bundle (gzip) | 161 kB JS + 1.7 kB CSS |
-| Draw call est. | ~200–400 (tanpa instancing) |
+| Total kode | ~6.000 baris (36 file src + 1 test + CI) |
+| Bundle (gzip) | 164 kB JS + ~7 kB CSS |
+| Draw call est. | ~200–400 (tanpa instancing — A-3 sisa, butuh tradeoff visual windows) |
 | Chunk aktif | ~25 (LOD penuh + sederhana) dari 484 |
-| Test | 13 pass / 0 fail (`npm test`) |
+| Test | 25 pass / 0 fail (`npm test`) |
 | Entitas hidup | ±46 (player, 24 parked, 10 traffic, 14 thug, 22 ped, cop dinamis) |
+| CI | ✅ GitHub Actions (tsc + test + build) |
 
 **Rekomendasi segera:** kerjakan P0 (B-1 + B-2) dalam satu sesi — keduanya kecil
 (< 100 baris perubahan) tapi mengubah game dari "tidak bisa dimainkan dengan benar"
