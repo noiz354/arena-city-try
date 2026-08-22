@@ -32,6 +32,7 @@ import { MobileControls } from '../systems/MobileControls'
 import { WeaponView } from '../systems/WeaponView'
 import { SaveManager } from '../systems/SaveManager'
 import { PauseMenu } from '../ui/pauseMenu'
+import type { GameTelemetry } from '../analytics/gameTelemetry'
 import { WEAPON_LIST } from '../data/weapons'
 
 export interface GameOptions {
@@ -86,6 +87,9 @@ export class Game {
   paused = false
   private saveTimer = 30
   private readonly exploded = new Set<Vehicle>()
+  private lastWantedStars = 0
+  /** Analytics wiring — set from main.ts. */
+  telemetry?: GameTelemetry
   /** HUD hooks — wired from main.ts */
   onPlayerDamaged?: () => void
   onWeaponHit?: () => void
@@ -173,10 +177,14 @@ export class Game {
       () => this.traffic.cars.map(c => c.vehicle),
     )
     this.scene.add(this.missions.markers)
-    this.missions.hooks.onMissionStart = def => this.onPickup?.(`MISSION: ${def.name}`)
+    this.missions.hooks.onMissionStart = def => {
+      this.onPickup?.(`MISSION: ${def.name}`)
+      this.telemetry?.missionStart(def.id, def.name)
+    }
     this.missions.hooks.onMissionComplete = (def, reward) => {
       this.audio.playMissionComplete()
       this.onPickup?.(`MISSION COMPLETE: ${def.name} · +$${reward}`)
+      this.telemetry?.missionComplete(def.id, def.name, reward)
       this.save()
     }
     this.missions.hooks.onObjective = (_def, text) => this.onObjective?.(text)
@@ -224,6 +232,7 @@ export class Game {
         onKill: kind => {
           this.kills++
           this.audio.playKill()
+          this.telemetry?.kill(kind, this.weapons.currentDef.id)
           if (kind === 'civilian') this.wanted.reportCrime(2, this.player.position)
         },
         onReload: () => this.audio.playReload(),
@@ -241,11 +250,13 @@ export class Game {
           this.weapons.giveWeapon(id)
           this.weaponView.setWeapon(id)
           this.audio.playPickup()
+          this.telemetry?.weaponAcquired(id)
           this.onPickup?.(`${WEAPON_LIST.find(w => w.id === id)?.name ?? id} acquired!`)
         },
         onAmmo: () => {
           this.weapons.giveAmmo(0.4)
           this.audio.playPickup()
+          this.telemetry?.ammoPickup()
           this.onPickup?.('+ AMMO')
         },
       },
@@ -364,6 +375,12 @@ export class Game {
     }
 
     this.handlePlayerDeath(delta)
+
+    // wanted-level telemetry (fires only when the stars change)
+    if (this.wanted.stars !== this.lastWantedStars) {
+      this.lastWantedStars = this.wanted.stars
+      this.telemetry?.wantedChanged(this.wanted.stars)
+    }
 
     // weapon viewmodel (bob + recoil; hidden while driving via player group)
     const pv = this.player.velocity
@@ -488,6 +505,7 @@ export class Game {
     this.mode = 'driving'
     this.player.group.visible = false
     this.cameraRig.onEnterVehicle(v.yaw)
+    this.telemetry?.vehicleEnter()
   }
 
   private exitVehicle(): void {
@@ -502,6 +520,7 @@ export class Game {
     this.mode = 'foot'
     this.player.group.visible = true
     this.cameraRig.onExitVehicle()
+    this.telemetry?.vehicleExit()
   }
 
   private handlePlayerDeath(delta: number): void {
@@ -509,11 +528,13 @@ export class Game {
       this.respawnTimer -= delta
       if (this.respawnTimer <= 0) {
         this.player.respawnAt(SPAWN_X, SPAWN_Z)
+        this.telemetry?.playerRespawn()
       }
       return
     }
     if (this.player.health <= 0) {
       this.respawnTimer = 3
+      this.telemetry?.playerDied()
     }
   }
 

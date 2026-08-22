@@ -20,6 +20,8 @@ import { PerspectiveCamera, Scene, Vector3 } from 'three'
 import { rayCapsule } from '../src/utils/raycast.ts'
 import { SaveManager } from '../src/systems/SaveManager.ts'
 import { ChunkManager } from '../src/systems/ChunkManager.ts'
+import { Tracker } from '../src/analytics/tracker.ts'
+import { initErrorHandling } from '../src/utils/errors.ts'
 import { WEAPONS } from '../src/data/weapons.ts'
 
 let pass = 0
@@ -169,6 +171,28 @@ const loaded = sm.load()
 ok('saveManager save+load', saved && loaded?.kills === 7 && loaded.pos.x === 3)
 sm.clear()
 ok('saveManager clear', sm.load() === null)
+
+// --- Analytics: tracker queue + persistence + flush race safety ---
+const trackStore = new Map()
+globalThis.localStorage = {
+  getItem: k => trackStore.get(k) ?? null,
+  setItem: (k, v) => void trackStore.set(k, String(v)),
+  removeItem: k => void trackStore.delete(k),
+}
+const t1 = new Tracker({ endpoint: 'http://localhost:9/events', siteId: 'test', flushAt: 3 })
+ok('tracker session id generated', t1.sessionId.length > 4)
+t1.track('test_event', { x: 1 })
+t1.track('test_event', { x: 2 })
+ok('tracker queue accumulates before flush threshold', t1.queuedCount === 2)
+t1.track('test_event', { x: 3 }) // flushAt=3 → async flush fires (fails: unreachable endpoint)
+ok('tracker keeps events queued while flush in flight', t1.queuedCount === 3)
+const t2 = new Tracker({ endpoint: 'http://localhost:9/events', siteId: 'test' })
+ok('tracker persists queue to localStorage', t2.queuedCount === 3)
+
+// --- Error handler: init must be a safe no-op outside a browser ---
+let reported = 0
+initErrorHandling({ onReport: () => { reported++ }, overlay: false })
+ok('error handler init does not throw (guarded)', true)
 
 console.log(`\nRESULT: ${pass} passed, ${fail} failed`)
 process.exit(fail > 0 ? 1 : 0)
