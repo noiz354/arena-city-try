@@ -6,13 +6,15 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc && vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "tsx tests/smoke.mjs"
   },
   "dependencies": {
     "@types/three": "^0.185.4",
     "three": "^0.185.1"
   },
   "devDependencies": {
+    "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "vite": "^8.2.2"
   }

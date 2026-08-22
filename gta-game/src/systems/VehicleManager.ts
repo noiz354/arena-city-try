@@ -21,15 +21,19 @@ export class VehicleManager {
     this.spawnCenterCars()
   }
 
-  /** A few cars right around the player spawn so the city feels alive immediately. */
+  /**
+   * A few cars right around the player spawn so the city feels alive
+   * immediately. Spots are ON road strips: x=0 / z=0 are the center road
+   * center lines (roads span ±5m), so offsets ride along them.
+   */
   private spawnCenterCars(): void {
     const sedan = VEHICLE_CONFIGS[0]
     const taxi = VEHICLE_CONFIGS[1]
     const spots: Array<[number, number, number, VehicleData]> = [
-      [-7.5, 2, 0, sedan], // on the vertical road west of the tower
-      [2, -7.5, Math.PI / 2, taxi], // on the horizontal road south of the tower
-      [32.5, 10, 0, sedan], // next road east
-      [-30, -7.5, Math.PI / 2, VEHICLE_CONFIGS[2]], // muscle car west
+      [0, 7, 0, sedan], // vertical road x=0, north of the intersection
+      [0, -8, Math.PI, taxi], // vertical road x=0, south, facing north
+      [8, 0, Math.PI / 2, sedan], // horizontal road z=0, east
+      [-9, 0, -Math.PI / 2, VEHICLE_CONFIGS[2]], // horizontal road z=0, west
     ]
     for (const [x, z, yaw, config] of spots) {
       this.vehicles.push(new Vehicle(config, x, z, yaw))
