@@ -6,7 +6,14 @@
  * (placement on roads), enemies + weapon ammo/reload, traffic bounds,
  * pedestrians, wanted system + cop spawns, mission delivery flow.
  */
-import { generateChunk, CHUNK_COUNT, CHUNK_CENTER } from '../src/systems/CityGenerator.ts'
+import {
+  generateChunk,
+  CHUNK_COUNT,
+  TOWER_X,
+  TOWER_Z,
+  TOWER_SIZE,
+  TOWER_HEIGHT,
+} from '../src/systems/CityGenerator.ts'
 import { VehicleManager } from '../src/systems/VehicleManager.ts'
 import { EnemySystem } from '../src/systems/EnemySystem.ts'
 import { WeaponSystem } from '../src/systems/WeaponSystem.ts'
@@ -16,7 +23,17 @@ import { PedestrianSystem } from '../src/systems/PedestrianSystem.ts'
 import { WantedSystem } from '../src/systems/WantedSystem.ts'
 import { MissionSystem } from '../src/systems/MissionSystem.ts'
 import { MISSIONS } from '../src/data/missions.ts'
-import { PerspectiveCamera, Scene, Vector3 } from 'three'
+import {
+  AmbientLight,
+  Color,
+  DirectionalLight,
+  Fog,
+  HemisphereLight,
+  MeshStandardMaterial,
+  PerspectiveCamera,
+  Scene,
+  Vector3,
+} from 'three'
 import { rayCapsule } from '../src/utils/raycast.ts'
 import { SaveManager } from '../src/systems/SaveManager.ts'
 import { ChunkManager } from '../src/systems/ChunkManager.ts'
@@ -28,6 +45,12 @@ import { CameraRig } from '../src/systems/CameraRig.ts'
 import { WeaponView } from '../src/systems/WeaponView.ts'
 import { AudioManager } from '../src/systems/AudioManager.ts'
 import { WEAPONS } from '../src/data/weapons.ts'
+import { SkySystem } from '../src/systems/SkySystem.ts'
+import { DayNightSystem } from '../src/systems/DayNightSystem.ts'
+import { Vegetation } from '../src/systems/Vegetation.ts'
+import { WetSurfaceSystem } from '../src/systems/WetSurfaceSystem.ts'
+import { buildGradeLUT } from '../src/systems/ColorGrade.ts'
+import { worldTexelSize, snapToGrid } from '../src/utils/texel.ts'
 
 // ChunkManager.update() builds CanvasTextures — stub the DOM bits three needs.
 const fakeCtx = new Proxy({}, { get: (t, k) => (k === 'canvas' ? fakeCanvas : () => {}), set: () => true })
@@ -79,7 +102,32 @@ for (let cx = 0; cx < CHUNK_COUNT; cx++) {
 }
 ok('chunks deterministic', det)
 ok('buildings total > 150', totalB > 150)
-ok('center tower', generateChunk(CHUNK_CENTER, CHUNK_CENTER).buildings.some(b => b.h >= 70))
+// the 72m landmark tower now lives in a block NE of center, not at the origin
+let towerFound = null
+for (let cx = 0; cx < CHUNK_COUNT; cx++) {
+  for (let cz = 0; cz < CHUNK_COUNT; cz++) {
+    const t = generateChunk(cx, cz).buildings.find(b => b.h >= 70)
+    if (t) towerFound = t
+  }
+}
+ok('tower exists somewhere', towerFound !== null)
+ok('tower is 16x16x72 at (20,20)', towerFound && towerFound.cx === TOWER_X && towerFound.cz === TOWER_Z && towerFound.w === TOWER_SIZE && towerFound.d === TOWER_SIZE && towerFound.h === TOWER_HEIGHT)
+ok('tower clear of the spawn origin (0,0)', towerFound && (TOWER_SIZE / 2 <= TOWER_X && TOWER_SIZE / 2 <= TOWER_Z))
+
+// --- jitter root-cause regression: no active collider overlaps the spawn ---
+const cmSpawn = new ChunkManager()
+cmSpawn.update(0, 0)
+const spawnR = 0.45
+let spawnBlocked = false
+for (const c of cmSpawn.getActiveCollidables()) {
+  const b = c.box
+  const nx = Math.max(b.min.x, Math.min(0, b.max.x))
+  const nz = Math.max(b.min.z, Math.min(0, b.max.z))
+  const dx = 0 - nx
+  const dz = 0 - nz
+  if (dx * dx + dz * dz < spawnR * spawnR) spawnBlocked = true
+}
+ok('player spawn (0,0) is clear of all colliders', spawnBlocked === false)
 
 // --- Phase 3: parked vehicles ---
 const vm = new VehicleManager()
@@ -243,6 +291,62 @@ ok('player hidden while driving', mcPlayer.group.visible === false)
 mc.exitVehicle()
 ok('exit → foot + player visible + car free', mc.mode === 'foot' && mcPlayer.group.visible && !car.occupied)
 ok('exit places player beside the car', Math.hypot(mcPlayer.position.x - car.position.x, mcPlayer.position.z - car.position.z) > 1)
+
+// --- M2: shadow texel snapping (pure math) ---
+const texel = worldTexelSize(55, 2048)
+ok('worldTexelSize ≈ 0.0537 m', Math.abs(texel - 0.05371) < 1e-4)
+ok('snapToGrid rounds to grid', snapToGrid(10.0, texel) !== snapToGrid(10.1, texel))
+ok('snapToGrid stable at same value', snapToGrid(10.02, texel) === snapToGrid(10.02, texel))
+ok('snapToGrid zero-size is identity', snapToGrid(7.3, 0) === 7.3)
+
+// --- M1: day/night drives a single shared sun direction (sky + light) ---
+const sky = new SkySystem()
+const dnSun = new DirectionalLight()
+const dnAmbient = new AmbientLight()
+const dnHemi = new HemisphereLight()
+const dnMoon = new DirectionalLight()
+const dnSkyColor = new Color()
+const dnFog = new Fog(0xffffff, 90, 420)
+const dn = new DayNightSystem(dnSun, dnAmbient, dnHemi, dnMoon, dnSkyColor, dnFog, sky)
+
+dn.timeOfDay = 0.5 // noon
+dn.update(0)
+ok('noon: sun high, day ≈ 1', dn.sunDirection.y > 0.6 && dn.day > 0.95)
+ok('sky shares the same sun direction', Math.abs(sky.uniforms.sunDirection.value.y - dn.sunDirection.y) < 1e-6)
+
+dn.timeOfDay = 0.0 // midnight
+dn.update(0)
+ok('midnight: sun below horizon, day ≈ 0', dn.sunDirection.y <= 0 && dn.day < 0.02)
+ok('sun direction is a unit vector', Math.abs(dn.sunDirection.length() - 1) < 1e-4)
+
+// --- M3: instanced grass (one draw call, blades placed on the terrain ring) ---
+const veg = new Vegetation()
+ok('grass is a single InstancedMesh', veg.root.children.length === 1 && veg.root.children[0].isInstancedMesh)
+ok('all grass blades placed', veg.root.children[0].count === 24000)
+ok('grass blade geometry indexed', veg.root.children[0].geometry.index !== null)
+veg.dispose()
+
+// --- M4: wet surfaces follow the shared rain envelope with progress bands ---
+const fakeGround = new MeshStandardMaterial({ roughness: 0.92 })
+let fakeRain = 0
+const wet = new WetSurfaceSystem(fakeGround, () => fakeRain)
+ok('wetness starts dry', wet.wetness === 0)
+fakeRain = 1
+for (let i = 0; i < 120; i++) wet.update(1 / 60)
+ok('wetness rises toward rain', wet.wetness > 0.7)
+ok('wet roughness collapses (early band)', fakeGround.roughness < 0.6)
+fakeRain = 0
+for (let i = 0; i < 120; i++) wet.update(1 / 60)
+ok('wetness dries out', wet.wetness < 0.3)
+ok('roughness returns when dry', fakeGround.roughness > 0.8)
+wet.dispose()
+
+// --- M5: generated grade LUT is well-formed and neutral-preserving ---
+const lut = buildGradeLUT(33)
+ok('grade LUT is 33^3 RGBA8', lut.image.width === 33 && lut.image.height === 33 && lut.image.depth === 33 && lut.image.data.length === 33 * 33 * 33 * 4)
+ok('grade LUT black stays black', lut.image.data[0] === 0 && lut.image.data[1] === 0 && lut.image.data[2] === 0)
+const last = (33 * 33 * 33 - 1) * 4
+ok('grade LUT white stays white', lut.image.data[last] === 255 && lut.image.data[last + 1] === 255 && lut.image.data[last + 2] === 255)
 
 console.log(`\nRESULT: ${pass} passed, ${fail} failed`)
 process.exit(fail > 0 ? 1 : 0)

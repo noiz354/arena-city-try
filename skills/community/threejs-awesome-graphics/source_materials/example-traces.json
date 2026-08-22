@@ -1,0 +1,1778 @@
+{
+  "schemaVersion": 1,
+  "examples": {
+    "threejs-spectral-ocean/coastal-breaker-ocean": [
+      {
+        "source": "author-local-coastal-breaker-ocean",
+        "files": [
+          "index.html",
+          "src/camera.js",
+          "src/chain.js",
+          "src/coast.js",
+          "src/debug.js",
+          "src/foam.js",
+          "src/main.js",
+          "src/noise.js",
+          "src/ocean.js",
+          "src/sky.js",
+          "src/tsl.js",
+          "src/ui.js",
+          "src/waveField.js"
+        ],
+        "mechanisms": [
+          "five deterministic rotated band-limited gravity fields with coupled height, horizontal displacement, derivatives, comb weights and dispersion motion",
+          "signed-distance mainland and island coast synchronized with arclength tables, coast-normal ribbons and a camera-following mainland window",
+          "conserved-volume Lagrangian shallow-water swash chains driven from the completed offshore wave level",
+          "persistent world-space breaker foam and coast-parameterized film foam with separate generation smoothing and lifetime channels",
+          "camera-following nonuniform ocean geometry coupled to water-column wet sand, filtered sand normals, bed caustics, absorption and shared sky radiance"
+        ],
+        "assets": [
+          {
+            "sourcePath": "sand_base_1k.jpg",
+            "localPath": "skills/threejs-spectral-ocean/assets/coastal-breaker-ocean/sand-base.jpg"
+          },
+          {
+            "sourcePath": "sand_normal_1k.jpg",
+            "localPath": "skills/threejs-spectral-ocean/assets/coastal-breaker-ocean/sand-normal.jpg"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the reusable example owns coast construction, generated wave fields, shallow-water chains, persistent foam targets, ocean and land geometry, materials, default parameters and exact sand texture configuration",
+          "renderer, gallery lifecycle, visible sky mesh, camera, orbit and pan controls remain in the development adapter; the shared analytic sky-radiance function stays with the ocean so reflection and visible sky cannot diverge",
+          "the gallery default camera is reframed down the channel between the island and mainland at position (14.5, 4.5, 32) m and target (-7.5, 0, 0) m, while the default viewport retains the supplied screenshot aspect",
+          "normal, foam, signed-coast and wireframe diagnostics are inspection-only branches and leave the calibrated final mode unchanged",
+          "both author-supplied 1K sand assets are preserved byte-identically under descriptive skill-local names"
+        ]
+      }
+    ],
+    "threejs-procedural-materials/thin-film-soap-bubbles": [
+      {
+        "source": "author-local-thin-film-soap-bubbles",
+        "files": [
+          "soap_bubble.html"
+        ],
+        "mechanisms": [
+          "exact s and p air-film-air Fresnel amplitude coefficients composed through Airy thin-film reflectance with a Cauchy aqueous index and three-tap RGB wavelength bands",
+          "rear and front deformed membrane passes with alpha-normalized reflected radiance and bounded one-bounce analytic reflection through six CPU-selected neighboring bubble proxies",
+          "volume-preserving radial capillary modes coupled to buoyancy, liquid-film mass, Reynolds-dependent drag, finite-correlation turbulence, local air vorticity and film drainage",
+          "camera-aware offscreen physical inflow, deterministic prewarming, expanded-frustum recycling and far-to-near paired membrane ordering",
+          "object-space geodesic puncture, Taylor-Culick film retraction, mass-derived incoherent liquid rim and pooled millimetre-scale drop aftermath"
+        ],
+        "assets": [
+          {
+            "sourcePath": "background-2k.exr",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-materials/thin-film-soap-bubbles/assets/background-2k.exr"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the reusable module owns every bubble-specific optical, geometry, mechanics, interaction, rupture, drop, deterministic validation and disposal mechanism while accepting an already configured environment, camera, orbit target and input element",
+          "renderer, scene, camera and orbit-control construction plus EXR loading remain in the development adapter",
+          "the adapter consumes the supplied 2K EXR and applies background blurriness 0.025 while leaving sharp environment sampling available to the bubble optics",
+          "environment-only, spherical-membrane and rear-membrane diagnostics toggle existing contracts and leave the calibrated final mode unchanged",
+          "the gallery runtime clock replaces page-owned animation and resize handlers while retaining the 120-hertz fixed mechanics step, five-step cap, membrane order and interaction timing"
+        ]
+      }
+    ],
+    "threejs-procedural-vegetation/gpu-culled-flower-field": [
+      {
+        "source": "inkwell-webgpu-flowers",
+        "files": [
+          "src/lib/webgpu-flower-engine.ts",
+          "src/components/webgpu-flower-lab-experience.tsx",
+          "test/webgpu-flower-engine.test.ts"
+        ],
+        "mechanisms": [
+          "zero-record flower reconstruction from one integer candidate ID and a deterministic seed, with wide jitter turning the lattice into an overlapping stochastic point cloud",
+          "rotated three-octave value-noise ecology field with separate deterministic hashes for presence, species, scale, dominant petal variant, compatible variant mixing, lean, and wind phase",
+          "32 by 32 conservative tile compaction feeding an indirect candidate dispatch, followed by atomic append into near, middle, and far four-byte visible-ID streams",
+          "eight indirect draws covering exact curved near stems, petals and centres, reduced curved middle geometry, and species-preserving far stems and procedural heads",
+          "five compatible atlas variants across eight flower species, terminal-tangent head orientation, rooted two-frequency wind, and moving-contact bend",
+          "GPU timestamp, visible-count, surviving-tile, candidate-test, draw-count, memory, and expanded-transform comparison metrics"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/plant-lab/inkwell-flower-petal-variants-v2.png",
+            "localPath": "skills/threejs-procedural-vegetation/assets/gpu-culled-flower-field/flower-petal-variants.png"
+          },
+          {
+            "sourcePath": "public/textures/hearth-grass-atlas-v6-palette.png",
+            "localPath": "skills/threejs-procedural-vegetation/assets/gpu-culled-flower-field/painted-grass-atlas.png"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the raw WebGPU device, compute, culling, indirect drawing, shaders, atlases, metrics and disposal remain the reusable example while view-projection, camera position, elapsed time, resize, orbit/pan controls and gallery lifecycle are supplied by the dev adapter",
+          "the React host, controls panel, hero copy, telemetry DOM, benchmark bridge, profile buttons, page CSS and presentation footer are omitted",
+          "the two effect-owned atlas files are byte-identical and distributed under descriptive skill-local names",
+          "the gallery diagnostic selector maps to the existing compact, direct, flat-culling and compatible-petal controls without changing the calibrated final branch",
+          "the gallery uses the package camera implementation and exposes pan in addition to the reviewed orbit and zoom interaction"
+        ]
+      }
+    ],
+    "threejs-procedural-materials/physical-diffraction-grating": [
+      {
+        "source": "author-local-diffraction-grating",
+        "files": [
+          "diffraction_grating.html"
+        ],
+        "mechanisms": [
+          "rounded printed substrate, additive optical radiance layer and dark physical backing with exact relative offsets and calibrated physical-material parameters",
+          "pure TSL optical graph built from Fn, If and Loop nodes, with no embedded native shader source strings",
+          "procedural star and three-family stripe masks selecting local groove azimuth, pitch and relief without directly supplying hue or motif opacity",
+          "analytic CIE 1931 XYZ matching curves converted to linear sRGB and weighted by a 5250-kelvin blackbody spectrum relative to 560 nanometres",
+          "one-dimensional reflective phase grating over orders one through three with wavelength from the grating equation, Bessel-squared order efficiency, Fresnel and blaze envelopes",
+          "normalized finite-coherence and azimuth-disorder broadening plus a 21-sample far-field strip-emitter integral",
+          "world-space groove axes updated from the card's actual object quaternion and additive HDR composition before ACES tone mapping"
+        ],
+        "assets": [
+          {
+            "sourcePath": "pokemon_card.png",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-materials/physical-diffraction-grating/assets/card-art.png"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the card artwork is dev-shim-only on explicit author instruction; the reusable implementation accepts an arbitrary printed substrate texture",
+          "renderer, fixed camera, object-drag events, visible emitter mesh, resize handler, HUD, range inputs, checkbox and reset button live outside the reusable material module",
+          "the dev gallery uses standard orbit and pan controls while updating the material's object axes every frame from the actual card world quaternion",
+          "the pitch, relief, coherence, azimuth spread, groove angle, gain, star enable, emitter geometry, temperature and power nodes remain public through the returned uniform contract",
+          "the gallery modes exercise existing parameter ranges for star removal, shallow relief and broad azimuth without changing the calibrated final branch",
+          "the gallery and reusable module use the package-installed Three.js revision while retaining the supplied WebGPU and pure-TSL contracts"
+        ]
+      }
+    ],
+    "threejs-procedural-geometry/procedural-optimus-humanoid": [
+      {
+        "source": "author-local-optimus",
+        "files": [
+          "optimus.html"
+        ],
+        "mechanisms": [
+          "shape-preserving and natural-cubic parameter curves, least-squares polynomial fitting, vector/quaternion transforms, and a polygon mesh container with material and generated-face slots",
+          "spatial-hash welding, connected-shell winding repair, split angle-weighted corner normals, exact BSP polygon difference, and angle-limited multi-segment bevel construction",
+          "arc-length-balanced superellipse profiles, parameter lofts, parallel-transport spine lofts, paired pillow panels, outline extrusion, tubes, and semantic mesh joining",
+          "complete 176-object torso, head, arm, five-finger hand, hip, leg and foot assembly totalling 891809 emitted triangles at 1.7321 metres",
+          "fourteen PBR identities including shells, polymers, visor, helmet, emissive sensor, mechanisms, aluminium, steel, rubber, foot material, logo and covers",
+          "lookup3-hashed signed Perlin noise with derivative octave filtering, authored roughness mapping and object-space bump feeding WebGPU node materials"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the reusable example contains the complete geometry and material implementation but omits HTML, loading veil, progress messages, error overlay, HUD, renderer, camera, orbit controls, studio environment, lights and floor",
+          "the seven build phases execute synchronously behind createProceduralOptimusHumanoid and return the named root hierarchy, shared material dictionary, semantic collections, deterministic statistics and disposal contract",
+          "the dev adapter owns the neutral Z-up inspection stage and exposes complete, wireframe, upper-body and lower-body modes without changing the final assembly",
+          "implementation comments are written as self-contained geometry and material contracts while preserving every coordinate, generator, material constant, polygon operation and emission order",
+          "the gallery and reusable module use the package-installed Three.js revision while retaining the supplied WebGPU and TSL contracts"
+        ]
+      }
+    ],
+    "threejs-procedural-geometry/porcelain-brass-submarine": [
+      {
+        "source": "author-local-submarine",
+        "files": [
+          "submarine.html"
+        ],
+        "mechanisms": [
+          "240-sample tilted-collar hull plan compiled to 56 rings by 128 radial segments with accumulated-distance UVs",
+          "shared grid loft, Z-axis lathe, parallel-transport tube sweep, and lens-section fin loft emitters",
+          "one hull-UV outline coupling alpha-tested window apertures, double swept brass frames, and nine-row bulged glazing",
+          "complete semantic assembly of hull fittings, armillary dome, furnished cabin, shrouded eight-blade propeller, fins, and lamp pods",
+          "generated 2048 by 1024 hull detail atlas, 512 by 512 quilt normal texture, and TSL porcelain brass glass leather wood and lamp materials",
+          "per-part unique-geometry triangle evidence with shared propeller-blade geometry and instanced collar rivets"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "renderer creation, studio environment, directional lights, ground, camera, and orbit controls live in the gallery adapter",
+          "the gallery uses exposure 0.76, environment intensity 0.36, reduced three-point light intensities, a neutral gray backdrop, and tighter key shadows to preserve close-inspection detail",
+          "presentation title, loading veil, authored view buttons, keyboard turntable toggle, and error overlay are omitted",
+          "the gallery adds topology, isolated hull-loft, and no-glass diagnostic modes without changing the final model branch",
+          "the gallery uses the package-installed Three.js revision while retaining the supplied geometry, material, and motion contracts"
+        ]
+      }
+    ],
+    "threejs-atmosphere-aerial-perspective/lut-aerial-perspective": [
+      {
+        "source": "jeantimex-geospatial",
+        "boundary": "reference-extraction",
+        "files": [
+          "src/atmosphere/index.ts",
+          "node_modules/@takram/three-atmosphere/src/AerialPerspectiveEffect.ts",
+          "node_modules/@takram/three-atmosphere/src/AtmosphereMaterialBase.ts",
+          "node_modules/@takram/three-atmosphere/src/AtmosphereParameters.ts",
+          "node_modules/@takram/three-atmosphere/src/IrradianceMaskPass.ts",
+          "node_modules/@takram/three-atmosphere/src/PrecomputedTexturesLoader.ts",
+          "node_modules/@takram/three-atmosphere/src/SkyLightProbe.ts",
+          "node_modules/@takram/three-atmosphere/src/SkyMaterial.ts",
+          "node_modules/@takram/three-atmosphere/src/StarsGeometry.ts",
+          "node_modules/@takram/three-atmosphere/src/StarsMaterial.ts",
+          "node_modules/@takram/three-atmosphere/src/SunDirectionalLight.ts",
+          "node_modules/@takram/three-atmosphere/src/blackBodyChromaticity.ts",
+          "node_modules/@takram/three-atmosphere/src/celestialDirections.ts",
+          "node_modules/@takram/three-atmosphere/src/constants.ts",
+          "node_modules/@takram/three-atmosphere/src/getAltitudeCorrectionOffset.ts",
+          "node_modules/@takram/three-atmosphere/src/getSunLightColor.ts",
+          "node_modules/@takram/three-atmosphere/src/helpers/functions.ts",
+          "node_modules/@takram/three-atmosphere/src/helpers/sampleTexture.ts",
+          "node_modules/@takram/three-atmosphere/src/index.ts",
+          "node_modules/@takram/three-atmosphere/src/shaders/aerialPerspectiveEffect.frag",
+          "node_modules/@takram/three-atmosphere/src/shaders/aerialPerspectiveEffect.vert",
+          "node_modules/@takram/three-atmosphere/src/shaders/functions.glsl",
+          "node_modules/@takram/three-atmosphere/src/shaders/index.ts",
+          "node_modules/@takram/three-atmosphere/src/shaders/irradianceMask.frag",
+          "node_modules/@takram/three-atmosphere/src/shaders/parameters.glsl",
+          "node_modules/@takram/three-atmosphere/src/shaders/sky.frag",
+          "node_modules/@takram/three-atmosphere/src/shaders/sky.glsl",
+          "node_modules/@takram/three-atmosphere/src/shaders/sky.vert",
+          "node_modules/@takram/three-atmosphere/src/shaders/stars.frag",
+          "node_modules/@takram/three-atmosphere/src/shaders/stars.vert",
+          "node_modules/@takram/three-atmosphere/src/types.ts",
+          "node_modules/@takram/three-geospatial-effects/src/DepthEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/DitheringEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/DownsampleThresholdMaterial.ts",
+          "node_modules/@takram/three-geospatial-effects/src/GeometryEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/GeometryPass.ts",
+          "node_modules/@takram/three-geospatial-effects/src/LensFlareEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/LensFlareFeaturesMaterial.ts",
+          "node_modules/@takram/three-geospatial-effects/src/NormalEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/createHaldLookupTexture.ts",
+          "node_modules/@takram/three-geospatial-effects/src/index.ts",
+          "node_modules/@takram/three-geospatial-effects/src/setupMaterialsForGeometryPass.ts",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/depthEffect.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/ditheringEffect.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/downsampleThreshold.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/downsampleThreshold.vert",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/geometryEffect.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/lensFlareEffect.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/lensFlareFeatures.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/lensFlareFeatures.vert",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/normalEffect.frag",
+          "node_modules/@takram/three-geospatial/src/ArrayBufferLoader.ts",
+          "node_modules/@takram/three-geospatial/src/DataLoader.ts",
+          "node_modules/@takram/three-geospatial/src/EXR3DLoader.ts",
+          "node_modules/@takram/three-geospatial/src/Ellipsoid.ts",
+          "node_modules/@takram/three-geospatial/src/EllipsoidGeometry.ts",
+          "node_modules/@takram/three-geospatial/src/Geodetic.ts",
+          "node_modules/@takram/three-geospatial/src/PointOfView.ts",
+          "node_modules/@takram/three-geospatial/src/Rectangle.ts",
+          "node_modules/@takram/three-geospatial/src/STBNLoader.ts",
+          "node_modules/@takram/three-geospatial/src/Texture3DLoader.ts",
+          "node_modules/@takram/three-geospatial/src/TileCoordinate.ts",
+          "node_modules/@takram/three-geospatial/src/TilingScheme.ts",
+          "node_modules/@takram/three-geospatial/src/TypedArrayLoader.ts",
+          "node_modules/@takram/three-geospatial/src/assertions.ts",
+          "node_modules/@takram/three-geospatial/src/bufferGeometry.ts",
+          "node_modules/@takram/three-geospatial/src/constants.ts",
+          "node_modules/@takram/three-geospatial/src/decorators.ts",
+          "node_modules/@takram/three-geospatial/src/defineShorthand.ts",
+          "node_modules/@takram/three-geospatial/src/helpers/projectOnEllipsoidSurface.ts",
+          "node_modules/@takram/three-geospatial/src/index.ts",
+          "node_modules/@takram/three-geospatial/src/math.ts",
+          "node_modules/@takram/three-geospatial/src/resolveIncludes.ts",
+          "node_modules/@takram/three-geospatial/src/shaders/cascadedShadowMaps.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/depth.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/generators.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/index.ts",
+          "node_modules/@takram/three-geospatial/src/shaders/interleavedGradientNoise.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/math.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/packing.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/raySphereIntersection.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/transform.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/turbo.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/vogelDisk.glsl",
+          "node_modules/@takram/three-geospatial/src/typedArray.ts",
+          "node_modules/@takram/three-geospatial/src/typedArrayParsers.ts",
+          "node_modules/@takram/three-geospatial/src/types.ts",
+          "node_modules/@takram/three-geospatial/src/unrollLoops.ts"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/assets/atmosphere/irradiance.exr",
+            "localPath": "skills/threejs-atmosphere-aerial-perspective/assets/lut-aerial-perspective/irradiance.exr"
+          },
+          {
+            "sourcePath": "public/assets/atmosphere/scattering.exr",
+            "localPath": "skills/threejs-atmosphere-aerial-perspective/assets/lut-aerial-perspective/scattering.exr"
+          },
+          {
+            "sourcePath": "public/assets/atmosphere/transmittance.exr",
+            "localPath": "skills/threejs-atmosphere-aerial-perspective/assets/lut-aerial-perspective/transmittance.exr"
+          },
+          {
+            "sourcePath": "public/assets/atmosphere/irradiance.bin",
+            "localPath": "skills/threejs-atmosphere-aerial-perspective/assets/lut-aerial-perspective/irradiance.bin"
+          },
+          {
+            "sourcePath": "public/assets/atmosphere/scattering.bin",
+            "localPath": "skills/threejs-atmosphere-aerial-perspective/assets/lut-aerial-perspective/scattering.bin"
+          },
+          {
+            "sourcePath": "public/assets/atmosphere/transmittance.bin",
+            "localPath": "skills/threejs-atmosphere-aerial-perspective/assets/lut-aerial-perspective/transmittance.bin"
+          }
+        ],
+        "mechanisms": [
+          "precomputed atmosphere texture loading for irradiance, scattering, and transmittance LUTs",
+          "one atmosphere parameter model shared by sky, sun transmittance, sky light, and aerial perspective",
+          "ECEF/geodetic camera frame with sun and moon directions evaluated in the same frame",
+          "AerialPerspectiveEffect transmittance and inscattering composition with lens flare, AGX tone mapping, and dithering"
+        ]
+      }
+    ],
+    "threejs-precipitation-surfaces/snow-accumulation": [
+      {
+        "source": "snow-system-threejs",
+        "files": [
+          "src/snow.js",
+          "src/main.js",
+          "src/model.js",
+          "src/lake.js",
+          "src/postfx.js"
+        ],
+        "mechanisms": [
+          "camera-centered wrapped instanced snowfall with per-flake seeds, slow fall speed, wind drift, and figure-eight flutter",
+          "shared time and wind uniforms connecting snowfall, ground snow sparkle, and snow material response",
+          "world-space FBM snow coverage, melt-line softness, drift height, and edge taper",
+          "one ground height field driving both vertex displacement and finite-difference normals",
+          "matte snow albedo and roughness override with sparse twinkling ice-crystal sparkle",
+          "model capping by upward world normals and model-locked coverage noise",
+          "shared irregular lake field for ground basin carving and translucent ice rendering"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/Material_1/Asphalt025C_1K-JPG_AmbientOcclusion.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/snow-accumulation/assets/asphalt/Asphalt025C_1K-JPG_AmbientOcclusion.jpg"
+          },
+          {
+            "sourcePath": "public/Material_1/Asphalt025C_1K-JPG_Color.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/snow-accumulation/assets/asphalt/Asphalt025C_1K-JPG_Color.jpg"
+          },
+          {
+            "sourcePath": "public/Material_1/Asphalt025C_1K-JPG_Displacement.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/snow-accumulation/assets/asphalt/Asphalt025C_1K-JPG_Displacement.jpg"
+          },
+          {
+            "sourcePath": "public/Material_1/Asphalt025C_1K-JPG_NormalGL.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/snow-accumulation/assets/asphalt/Asphalt025C_1K-JPG_NormalGL.jpg"
+          },
+          {
+            "sourcePath": "public/Material_1/Asphalt025C_1K-JPG_Roughness.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/snow-accumulation/assets/asphalt/Asphalt025C_1K-JPG_Roughness.jpg"
+          },
+          {
+            "sourcePath": "public/old_rusty_car_2.glb",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/snow-accumulation/assets/old_rusty_car_2.glb"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the source studio UI, audio, and model import controls remain gallery/runtime concerns and are not part of the reusable skill example",
+          "the gallery uses the original rusty car GLB as a dev-owned inspection asset while keeping model import controls outside the reusable skill example",
+          "the frozen lake is retained as an optional debug/inspection mode instead of a default scene state",
+          "the source cinematic post-processing stack is represented in the gallery as presentation while the copied precipitation and surface shaders remain the inspected effect"
+        ]
+      }
+    ],
+    "threejs-precipitation-surfaces/wet-puddle-rain": [
+      {
+        "source": "demo-2023-rain-puddle",
+        "files": [
+          "src/Floor/PuddleMaterial.tsx",
+          "src/Rain/Drops.tsx",
+          "src/Rain/Splashes/index.tsx",
+          "src/Rain/Splashes/useSplashPositions.ts",
+          "src/Rain/index.tsx",
+          "src/useMakeRain.ts",
+          "src/App.tsx",
+          "src/Floor/index.tsx",
+          "src/Floor/Trash.tsx"
+        ],
+        "mechanisms": [
+          "rain-progress envelope driving roughness, ripple normals, rain streak opacity, and splash opacity",
+          "asphalt puddle material with procedural puddle mask, staged roughness collapse, and analytic expanding-ring ripple normals",
+          "camera-facing instanced falling rain streaks shaped by an uneven-capsule SDF",
+          "upward-normal weighted mesh surface sampling for splash placement",
+          "4 by 5 flipbook splash animation with per-instance splash progress and additive blending"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/Splash.png",
+            "localPath": "skills/threejs-precipitation-surfaces/assets/wet-puddle-rain/Splash.png"
+          },
+          {
+            "sourcePath": "public/road/aerial_asphalt_01_ao_2k.jpg",
+            "localPath": "skills/threejs-precipitation-surfaces/assets/wet-puddle-rain/road/aerial_asphalt_01_ao_2k.jpg"
+          },
+          {
+            "sourcePath": "public/road/aerial_asphalt_01_diff_2k.jpg",
+            "localPath": "skills/threejs-precipitation-surfaces/assets/wet-puddle-rain/road/aerial_asphalt_01_diff_2k.jpg"
+          },
+          {
+            "sourcePath": "public/road/aerial_asphalt_01_nor_gl_2k.jpg",
+            "localPath": "skills/threejs-precipitation-surfaces/assets/wet-puddle-rain/road/aerial_asphalt_01_nor_gl_2k.jpg"
+          },
+          {
+            "sourcePath": "public/road/aerial_asphalt_01_rough_2k.jpg",
+            "localPath": "skills/threejs-precipitation-surfaces/assets/wet-puddle-rain/road/aerial_asphalt_01_rough_2k.jpg"
+          },
+          {
+            "sourcePath": "public/decals/trash/shmpulh_4K_AO.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/wet-puddle-rain/assets/trash/shmpulh_4K_AO.jpg"
+          },
+          {
+            "sourcePath": "public/decals/trash/shmpulh_4K_Albedo.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/wet-puddle-rain/assets/trash/shmpulh_4K_Albedo.jpg"
+          },
+          {
+            "sourcePath": "public/decals/trash/shmpulh_4K_Normal.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/wet-puddle-rain/assets/trash/shmpulh_4K_Normal.jpg"
+          },
+          {
+            "sourcePath": "public/decals/trash/shmpulh_4K_Opacity.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/wet-puddle-rain/assets/trash/shmpulh_4K_Opacity.jpg"
+          },
+          {
+            "sourcePath": "public/decals/trash/shmpulh_4K_Roughness.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/wet-puddle-rain/assets/trash/shmpulh_4K_Roughness.jpg"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the source React components and custom-shader-material hooks are translated into standalone Three.js modules while preserving the material, rain, and splash mechanisms",
+          "the click-to-start UI is replaced by an automatic five-second rain-progress ramp for deterministic gallery inspection",
+          "the source thunder flash and audio playback are omitted because this skill pack covers the visual rain, puddle, ripple, and splash effects without scene-flash presentation"
+        ]
+      }
+    ],
+    "threejs-procedural-architecture/procedural-financial-tower": [
+      {
+        "source": "procedural-bank",
+        "files": [
+          "src/kit/building/building-generator.ts",
+          "src/kit/building/compile-building.ts",
+          "src/kit/building/mass-caps.ts",
+          "src/grammar/building-grammar.ts",
+          "src/grammar/mass-grammar.ts",
+          "src/grammar/facade-grammar.ts",
+          "src/grammar/footprint-edge-graph.ts",
+          "src/grammar/placement-factory.ts",
+          "src/grammar/podium-grammar.ts",
+          "src/grammar/shaft-grammar.ts",
+          "src/grammar/crown-grammar.ts",
+          "src/grammar/roof-grammar.ts",
+          "src/grammar/generator-assertions.ts",
+          "src/kit/shared/mesh-writer.ts",
+          "src/kit/shared/module-api.ts",
+          "src/kit/shared/transforms.ts",
+          "src/kit/kit-types.ts",
+          "src/kit/module-registry.ts",
+          "src/kit/financial-core-kit.ts",
+          "src/scene/csm/cached-clipmap-shadow-node.ts",
+          "src/scene/csm/bounded-shadow-node.ts",
+          "src/scene/materials.ts",
+          "src/scene/daylight-lighting.ts",
+          "src/scene/daylight-sky.ts",
+          "src/scene/scene-environment.ts",
+          "src/app/building-canvas.tsx",
+          "src/app/generated-building-mesh.tsx",
+          "src/app/scene-lights.tsx",
+          "src/app/ground-plane.tsx"
+        ],
+        "mechanisms": [
+          "default seed 1042 financial tower settings and exact 3.2 metre bay and 3.35 metre floor anchors",
+          "podium shaft crown bridge and roof intermediate plan before material-slot geometry emission",
+          "reserved central glass shaft corner piers bay rhythms projected colonnade cornices finials and statue roof",
+          "KitMeshWriter material-slot BufferGeometry output with vertex-color node material consumption",
+          "three light-space square WebGPU cached shadow levels with per-level texel snapping and scaled normal bias",
+          "dynamic near level cached coarse levels one-level update budget containment cross-fade and unshadowed outside weight"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/assets/financial-core/limestone-albedo.png",
+            "localPath": "skills/threejs-procedural-architecture/assets/procedural-financial-tower/limestone-albedo.png"
+          },
+          {
+            "sourcePath": "public/assets/financial-core/limestone-normal.png",
+            "localPath": "skills/threejs-procedural-architecture/assets/procedural-financial-tower/limestone-normal.png"
+          },
+          {
+            "sourcePath": "public/assets/financial-core/ornaments-albedo.png",
+            "localPath": "skills/threejs-procedural-architecture/assets/procedural-financial-tower/ornaments-albedo.png"
+          },
+          {
+            "sourcePath": "public/assets/financial-core/ornaments-normal.png",
+            "localPath": "skills/threejs-procedural-architecture/assets/procedural-financial-tower/ornaments-normal.png"
+          }
+        ],
+        "boundary": "reference-extraction"
+      }
+    ],
+    "threejs-procedural-geometry/sculpted-gallery-frame": [
+      {
+        "source": "mysite-react",
+        "files": [
+          "src/features/art-in-life/ArtInLifeGallery.tsx"
+        ],
+        "mechanisms": [
+          "92-sample crown, bead, groove, shoulder, and cove rail profile",
+          "orientation-specific profile sweep with closed backing and end caps",
+          "desktop frame dimensions and coupled artwork depth",
+          "walnut, antique-gold, and ebony physical-material response bundles",
+          "warm picture spotlights with static high-resolution VSM shadows",
+          "selective bloom by temporary non-contributor material substitution"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the inspection scene presents three frames on one wall instead of virtualizing a long scrolling hallway",
+          "painting shadow maps use the reviewed mobile 2048 resolution instead of the desktop 4096 resolution to keep the gallery inspection surface bounded",
+          "the single-bay chandelier point fill uses intensity 18 instead of 70 because the reviewed long hallway distributes multiple chandelier lights over a much larger volume",
+          "procedural placeholder artwork is retained while Instagram CSS3D embeds, navigation, neon signage, and the full chandelier are outside this focused extraction"
+        ],
+        "assets": [
+          {
+            "sourcePath": "src/assets/textures/aged-walnut-frame.webp",
+            "localPath": "skills/threejs-procedural-geometry/assets/sculpted-gallery-frame/aged-walnut-frame.webp"
+          },
+          {
+            "sourcePath": "src/assets/textures/antique-gold-frame.webp",
+            "localPath": "skills/threejs-procedural-geometry/assets/sculpted-gallery-frame/antique-gold-frame.webp"
+          },
+          {
+            "sourcePath": "src/assets/textures/dark-ebony-frame.webp",
+            "localPath": "skills/threejs-procedural-geometry/assets/sculpted-gallery-frame/dark-ebony-frame.webp"
+          },
+          {
+            "sourcePath": "src/assets/textures/gallery-mat-board.webp",
+            "localPath": "skills/threejs-procedural-geometry/assets/sculpted-gallery-frame/gallery-mat-board.webp"
+          },
+          {
+            "sourcePath": "src/assets/textures/gallery-plaster.webp",
+            "localPath": "assets/gallery-plaster.webp"
+          },
+          {
+            "sourcePath": "src/assets/textures/gallery-plaster-bump.webp",
+            "localPath": "assets/gallery-plaster-bump.webp"
+          },
+          {
+            "sourcePath": "src/assets/textures/gallery-floor.webp",
+            "localPath": "assets/gallery-floor.webp"
+          }
+        ]
+      }
+    ],
+    "threejs-procedural-materials/lava-flow-surface": [
+      {
+        "source": "very-hot-planet-codepen",
+        "files": [
+          "script.js",
+          "metadata.json"
+        ],
+        "mechanisms": [
+          "fullscreen raymarched terrain whose distance field is a time-advected procedural height map",
+          "finite-difference normals sampled from the same map used by the ray marcher",
+          "height-based lava-rock material identity instead of independent color noise",
+          "near-surface emissive accumulation during the march",
+          "hash-seeded screen-space ember loop with lifetime fade, upward acceleration, turbulent drift, and ray-proximity glow",
+          "distance fog, vignette, gamma, and film-grain finishing inside the material"
+        ],
+        "boundary": "reviewed-reference",
+        "divergences": [
+          "the source pen is treated as MIT by project rule and its raymarch, material split, glow, ember, fog, vignette, gamma, and grain mechanisms are copied/adapted into the skill example",
+          "uniform names and host runtime boundaries are adjusted for this pack",
+          "the gallery owns only the fullscreen host camera and renderer wiring"
+        ]
+      }
+    ],
+    "threejs-procedural-planets/procedural-planet-surface": [
+      {
+        "source": "stellar",
+        "files": [
+          "src/game/runtime/solar/terrain.ts",
+          "src/game/runtime/solar/bodySurface.ts",
+          "src/game/runtime/solar/bodyMaterial.ts",
+          "src/game/runtime/solar/definitions/pelagia.ts"
+        ],
+        "mechanisms": [
+          "normalized pre-displacement surfaceDirection retained as an explicit geometry attribute",
+          "terrestrial CPU terrain stack with three-channel warp, continental, highland, and ridge bands",
+          "radius-scaled tangential shader warp for climate and material causes",
+          "altitude, latitude, humidity, slope, coast, snow, aridity, lushness, rock, and water coupling",
+          "screen-derivative procedural bump and normal-variance roughness filtering"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the inspection mesh uses 228 by 114 segments, matching the reviewed terrestrial far LOD rather than its 380-segment near LOD",
+          "geometry and shader terrain evaluate the same value-noise field to remove the reviewed source's documented CPU/TSL parity debt",
+          "the focused example intentionally excludes the separate atmosphere system so the surface remains independently inspectable"
+        ]
+      }
+    ],
+    "threejs-procedural-vegetation/gpu-computed-grass": [
+      {
+        "source": "r3f-procedural-grass",
+        "files": [
+          "src/components/Grass.tsx",
+          "src/components/Terrain.tsx",
+          "src/components/grass/constants.ts",
+          "src/components/grass/hooks/useGrassCompute.ts",
+          "src/components/grass/utils.ts",
+          "src/components/grass/shaders/grassComputeShader.glsl",
+          "src/components/grass/shaders/grassVertex.glsl",
+          "src/components/grass/shaders/grassFragment.glsl",
+          "src/components/terrain/TerrainMath.ts",
+          "packages/r3f-gist/shaders/cginc/math/utility.glsl",
+          "packages/r3f-gist/shaders/cginc/noise/simplexNoise.glsl",
+          "packages/r3f-gist/shaders/cginc/noise/fractal.glsl"
+        ],
+        "mechanisms": [
+          "WebGL2 multiple-render-target compute pass writing blade parameters, clump data, and motion seeds",
+          "deterministic jittered blade placement over an FBM terrain-conforming patch",
+          "Voronoi clumps with center-facing yaw, presence falloff, and per-clump type trends",
+          "Bezier blade spine with wind push, travelling sway, tip flutter, slope alignment, LOD folding, stochastic culling, and density compensation",
+          "clump-normal lighting, distance fade to ground color and normal, height AO, backlight translucency, and per-blade color variation"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the source React component and custom-shader-material hooks are translated into a standalone Three.js module while preserving the compute, blade, terrain, and shading equations",
+          "the gallery uses a 256 squared inspection grid instead of the source default 384 squared grid to keep the reusable example interactive",
+          "environment, camera, and controls live in the gallery adapter rather than the skill example"
+        ]
+      }
+    ],
+    "threejs-procedural-vegetation/structured-ash-growth": [
+      {
+        "source": "ez-tree",
+        "files": [
+          "src/lib/tree.js",
+          "src/lib/options.js",
+          "src/lib/presets/ash_medium.json",
+          "src/app/scene.js",
+          "src/app/main.js",
+          "src/app/environment.js",
+          "src/app/textures.js",
+          "src/app/noise.js",
+          "src/app/grass.js",
+          "src/app/ground.js",
+          "src/app/skybox.js",
+          "src/app/shaders/skybox.vert",
+          "src/app/shaders/skybox.frag",
+          "src/app/rocks.js"
+        ],
+        "mechanisms": [
+          "Ash Medium per-level species parameters",
+          "queue growth with lateral and terminal continuation descendants",
+          "radius-amplified gnarliness and inverse-radius growth force",
+          "stratified longitudinal placement with independently permuted azimuth slots",
+          "final-branch leaf placement with double cards and rounded normals",
+          "leaf-root multi-frequency wind",
+          "shared simplex field for grass rejection and ground blending",
+          "daylight fog meadow with grass, flowers, rocks, and background forest"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "background forest reuses the reviewed Ash geometry instead of generating 100 mixed presets",
+          "random placement is seeded so gallery captures are deterministic",
+          "camera distance is 115 instead of the startup value 100 to reproduce the reviewed hero frame's visible crown margin at a 3:2 inspection viewport"
+        ],
+        "assets": [
+          {
+            "sourcePath": "src/app/public/textures/leaves/ash.png",
+            "localPath": "skills/threejs-procedural-vegetation/assets/structured-ash-growth/ash.png"
+          },
+          {
+            "sourcePath": "src/app/public/textures/bark/Bark001_1K-JPG/Bark001_1K-JPG_Color.jpg",
+            "localPath": "skills/threejs-procedural-vegetation/assets/structured-ash-growth/bark-color.jpg"
+          },
+          {
+            "sourcePath": "src/app/public/textures/bark/Bark001_1K-JPG/Bark001_1K-JPG_NormalGL.jpg",
+            "localPath": "skills/threejs-procedural-vegetation/assets/structured-ash-growth/bark-normal.jpg"
+          },
+          {
+            "sourcePath": "src/app/public/textures/bark/Bark001_1K-JPG/Bark001_1K-JPG_Roughness.jpg",
+            "localPath": "skills/threejs-procedural-vegetation/assets/structured-ash-growth/bark-roughness.jpg"
+          },
+          {
+            "sourcePath": "src/app/public/models/grass.glb",
+            "localPath": "assets/grass.glb"
+          },
+          {
+            "sourcePath": "src/app/public/models/flower_blue.glb",
+            "localPath": "assets/flower-blue.glb"
+          },
+          {
+            "sourcePath": "src/app/public/models/flower_white.glb",
+            "localPath": "assets/flower-white.glb"
+          },
+          {
+            "sourcePath": "src/app/public/models/flower_yellow.glb",
+            "localPath": "assets/flower-yellow.glb"
+          },
+          {
+            "sourcePath": "src/app/public/models/rock1.glb",
+            "localPath": "assets/rock1.glb"
+          },
+          {
+            "sourcePath": "src/app/public/models/rock2.glb",
+            "localPath": "assets/rock2.glb"
+          },
+          {
+            "sourcePath": "src/app/public/models/rock3.glb",
+            "localPath": "assets/rock3.glb"
+          },
+          {
+            "sourcePath": "src/app/public/textures/ground/grass.jpg",
+            "localPath": "assets/ground-grass.jpg"
+          },
+          {
+            "sourcePath": "src/app/public/textures/ground/dirt_color.jpg",
+            "localPath": "assets/ground-dirt.jpg"
+          },
+          {
+            "sourcePath": "src/app/public/textures/ground/dirt_normal.jpg",
+            "localPath": "assets/ground-normal.jpg"
+          }
+        ]
+      }
+    ],
+    "threejs-procedural-vegetation/stylized-meadow-grass": [
+      {
+        "source": "stylized-scene",
+        "files": [
+          "src/materials/grass-material.ts",
+          "src/materials/wind.ts",
+          "src/materials/normals.ts",
+          "src/scene/grass.tsx",
+          "src/materials/ground-material.ts",
+          "src/config/scene-config.ts"
+        ],
+        "mechanisms": [
+          "authored multi-blade cluster geometry supplied as an effect asset with procedural blade fallback for generated scenes",
+          "per-instance world-origin and facing attributes so gusts sample the blade's field position and counter-rotate into local space",
+          "circular-arc cantilever bend with gust fronts, turbulence wobble, chop, and tip flutter",
+          "rooted grass blades with source default uniform scale and height variation from a stable field",
+          "root-to-tip color gradients mixed by static clump and macro variation",
+          "thin-blade back translucency and grazing Fresnel rim terms",
+          "path mask and Perlin inputs used by the effect field, with ground color projection available when the host scene supplies an albedo map"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/grass-blades-up.glb",
+            "localPath": "skills/threejs-procedural-vegetation/assets/stylized-meadow-grass/grass-blades-up.glb"
+          },
+          {
+            "sourcePath": "public/path.webp",
+            "localPath": "skills/threejs-procedural-vegetation/assets/stylized-meadow-grass/path.webp"
+          },
+          {
+            "sourcePath": "public/perlin.webp",
+            "localPath": "skills/threejs-procedural-vegetation/assets/stylized-meadow-grass/perlin.webp"
+          },
+          {
+            "sourcePath": "public/grass_texture/grass_05_basecolor_1k.webp",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/grass_texture/grass_05_basecolor_1k.webp"
+          },
+          {
+            "sourcePath": "public/grass_texture/grass_05_normal_gl_1k.webp",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/grass_texture/grass_05_normal_gl_1k.webp"
+          },
+          {
+            "sourcePath": "public/grass_texture/grass_05_roughness_1k.webp",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/grass_texture/grass_05_roughness_1k.webp"
+          },
+          {
+            "sourcePath": "public/ground_texture/ground_07_4k/ground_07__ambientocclusion_1k.webp",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/ground_texture/ground_07_4k/ground_07__ambientocclusion_1k.webp"
+          },
+          {
+            "sourcePath": "public/ground_texture/ground_07_4k/ground_07__basecolor_1k.webp",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/ground_texture/ground_07_4k/ground_07__basecolor_1k.webp"
+          },
+          {
+            "sourcePath": "public/ground_texture/ground_07_4k/ground_07__height_1k.webp",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/ground_texture/ground_07_4k/ground_07__height_1k.webp"
+          },
+          {
+            "sourcePath": "public/ground_texture/ground_07_4k/ground_07__metallic_1k.webp",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/ground_texture/ground_07_4k/ground_07__metallic_1k.webp"
+          },
+          {
+            "sourcePath": "public/ground_texture/ground_07_4k/ground_07__normal_gl_1k.webp",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/ground_texture/ground_07_4k/ground_07__normal_gl_1k.webp"
+          },
+          {
+            "sourcePath": "public/ground_texture/ground_07_4k/ground_07__roughness_1k.webp",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/ground_texture/ground_07_4k/ground_07__roughness_1k.webp"
+          },
+          {
+            "sourcePath": "public/leaves-alpha-map.png",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/leaves-alpha-map.png"
+          },
+          {
+            "sourcePath": "public/skybox/sky_88_2k.png",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/skybox/sky_88_2k.png"
+          },
+          {
+            "sourcePath": "public/tree-leaves-mesh.glb",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/tree-leaves-mesh.glb"
+          },
+          {
+            "sourcePath": "public/tree-tronk-transformed.glb",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vegetation/stylized-meadow-grass/assets/tree-tronk-transformed.glb"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the source WebGPU TSL graph is translated to explicit WebGL GLSL so the current gallery runtime can validate it consistently",
+          "the distributed skill includes the authored blade cluster plus path and noise masks because they directly define the grass effect",
+          "trees, sky, ground-surface dressing, and camera framing live only in the dev gallery scene"
+        ]
+      }
+    ],
+    "threejs-procedural-vfx/raymarched-aurora-curtains": [
+      {
+        "source": "author-local-aurora",
+        "files": [
+          "aurora-snow-desert.html",
+          "aurora-original-shader.js"
+        ],
+        "mechanisms": [
+          "75-step perspective raymarch through a 75-world-unit emissive slab bounded to X plus or minus 250 and Z plus or minus 500 world units",
+          "three-octave inverted value-noise field warped by height, world Z, two line-noise bands, time, and a 19.6 seed",
+          "uniform step-length-weighted integration with a 0.25-step positive start jitter and no distance or direction attenuation",
+          "height-ramped emerald-to-cyan emission with a 0.05 radiance multiplier",
+          "40-step uniform 32-by-16 equirectangular upper-hemisphere radiance material with four samples per texel"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the reusable example contains only the aurora slab, density field, perspective material, equirectangular material, uniform contract, and calibrated preset",
+          "polar-night backdrop and stars, HDR render targets, composite and grade, irradiance use, snow terrain, spindrift, renderer lifecycle, camera, and controls live only in the gallery adapter",
+          "gallery-owned backdrop and star code composes with the reusable aurora field inside the same linear HDR sky and probe passes, retaining pass precision and the linear radiance sum",
+          "on author instruction, the 12000-world-unit horizontal half-extents are replaced by the standalone curtain footprint of X plus or minus 250 and Z plus or minus 500, removing the long horizontal accumulation path",
+          "the standalone uniform marcher and 0.25-step start jitter replace the snow-desert geometric schedule, distance extinction, and direction gate because the restored finite footprint already removes the unwanted limb path",
+          "the standalone screen-space lower fade is omitted from the reusable field and probe; the finite volume owns aurora coverage while scene geometry owns occlusion",
+          "the gallery uses a scene-relative aurora gain of 1.15, a moderately darker polar-night backdrop, and an intermediate upward camera pitch to recover curtain contrast without reverting the complete snow-desert presentation to the standalone sky",
+          "the authored pointer-look rig is represented by an orbitable, pannable gallery camera with an above-terrain clamp",
+          "the presentation HUD, FPS display, boot veil, GUI, and preset controls are omitted",
+          "aurora-only, no-aurora, and radiance-probe diagnostics wrap the same passes without changing their final formulas"
+        ]
+      }
+    ],
+    "threejs-procedural-vfx/reentry-plasma": [
+      {
+        "source": "stellar",
+        "files": [
+          "src/game/render/createReentryPlasma.ts"
+        ],
+        "mechanisms": [
+          "stacked capsule-profile wake shells with progressively expanded radii and lengths",
+          "coarse and fine advected filament fields moving along the flow axis",
+          "Fresnel-supported closed-surface coverage that remains visible from every angle",
+          "head-to-tail thermal color progression with additive emission hierarchy"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the focused effect contains only the wake-shell implementation and no supporting spacecraft asset",
+          "the source node-material logic is translated to explicit WebGL2 GLSL",
+          "the shell stack uses a fixed flow axis suitable for direct reuse with an owning transform"
+        ]
+      }
+    ],
+    "threejs-procedural-vfx/volumetric-fluid-fire": [
+      {
+        "source": "threejs-easyfire",
+        "files": [
+          "src/EasyFire.ts",
+          "src/EasyFireShaderContext.ts",
+          "src/EmitterManager.ts",
+          "src/pass/advectDyePass.ts",
+          "src/pass/advectVelocityPass.ts",
+          "src/pass/curlNoisePass.ts",
+          "src/pass/divergencePass.ts",
+          "src/pass/emitObjectPass.ts",
+          "src/pass/jacobiPass.ts",
+          "src/pass/projectPass.ts",
+          "src/pass/vorticityPass.ts",
+          "src/sdf/CollisionHandler.ts",
+          "src/sdf/sdfSampler.ts",
+          "src/sdf/shape/SDFBox.ts",
+          "src/sdf/shape/SDFEllipsoid.ts",
+          "src/sdf/shape/SDFShape.ts",
+          "src/util/createStorage3D.ts",
+          "demo/demo.ts",
+          "demo/main.ts"
+        ],
+        "mechanisms": [
+          "eleven-texture WebGPU volume with separate physics and render grids for velocity, dye, pressure, divergence, vorticity, curl noise, signed distance, and surface velocity",
+          "fixed compute schedule for curl generation, collider baking, velocity and dye advection, vorticity confinement, Jacobi pressure projection, and mesh-vertex injection",
+          "preallocated mesh-surface emitter buffers carrying proxy transforms, emission multipliers, tint factors, and object velocity",
+          "baked box and ellipsoid signed-distance fields with moving-surface velocity, ejection, friction, and penetration prevention",
+          "temperature-tier HDR volume scattering with animated simplex detail, self-absorption, scene-depth termination, additive composition, and thresholded bloom",
+          "calibrated 100-by-78-by-49 render grid, 80-by-63-by-40 physics grid, 22-step raymarch, and exact fire-motion/material preset"
+        ],
+        "assets": [
+          {
+            "sourcePath": "demo/public/demo-scene.glb",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-vfx/volumetric-fluid-fire/assets/demo-scene.glb"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the reusable TypeScript modules use product-neutral class names and browser-resolvable package imports while retaining the compute formulas, texture contracts, pass order, and public controls",
+          "the reference-specific inspector, browser storage, clipboard, download, and repository-link controls are omitted from the distributed effect",
+          "the GLB stage, camera, lights, teapot, collider animation, scene pass, depth handoff, and bloom composition live in the gallery adapter",
+          "density, temperature, velocity, collider, and no-bloom diagnostics wrap the final branch without altering its formulas",
+          "collider angular speeds use a fixed seeded generator instead of nondeterministic Math.random values",
+          "gallery thumbnail mode advances 120 animation frames before its single still render so the time-dependent volume reaches an established flame state",
+          "the package Three.js dependency is upgraded from 0.184.0 to the implementation's 0.185.1 target"
+        ]
+      }
+    ],
+    "threejs-raymarched-space-effects/curved-ray-accretion-volume": [
+      {
+        "source": "interstellar-three",
+        "files": [
+          "src/three/scenes/11GargantuaSlingshotScene.js"
+        ],
+        "mechanisms": [
+          "128-step artistic inverse-square ray steering inside a bounded effect volume",
+          "source-compatible double ray advance per iteration",
+          "rotating radius-driven deep-noise disk coordinates",
+          "quadratic thin-disk band and three-point hot-to-amber color ramp",
+          "front-to-back alpha and color accumulation around an opaque black core",
+          "deterministic 5200-star equirectangular background sampled after integration"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the reviewed TSL node graph is translated to explicit WebGL2 GLSL for a broadly inspectable gallery path",
+          "the sphere proxy is intersected analytically from a full-screen ray instead of relying on front/back proxy fragments",
+          "the source double-advance defect is intentionally preserved so visual parity remains auditable",
+          "the foreground spacecraft model is omitted to keep the inspection surface focused on the numerical renderer"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/textures/noise_deep.png",
+            "localPath": "skills/threejs-raymarched-space-effects/assets/curved-ray-accretion-volume/noise_deep.png"
+          }
+        ]
+      }
+    ],
+    "threejs-raymarched-space-effects/schwarzschild-geodesic-black-hole": [
+      {
+        "source": "interstellar-three",
+        "files": [
+          "blackhole.html"
+        ],
+        "mechanisms": [
+          "400-iteration bounded RK2 midpoint null-geodesic loop with 120, 200, and 320 step quality tiers",
+          "adaptive step length clamped from horizon distance with explicit horizon capture and far-field escape termination",
+          "equatorial-plane crossing interpolation for accretion disk hits, including repeated crossings after strong bending",
+          "Keplerian-sheared FBM disk density with radial emissivity, Doppler beaming, gravitational redshift, and blackbody color",
+          "escaped-ray procedural deep field with layered stars, nebula, and post-integration lensing lookup",
+          "half-float HDR scene target, soft-knee brightpass, half- and quarter-resolution separable bloom, ACES composite, chromatic aberration, vignette, and grain"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the source HUD, audio drone, screenshot button, and canvas-owned adaptive resolution are gallery/runtime concerns and are not part of the reusable skill example",
+          "the final render math is preserved while neutral API preset names replace presentation labels that would leak development context",
+          "diagnostic modes expose escape direction, transmittance, disk crossings, closest approach, and step count without changing the final render branch"
+        ]
+      }
+    ],
+    "threejs-spectral-ocean/hybrid-clear-water-ocean": [
+      {
+        "source": "ocean-threejs",
+        "files": [
+          "src/Ocean/OceanMaterial.js",
+          "src/Ocean/Gerstner.js",
+          "src/Ocean/Spectra.js",
+          "src/Ocean/FFT.js",
+          "src/Ocean/OceanSimulation.js",
+          "src/Shaders/water.vert.js",
+          "src/Shaders/water.frag.js",
+          "src/config.js"
+        ],
+        "mechanisms": [
+          "deterministic directional spectra and three FFT displacement bands",
+          "long authored Gerstner swell layered over FFT displacement",
+          "FFT derivative and Gerstner analytic normal fusion",
+          "shared analytic sky radiance for visible sky and water reflection",
+          "screen-space seafloor refraction, Beer-Lambert extinction, crest scatter, GGX sun highlights, and foam diagnostics",
+          "animated sand-bed caustic material with optional host-supplied color, normal, roughness, displacement, and AO maps"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/Ground098_1K-JPG_AmbientOcclusion.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-spectral-ocean/hybrid-clear-water-ocean/assets/sand/Ground098_1K-JPG_AmbientOcclusion.jpg"
+          },
+          {
+            "sourcePath": "public/Ground098_1K-JPG_Color.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-spectral-ocean/hybrid-clear-water-ocean/assets/sand/Ground098_1K-JPG_Color.jpg"
+          },
+          {
+            "sourcePath": "public/Ground098_1K-JPG_Displacement.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-spectral-ocean/hybrid-clear-water-ocean/assets/sand/Ground098_1K-JPG_Displacement.jpg"
+          },
+          {
+            "sourcePath": "public/Ground098_1K-JPG_NormalDX.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-spectral-ocean/hybrid-clear-water-ocean/assets/sand/Ground098_1K-JPG_NormalDX.jpg"
+          },
+          {
+            "sourcePath": "public/Ground098_1K-JPG_Roughness.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-spectral-ocean/hybrid-clear-water-ocean/assets/sand/Ground098_1K-JPG_Roughness.jpg"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the reviewed FFT spectrum defaults are energy-matched onto the pack's existing spectral-cascade backend",
+          "the water material, sky, foam, refraction, Gerstner swell, and grading paths are copied/adapted into the clear-water ocean variant needed for this pack's inspection gallery",
+          "the dev scene owns the seafloor mesh, sand texture inputs, and render-target prepass used to inspect refraction"
+        ]
+      }
+    ],
+    "threejs-spectral-ocean/spectral-cascade-ocean": [
+      {
+        "source": "poseidon",
+        "files": [
+          "src/ocean/Ocean.js",
+          "src/ocean/OceanCascade.js",
+          "src/ocean/fft.js",
+          "src/ocean/spectrum.js",
+          "src/ocean/maps.js",
+          "src/ocean/oceanSurfaceMaterial.js",
+          "src/ocean/params.js",
+          "src/ocean/detailTexture.js",
+          "src/ocean/sky.js",
+          "src/ocean/debugView.js",
+          "src/main.js"
+        ],
+        "mechanisms": [
+          "disjoint 250 m, 17 m, and 5 m directional spectrum cascades",
+          "independently validated staged inverse FFT architecture",
+          "complex packing of horizontal displacement fields",
+          "choppy displacement with derivative-map normal reconstruction",
+          "horizontal-displacement Jacobian driving persistent whitecaps",
+          "shared analytic sky radiance for dome and reflection",
+          "fixed ocean camera, fog horizon, and dense displaced surface presentation"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "uses WebGL2 fragment render-target FFT stages because the repository gallery Chromium has no WebGPU adapter",
+          "uses 64 squared simulation grids for deterministic inspection instead of the reviewed 256 squared WebGPU grids",
+          "derivatives are assembled by spatial finite differences after transforming height and horizontal displacement instead of transforming every derivative spectrum",
+          "spray particles and live GUI controls are omitted from this focused ocean-system parity surface"
+        ]
+      }
+    ],
+    "threejs-spectral-ocean/stylized-above-below-ocean": [
+      {
+        "source": "fftocean",
+        "files": [
+          "src/gpgpu/useOceanGPGPU.js",
+          "src/materials/shaders/ocean/oceanFragment.glsl",
+          "src/materials/shaders/postprocessing/underwaterFragment.glsl",
+          "src/materials/shaders/seafloor/seafloorFragment.glsl",
+          "src/geometry/lod/ClipmapGeometry.js"
+        ],
+        "mechanisms": [
+          "stylized height-gradient water body color and horizon fog",
+          "front/back side normal handling for above and below surface viewing",
+          "depth-colored seafloor refraction and Beer-Lambert absorption",
+          "sun-path glinting, crest scatter, and Jacobian/noise foam",
+          "viewer-scaled ocean geometry and underwater visibility as coupled parts of the ocean system"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the focused example keeps a regular high-resolution inspection plane instead of the reviewed clipmap geometry",
+          "the underwater pass is adapted into the gallery render-target composite while preserving the reference depth-aware Beer-Lambert fog and seafloor caustics"
+        ]
+      }
+    ],
+    "threejs-spectral-ocean/submerged-snell-ocean": [
+      {
+        "source": "pearl-sea-park",
+        "files": [
+          "src/core/prng.ts",
+          "src/render/tslNoise.ts",
+          "src/render/grade.ts",
+          "src/render/pipeline.ts",
+          "src/sky/sun.ts",
+          "src/sky/skyRadiance.ts",
+          "src/sky/skySystem.ts",
+          "src/sea/opticalConstants.ts",
+          "src/sea/oceanSpectrum.ts",
+          "src/sea/fftCompute.ts",
+          "src/sea/waveSim.ts",
+          "src/sea/oceanSkirtGeometry.ts",
+          "src/sea/caustics.ts",
+          "src/sea/current.ts",
+          "src/sea/oceanFoam.ts",
+          "src/sea/wakeFoamMap.ts",
+          "src/sea/interfaceStructureLayer.ts",
+          "src/sea/oceanSurfaceMaterial.ts",
+          "src/sea/seabedRadiance.ts",
+          "src/sea/medium.ts",
+          "src/sea/seaSystem.ts",
+          "src/sea/waterlineProbe.ts",
+          "src/world/seabedSurface.ts",
+          "src/world/terrain.ts",
+          "dev_docs/systems/sea-and-sky.md",
+          "dev_docs/systems/undersea-medium.md",
+          "dev_docs/systems/render-pipeline.md"
+        ],
+        "mechanisms": [
+          "three deterministic 256 squared JONSWAP and TMA cascades transformed as packed height and horizontal-displacement fields in WebGPU workgroups with explicit barriers",
+          "fold-aware double-sided ocean shading controlled by one camera-medium state, with pixel-footprint cascade, vertex-displacement and normal-flatten keeps",
+          "exact unpolarised dielectric Fresnel on both sides with a derivative-filtered critical-angle transmission mask",
+          "total internal reflection against a physically bright silvery-teal underside close to the medium's horizontal ambient",
+          "transmitted-sun lobe convolved with the measured per-pixel normal spread and rescaled by the surviving exponent, conserving lobe energy at the window rim",
+          "critical-angle-bracketed crossing solve and forward projection of opposite-medium opaque structures into a shared half-resolution target",
+          "per-channel aquatic extinction and directional in-scatter composited over scene depth before bloom, with a coherent above-water no-op branch",
+          "differential-area caustics drawn three by three into one wrapping tile, read by surfaces through a footprint fade to their conserved mean and by the god-ray march through the exact sampler",
+          "full-resolution jittered god-ray march over the bounded caustic field with tiered step counts",
+          "camera-following curl-driven particulates blended through opacityNode",
+          "four-population foam coverage feeding one thickness-graded shading path with mean-preserving footprint keeps",
+          "procedural sand ripples restored analytically as a direct-light ratio, a horizon-closing far saucer, and AgX output with a generated 32-cube grade and vignette"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the camera-medium state is fixed submerged because this inspection example intentionally prevents waterline crossing, so the displaced-waterline probe and its asynchronous height copy are not built",
+          "the above-water optical tier is not wired: the world-anchored undersea radiance capture, the bounded planar mirror reflection pass and the baked surface sun-shadow mask are omitted, and the material's optional node bundles for them are declared as local interfaces",
+          "the vessel wake foam field is available but constructed as null, because the inspection scene has no vessels to splat into it",
+          "marine aerial perspective is omitted: it is an above-water term and a strict no-op underwater",
+          "the focused render graph omits GTAO, adaptive exposure readback, dynamic-resolution control and cached shadow clipmaps because they are not part of the underwater optical effect",
+          "the bare-seabed height field bake is reduced to the direct-light share constant the surface material consumes, because its only other consumer is the omitted above-water transmission path",
+          "the focused seabed keeps a perfectly flat central plateau and the exact 680-to-1150-metre noisy saucer rise while omitting scene-specific basins, trenches and dunes",
+          "the tower keeps the seabed-rooted piles, underwater bracing, deck, canopy and headframe silhouette but is simplified as explicitly requested, and is registered with the interface layer as the scene-scale forward-projection case"
+        ]
+      }
+    ],
+    "threejs-temporal-surfaces/touch-history-frost": [
+      {
+        "source": "frozen",
+        "files": [
+          "src/Frozen/index.tsx",
+          "src/Frozen/hooks/useSingleFBO.ts",
+          "src/Frozen/hooks/useDoubleFBO.ts",
+          "src/Frozen/materials/Blur.ts",
+          "src/Frozen/materials/Frost.ts",
+          "src/Frozen/materials/Output.ts",
+          "src/Frozen/materials/Pointer.ts",
+          "src/Frozen/materials/noise/FrostNoise.ts",
+          "src/Frozen/materials/noise/FrozenNoise.ts",
+          "src/Frozen/materials/noise/HighlightNoise.ts"
+        ],
+        "mechanisms": [
+          "full-resolution half-float read-write pointer history with visible and tilt-response channels",
+          "root scene followed by reduced-resolution vertical and horizontal blur",
+          "three static procedural structure targets generated outside the frame loop",
+          "frost composite that couples clear amount structure blur tint and highlights",
+          "two-scale structure-gradient refraction gated by frost alpha and pointer state",
+          "one-frame relationship where frost reads completed history before the next pointer state is written and swapped"
+        ],
+        "boundary": "reviewed-reference",
+        "divergences": [
+          "the source imagery and normal-map assets are replaced by generated procedural scene and crystalline fields",
+          "per-frame pointer decay is corrected to an exponential frame-rate-independent response",
+          "the focused WebGL2 output derives two-scale normals from static structure gradients instead of bundled normal maps",
+          "static targets regenerate and both history targets clear on resize rather than inheriting ambiguous resize state"
+        ]
+      }
+    ],
+    "threejs-volumetric-clouds/weather-volume-clouds": [
+      {
+        "source": "jeantimex-geospatial",
+        "boundary": "reference-extraction",
+        "files": [
+          "src/clouds/index.ts",
+          "node_modules/@takram/three-atmosphere/src/AerialPerspectiveEffect.ts",
+          "node_modules/@takram/three-atmosphere/src/AtmosphereMaterialBase.ts",
+          "node_modules/@takram/three-atmosphere/src/AtmosphereParameters.ts",
+          "node_modules/@takram/three-atmosphere/src/IrradianceMaskPass.ts",
+          "node_modules/@takram/three-atmosphere/src/PrecomputedTexturesLoader.ts",
+          "node_modules/@takram/three-atmosphere/src/SkyLightProbe.ts",
+          "node_modules/@takram/three-atmosphere/src/SkyMaterial.ts",
+          "node_modules/@takram/three-atmosphere/src/StarsGeometry.ts",
+          "node_modules/@takram/three-atmosphere/src/StarsMaterial.ts",
+          "node_modules/@takram/three-atmosphere/src/SunDirectionalLight.ts",
+          "node_modules/@takram/three-atmosphere/src/blackBodyChromaticity.ts",
+          "node_modules/@takram/three-atmosphere/src/celestialDirections.ts",
+          "node_modules/@takram/three-atmosphere/src/constants.ts",
+          "node_modules/@takram/three-atmosphere/src/getAltitudeCorrectionOffset.ts",
+          "node_modules/@takram/three-atmosphere/src/getSunLightColor.ts",
+          "node_modules/@takram/three-atmosphere/src/helpers/functions.ts",
+          "node_modules/@takram/three-atmosphere/src/helpers/sampleTexture.ts",
+          "node_modules/@takram/three-atmosphere/src/index.ts",
+          "node_modules/@takram/three-atmosphere/src/shaders/aerialPerspectiveEffect.frag",
+          "node_modules/@takram/three-atmosphere/src/shaders/aerialPerspectiveEffect.vert",
+          "node_modules/@takram/three-atmosphere/src/shaders/functions.glsl",
+          "node_modules/@takram/three-atmosphere/src/shaders/index.ts",
+          "node_modules/@takram/three-atmosphere/src/shaders/irradianceMask.frag",
+          "node_modules/@takram/three-atmosphere/src/shaders/parameters.glsl",
+          "node_modules/@takram/three-atmosphere/src/shaders/sky.frag",
+          "node_modules/@takram/three-atmosphere/src/shaders/sky.glsl",
+          "node_modules/@takram/three-atmosphere/src/shaders/sky.vert",
+          "node_modules/@takram/three-atmosphere/src/shaders/stars.frag",
+          "node_modules/@takram/three-atmosphere/src/shaders/stars.vert",
+          "node_modules/@takram/three-atmosphere/src/types.ts",
+          "node_modules/@takram/three-clouds/src/CascadedShadowMaps.ts",
+          "node_modules/@takram/three-clouds/src/CloudLayer.ts",
+          "node_modules/@takram/three-clouds/src/CloudLayers.ts",
+          "node_modules/@takram/three-clouds/src/CloudShape.ts",
+          "node_modules/@takram/three-clouds/src/CloudShapeDetail.ts",
+          "node_modules/@takram/three-clouds/src/CloudsEffect.ts",
+          "node_modules/@takram/three-clouds/src/CloudsMaterial.ts",
+          "node_modules/@takram/three-clouds/src/CloudsPass.ts",
+          "node_modules/@takram/three-clouds/src/CloudsResolveMaterial.ts",
+          "node_modules/@takram/three-clouds/src/DensityProfile.ts",
+          "node_modules/@takram/three-clouds/src/LocalWeather.ts",
+          "node_modules/@takram/three-clouds/src/PassBase.ts",
+          "node_modules/@takram/three-clouds/src/Procedural3DTexture.ts",
+          "node_modules/@takram/three-clouds/src/ProceduralTexture.ts",
+          "node_modules/@takram/three-clouds/src/ShaderArrayPass.ts",
+          "node_modules/@takram/three-clouds/src/ShadowMaterial.ts",
+          "node_modules/@takram/three-clouds/src/ShadowPass.ts",
+          "node_modules/@takram/three-clouds/src/ShadowResolveMaterial.ts",
+          "node_modules/@takram/three-clouds/src/Turbulence.ts",
+          "node_modules/@takram/three-clouds/src/bayer.ts",
+          "node_modules/@takram/three-clouds/src/constants.ts",
+          "node_modules/@takram/three-clouds/src/helpers/FrustumCorners.ts",
+          "node_modules/@takram/three-clouds/src/helpers/setArrayRenderTargetLayers.ts",
+          "node_modules/@takram/three-clouds/src/helpers/splitFrustum.ts",
+          "node_modules/@takram/three-clouds/src/index.ts",
+          "node_modules/@takram/three-clouds/src/qualityPresets.ts",
+          "node_modules/@takram/three-clouds/src/shaders/catmullRomSampling.glsl",
+          "node_modules/@takram/three-clouds/src/shaders/cloudShape.frag",
+          "node_modules/@takram/three-clouds/src/shaders/cloudShapeDetail.frag",
+          "node_modules/@takram/three-clouds/src/shaders/clouds.frag",
+          "node_modules/@takram/three-clouds/src/shaders/clouds.glsl",
+          "node_modules/@takram/three-clouds/src/shaders/clouds.vert",
+          "node_modules/@takram/three-clouds/src/shaders/cloudsEffect.frag",
+          "node_modules/@takram/three-clouds/src/shaders/cloudsResolve.frag",
+          "node_modules/@takram/three-clouds/src/shaders/cloudsResolve.vert",
+          "node_modules/@takram/three-clouds/src/shaders/localWeather.frag",
+          "node_modules/@takram/three-clouds/src/shaders/parameters.glsl",
+          "node_modules/@takram/three-clouds/src/shaders/perlin.glsl",
+          "node_modules/@takram/three-clouds/src/shaders/shadow.frag",
+          "node_modules/@takram/three-clouds/src/shaders/shadow.vert",
+          "node_modules/@takram/three-clouds/src/shaders/shadowResolve.frag",
+          "node_modules/@takram/three-clouds/src/shaders/shadowResolve.vert",
+          "node_modules/@takram/three-clouds/src/shaders/structuredSampling.glsl",
+          "node_modules/@takram/three-clouds/src/shaders/tileableNoise.glsl",
+          "node_modules/@takram/three-clouds/src/shaders/turbulence.frag",
+          "node_modules/@takram/three-clouds/src/shaders/types.glsl",
+          "node_modules/@takram/three-clouds/src/shaders/varianceClipping.glsl",
+          "node_modules/@takram/three-clouds/src/uniforms.ts",
+          "node_modules/@takram/three-geospatial-effects/src/DepthEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/DitheringEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/DownsampleThresholdMaterial.ts",
+          "node_modules/@takram/three-geospatial-effects/src/GeometryEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/GeometryPass.ts",
+          "node_modules/@takram/three-geospatial-effects/src/LensFlareEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/LensFlareFeaturesMaterial.ts",
+          "node_modules/@takram/three-geospatial-effects/src/NormalEffect.ts",
+          "node_modules/@takram/three-geospatial-effects/src/createHaldLookupTexture.ts",
+          "node_modules/@takram/three-geospatial-effects/src/index.ts",
+          "node_modules/@takram/three-geospatial-effects/src/setupMaterialsForGeometryPass.ts",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/depthEffect.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/ditheringEffect.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/downsampleThreshold.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/downsampleThreshold.vert",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/geometryEffect.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/lensFlareEffect.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/lensFlareFeatures.frag",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/lensFlareFeatures.vert",
+          "node_modules/@takram/three-geospatial-effects/src/shaders/normalEffect.frag",
+          "node_modules/@takram/three-geospatial/src/ArrayBufferLoader.ts",
+          "node_modules/@takram/three-geospatial/src/DataLoader.ts",
+          "node_modules/@takram/three-geospatial/src/EXR3DLoader.ts",
+          "node_modules/@takram/three-geospatial/src/Ellipsoid.ts",
+          "node_modules/@takram/three-geospatial/src/EllipsoidGeometry.ts",
+          "node_modules/@takram/three-geospatial/src/Geodetic.ts",
+          "node_modules/@takram/three-geospatial/src/PointOfView.ts",
+          "node_modules/@takram/three-geospatial/src/Rectangle.ts",
+          "node_modules/@takram/three-geospatial/src/STBNLoader.ts",
+          "node_modules/@takram/three-geospatial/src/Texture3DLoader.ts",
+          "node_modules/@takram/three-geospatial/src/TileCoordinate.ts",
+          "node_modules/@takram/three-geospatial/src/TilingScheme.ts",
+          "node_modules/@takram/three-geospatial/src/TypedArrayLoader.ts",
+          "node_modules/@takram/three-geospatial/src/assertions.ts",
+          "node_modules/@takram/three-geospatial/src/bufferGeometry.ts",
+          "node_modules/@takram/three-geospatial/src/constants.ts",
+          "node_modules/@takram/three-geospatial/src/decorators.ts",
+          "node_modules/@takram/three-geospatial/src/defineShorthand.ts",
+          "node_modules/@takram/three-geospatial/src/helpers/projectOnEllipsoidSurface.ts",
+          "node_modules/@takram/three-geospatial/src/index.ts",
+          "node_modules/@takram/three-geospatial/src/math.ts",
+          "node_modules/@takram/three-geospatial/src/resolveIncludes.ts",
+          "node_modules/@takram/three-geospatial/src/shaders/cascadedShadowMaps.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/depth.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/generators.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/index.ts",
+          "node_modules/@takram/three-geospatial/src/shaders/interleavedGradientNoise.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/math.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/packing.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/raySphereIntersection.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/transform.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/turbo.glsl",
+          "node_modules/@takram/three-geospatial/src/shaders/vogelDisk.glsl",
+          "node_modules/@takram/three-geospatial/src/typedArray.ts",
+          "node_modules/@takram/three-geospatial/src/typedArrayParsers.ts",
+          "node_modules/@takram/three-geospatial/src/types.ts",
+          "node_modules/@takram/three-geospatial/src/unrollLoops.ts"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/assets/atmosphere/irradiance.exr",
+            "localPath": "skills/threejs-volumetric-clouds/assets/weather-volume-clouds/atmosphere/irradiance.exr"
+          },
+          {
+            "sourcePath": "public/assets/atmosphere/scattering.exr",
+            "localPath": "skills/threejs-volumetric-clouds/assets/weather-volume-clouds/atmosphere/scattering.exr"
+          },
+          {
+            "sourcePath": "public/assets/atmosphere/transmittance.exr",
+            "localPath": "skills/threejs-volumetric-clouds/assets/weather-volume-clouds/atmosphere/transmittance.exr"
+          },
+          {
+            "sourcePath": "public/assets/clouds/local_weather.png",
+            "localPath": "skills/threejs-volumetric-clouds/assets/weather-volume-clouds/local_weather.png"
+          },
+          {
+            "sourcePath": "public/assets/clouds/shape.bin",
+            "localPath": "skills/threejs-volumetric-clouds/assets/weather-volume-clouds/shape.bin"
+          },
+          {
+            "sourcePath": "public/assets/clouds/shape_detail.bin",
+            "localPath": "skills/threejs-volumetric-clouds/assets/weather-volume-clouds/shape_detail.bin"
+          },
+          {
+            "sourcePath": "public/assets/clouds/turbulence.png",
+            "localPath": "skills/threejs-volumetric-clouds/assets/weather-volume-clouds/turbulence.png"
+          },
+          {
+            "sourcePath": "public/assets/core/stbn.bin",
+            "localPath": "skills/threejs-volumetric-clouds/assets/weather-volume-clouds/stbn.bin"
+          }
+        ],
+        "mechanisms": [
+          "weather, shape, detail, turbulence, and STBN inputs drive one CloudsEffect volume",
+          "bounded cloud layers and cascaded cloud shadow maps are coupled into AerialPerspectiveEffect",
+          "NormalPass deferred lighting feeds atmosphere-aware cloud and sky composition",
+          "temporal reconstruction and native-resolution diagnostics expose the cloud reconstruction path"
+        ]
+      }
+    ],
+    "threejs-water-optics/analytic-wave-optics": [
+      {
+        "source": "interstellar-three",
+        "files": [
+          "src/three/scenes/08MillersPlanetScene.js"
+        ],
+        "mechanisms": [
+          "five authored Gerstner-style components shared exactly by vertex displacement and analytic normal evaluation",
+          "four smaller moving sinusoidal normal bands over the displaced macro normal",
+          "analytic sky reflection with sun disc halo and surface glint",
+          "crest response from resolved normal slope and distance haze over the bounded mesh",
+          "CPU surface-height evaluation from the same wave parameter bundle"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the TSL node material is translated to explicit WebGL2 GLSL for deterministic gallery inspection",
+          "the scene focuses on the ocean surface and omits the approaching tidal wall, astronaut, and narrative objects",
+          "screen-space scene-color refraction is added from the second traced water implementation while preserving the five-wave displacement contract"
+        ]
+      },
+      {
+        "source": "mycraft",
+        "files": [
+          "src/engine/render/water/WaterSurfaceMaterial.ts"
+        ],
+        "mechanisms": [
+          "screen-derivative attenuation for unresolved micro-wave bands",
+          "side-aware air-water Fresnel and heuristic screen-space refraction",
+          "fallback Beer-Lambert path length using four metres of estimated depth",
+          "crest-linked noisy foam and analytic reflection hierarchy"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the inspection example displaces geometry using the five-wave bundle instead of retaining the normal-only surface",
+          "scene-color refraction renders a focused seabed and rock layer without scene-depth rejection",
+          "the six-band normal bundle is represented by three derivative-filtered micro bands over the shared displaced normal"
+        ]
+      }
+    ],
+    "threejs-water-optics/interactive-pool-volume": [
+      {
+        "source": "threejs-water",
+        "files": [
+          "src/Water.ts",
+          "src/water/WaterDisplacement.ts",
+          "src/water/WaterOptics.ts",
+          "src/shaders/WaveSimulation.frag",
+          "src/shaders/WaterNormal.frag",
+          "src/shaders/WaterAbove.frag",
+          "src/shaders/WaterBelow.frag",
+          "src/shaders/Caustics.frag"
+        ],
+        "mechanisms": [
+          "RGBA ping-pong simulation state with height, velocity, and packed normal components",
+          "finite-difference wave-equation propagation with damping",
+          "local drop pass and moving sphere displacement pass before propagation",
+          "normal update pass derived from the same height texture",
+          "surface shader with scene-color refraction, side-aware Fresnel, absorption, and sky reflection",
+          "water-normal driven caustic receiver kept separate from the decorative pool shell"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/tiles.jpg",
+            "localPath": "dev/example-gallery/examples/threejs-water-optics/interactive-pool-volume/assets/tiles.jpg"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the reference app class responsibilities are copied/adapted into reusable Three.js modules",
+          "the gallery scene uses one draggable sphere, dev-owned reference tile texture, and standard orbit controls rather than the full reference UI, mesh menu, and physics controls",
+          "complex mesh and box displacement strategies are documented by the trace but omitted from the focused runnable example"
+        ]
+      }
+    ],
+    "threejs-procedural-materials/hybrid-soil-moss-surface": [
+      {
+        "source": "grass-system-threejs",
+        "files": [
+          "src/main.js",
+          "src/model.js"
+        ],
+        "mechanisms": [
+          "five-octave simplex mound field shared by vertex displacement and finite-difference macro normals",
+          "coverage-thresholded broad mounds with fine drift and edge taper",
+          "texture-backed PBR soil albedo, AO, roughness, and normal identity with the copied displacement map disabled",
+          "world-space tone and moisture masks coupling albedo and roughness",
+          "warped two-scale Worley cracks coupling albedo, roughness, and groove normals",
+          "world-space FBM ground moss mask shared by displaced moss height and PBR moss shading",
+          "model-locked upward-facing moss accumulation with displaced thickness and shared moss identity"
+        ],
+        "assets": [
+          {
+            "sourcePath": "public/Ground103_1K-JPG_AmbientOcclusion.jpg",
+            "localPath": "skills/threejs-procedural-materials/assets/hybrid-soil-moss-surface/Ground103_1K-JPG_AmbientOcclusion.jpg"
+          },
+          {
+            "sourcePath": "public/Ground103_1K-JPG_Color.jpg",
+            "localPath": "skills/threejs-procedural-materials/assets/hybrid-soil-moss-surface/Ground103_1K-JPG_Color.jpg"
+          },
+          {
+            "sourcePath": "public/Ground103_1K-JPG_Displacement.jpg",
+            "localPath": "skills/threejs-procedural-materials/assets/hybrid-soil-moss-surface/Ground103_1K-JPG_Displacement.jpg"
+          },
+          {
+            "sourcePath": "public/Ground103_1K-JPG_NormalGL.jpg",
+            "localPath": "skills/threejs-procedural-materials/assets/hybrid-soil-moss-surface/Ground103_1K-JPG_NormalGL.jpg"
+          },
+          {
+            "sourcePath": "public/Ground103_1K-JPG_Roughness.jpg",
+            "localPath": "skills/threejs-procedural-materials/assets/hybrid-soil-moss-surface/Ground103_1K-JPG_Roughness.jpg"
+          },
+          {
+            "sourcePath": "public/Moss002_1K-JPG_AmbientOcclusion.jpg",
+            "localPath": "skills/threejs-procedural-materials/assets/hybrid-soil-moss-surface/moss/Moss002_1K-JPG_AmbientOcclusion.jpg"
+          },
+          {
+            "sourcePath": "public/Moss002_1K-JPG_Color.jpg",
+            "localPath": "skills/threejs-procedural-materials/assets/hybrid-soil-moss-surface/moss/Moss002_1K-JPG_Color.jpg"
+          },
+          {
+            "sourcePath": "public/Moss002_1K-JPG_NormalGL.jpg",
+            "localPath": "skills/threejs-procedural-materials/assets/hybrid-soil-moss-surface/moss/Moss002_1K-JPG_NormalGL.jpg"
+          },
+          {
+            "sourcePath": "public/Moss002_1K-JPG_Roughness.jpg",
+            "localPath": "skills/threejs-procedural-materials/assets/hybrid-soil-moss-surface/moss/Moss002_1K-JPG_Roughness.jpg"
+          },
+          {
+            "sourcePath": "public/old_rusty_car_2.glb",
+            "localPath": "dev/example-gallery/examples/threejs-precipitation-surfaces/snow-accumulation/assets/old_rusty_car_2.glb"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the example is named as a hybrid PBR/procedural material because soil and moss identity remain texture-backed",
+          "grass, clouds, post-processing, and GUI are omitted",
+          "the rusty-car GLB is reused from the existing gallery asset instead of copied again",
+          "diagnostic branches are added without changing the final material path"
+        ]
+      }
+    ],
+    "threejs-procedural-vegetation/procedural-surface-ivy": [
+      {
+        "source": "vegetation-generator-threejs",
+        "files": [
+          "src/ivy.ts",
+          "src/flowers.ts",
+          "src/leafTexture.ts",
+          "src/wind.ts",
+          "src/bvh.ts"
+        ],
+        "mechanisms": [
+          "seeded Catmull-Rom main stem repeatedly reprojected onto arbitrary target meshes",
+          "tangent-plane creep, alternating recursive branches, surface loss droop, and BVH first-hit acceleration",
+          "parallel-transport tube geometry with ordered draw ranges for growth",
+          "instanced leaves with procedural cutout texture and petiole-hinge wind",
+          "instanced bud-to-umbel bloom spring and deterministic growth reveal"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the gallery owns a deterministic pre-authored stroke instead of pointer painting UI",
+          "tree mode, app controls, HUD, and imported-model workflow are omitted",
+          "the original TypeScript modules are copied byte-for-byte and a thin entry module only re-exports them for the gallery transpiler"
+        ]
+      }
+    ],
+    "threejs-temporal-surfaces/refractive-window-rain": [
+      {
+        "source": "rainy-window",
+        "files": [
+          "js/script.js",
+          "shaders/rain.frag"
+        ],
+        "mechanisms": [
+          "static plus two travelling droplet layers with hashed cell offsets and trail droplets",
+          "finite-difference coverage normal driving background refraction",
+          "stochastic disc blur with runtime iteration budget",
+          "aspect-fill correction, cool color shift, optional lightning, vignette, and brightness"
+        ],
+        "assets": [
+          {
+            "sourcePath": "media/image.webp",
+            "localPath": "dev/example-gallery/examples/threejs-temporal-surfaces/refractive-window-rain/assets/background.webp"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the original fragment shader is copied byte-for-byte",
+          "the gallery preserves the fixed fullscreen orthographic pass and disables camera interaction",
+          "wallpaper integration, file picker, GUI, and video background handling remain dev/runtime concerns"
+        ]
+      }
+    ],
+    "threejs-parallax-occlusion-mapping/silhouette-relief": [
+      {
+        "source": "threejs-silhouette-pom",
+        "files": [
+          "ParallaxOcclusion.js",
+          "index.html"
+        ],
+        "mechanisms": [
+          "adaptive tangent-space TSL height march with final-layer interpolation and gradient-safe sampling",
+          "bounded flat and curvature-aware silhouette coverage with horizon chase and trimming",
+          "inflated curved shells that keep the height-field floor on the base surface",
+          "central-difference relief normals and a second light-ray self-shadow march",
+          "maskShadowNode carving plus marched shadow depth and received-shadow positions"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "ParallaxOcclusion.js is copied byte-for-byte",
+          "the gallery retains the full procedural wall, deck, columns, and two-pipe composition",
+          "GUI, inspector, and optional bloom are omitted while the camera is constrained above the deck"
+        ]
+      }
+    ],
+    "threejs-procedural-vfx/holographic-shape-transition": [
+      {
+        "source": "holographic-shader-visualizer",
+        "files": [
+          "src/shaders/vertexShader.glsl.js",
+          "src/shaders/fragmentShader.glsl.js",
+          "src/constants/params.js",
+          "src/utils/threeHelpers.js",
+          "src/hooks/useHologram.js"
+        ],
+        "mechanisms": [
+          "additive depth-write-free projection shell whose silhouette is carried by squared Fresnel incidence with a grazing falloff",
+          "object-space scanline bands phased on world height at 20 bands per metre drifting at 0.2 metres per second",
+          "height-phased glitch gate built from three incommensurate sines through a smoothstep, displacing world XZ",
+          "one shared normalised sweep range spanning the union of every shape's bounding box with 0.1 metre end margins",
+          "complementary fragment discards that hand the current shape to the next without overlapping coverage",
+          "index-gated participation so an arbitrarily large shape library costs one skipped draw each",
+          "linear 1.5 second progress ramp inside a 4 second dwell with a 0.5 radian per second two-axis spin"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "rim incidence is resolved in view space from the inverse-transpose normal matrix and the displaced point's view position instead of a bare model-basis normal multiply, which is exact for rotation and uniform scale and correct under non-uniform scale",
+          "the scanline band is footprint-filtered with fwidth and dissolved into its own 0.25 mean between two samples per period and one, because the band is an unfiltered aliasing source at any frequency",
+          "the tween library is replaced by the mathematically identical linear zero-to-one ramp over the same 1.5 seconds",
+          "renderer, camera, orbit limits, ambient/directional/point lights, the metallic plinth, and the three geometries live in the gallery adapter",
+          "the presentation HUD, screen-wide scanline overlay, vignette, and colour control panel are omitted",
+          "the gallery adds scanline, Fresnel, sweep-range, and glitch-magnitude diagnostic modes through one uniform without changing the final branch"
+        ]
+      }
+    ],
+    "threejs-procedural-geometry/formula-one-race-car": [
+      {
+        "source": "author-local-vehicles",
+        "files": [
+          "f1_race_car.html"
+        ],
+        "mechanisms": [
+          "shape-preserving monotone cubic parameter tracks sampled at 168 longitudinal stations driving one continuous nose-to-engine-cover loft at 96 ring resolution",
+          "thirteen-point semantic half-section whose cockpit recess opens and closes inside the section itself, so nose, tub and engine cover stay one surface",
+          "four-quadrant superellipse sidepod sections with independent exponents plus a lower-outboard undercut and a flat shoulder shelf",
+          "spanwise airfoil lofts carrying chord, incidence, camber, camber position, blunt trailing edge and dihedral per station",
+          "authored outline plates extruded with bevels, real holes and three-dimensional warps for endplates, fences, strakes and louvres",
+          "two-plane world-normal livery projector with a normalised plane blend and an under-car kill mask",
+          "measured tyre carcass revolved from a bead-to-crown profile with a baked contact-patch deflection and a second undeflected carcass",
+          "per-part triangle and vertex evidence over 62 emitted geometries totalling 375,964 unique triangles"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "renderer, camera, orbit controls, ground and lighting live in the gallery adapter, which uses the shared inspection studio rig rather than the generated white cyclorama environment and bloom",
+          "the studio cyclorama sweep geometry and its analytic contact-occlusion ground node are gallery-owned scene dressing",
+          "the boot veil, presentation HUD, authored view presets, exposure slider and part-report button are omitted",
+          "the gallery exposes topology, bare-structure, projector-plane and rolling-carcass diagnostics through the model's own uniforms",
+          "the gallery uses the package-installed Three.js revision while retaining the supplied dimension, geometry, material and motion contracts"
+        ]
+      }
+    ],
+    "threejs-procedural-geometry/sport-motorcycle": [
+      {
+        "source": "author-local-vehicles",
+        "files": [
+          "motorcycle.html"
+        ],
+        "mechanisms": [
+          "steering-geometry spine: every front-end part is placed at a stated distance along the fork axis, so rake and triple-clamp offset propagate to yokes, bars, calipers and fender without a hand-placed transform",
+          "semantic mesh writer with per-part material slots, mirrored pairing, and instanced fastener matrices",
+          "revolve, parallel-transport sweep and world-up sweep emitters plus thick panel shells with authored rim thickness",
+          "spoked wheel arms whose tangential width, axial depth and dish all vary along the radius",
+          "petal rotor alpha mask generated with its own drilling and carrier arms",
+          "four-quadrant superellipse bodywork sections whose exponents carry soft crowns over knife-edged lower creases",
+          "catenary-sampled chain with per-link plates around two sprockets",
+          "signed-volume orientation guard that flips winding and normals on any inside-out closed body",
+          "per-slot triangle evidence over 267 emitted parts totalling 303,708 triangles with 87 orientation fixups"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "renderer, camera, orbit controls and lighting live in the gallery adapter, which uses the shared inspection studio rig rather than the two-key plus hemisphere product rig, generated equirect environment and bloom",
+          "the studio floor plane and its material are gallery-owned scene dressing",
+          "the boot screen, presentation HUD, authored view presets, turntable, exposure slider, tessellation tiers and part list are omitted",
+          "the gallery drives the model's own topology, slot, normal, bodywork-removed and glass-removed diagnostic modes",
+          "the gallery uses the package-installed Three.js revision while retaining the supplied dimension, geometry and material contracts"
+        ]
+      }
+    ],
+    "threejs-procedural-materials/raytraced-diamond": [
+      {
+        "source": "n8python-diamonds",
+        "files": [
+          "main.js",
+          "EffectShader.js"
+        ],
+        "mechanisms": [
+          "camera-ray entry refraction into the gem volume followed by GPU BVH first-hit traversal of the same mesh",
+          "bounded internal bounce loop that keeps reflecting under total internal reflection and refracts out as soon as escape is possible",
+          "per-channel index-of-refraction spread resolving three exit rays for chromatic dispersion",
+          "mip-correct environment cube sampling using gradients of the reconstructed ideal per-pixel camera ray",
+          "SAH BVH built from a non-indexed copy of the rendered geometry, attached as boundsTree, and uploaded as a shader uniform struct",
+          "scene rendered into an explicit target and passed through a scene-buffer uniform into a gamma-correction plus SMAA presentation chain"
+        ],
+        "assets": [
+          {
+            "sourcePath": "diamond.glb",
+            "localPath": "skills/threejs-procedural-materials/assets/raytraced-diamond/diamond.glb"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the API surface is translated to the package-installed three and three-mesh-bvh releases: the removed lazyGeneration BVH option is dropped and the BVH debug visualizer uses the current helper class",
+          "an unused duplicate misspelled chromatic-aberration uniform declaration and a commented-out face-normal side flip are omitted",
+          "the commented-out procedural gem-cluster variant and the commented-out box, sphere, and torus-knot dressing are not extracted",
+          "on author instruction the gallery stages the gem in an authored dark studio instead of the reviewed daylight scene: black background, a semi-reflective floor built as a slightly transparent glossy dark disc over a planar mirror so the gem itself reflects in it, no scene lights, and no self-rotation; the reviewed skybox faces, light rig, ground plane, and rotation are not used",
+          "an author-deposited studio HDRI (a dev-gallery asset) replaces the reviewed skybox as the material's environment input: it is converted once to a 512 mipmapped half-float cube target for the gem and drives the floor's image-based lighting, but is never drawn as the background; the gallery preset raises aberrationStrength to 0.05 for pronounced fire",
+          "model traversal and geometry prep, staging, presentation passes, and stats live in the dev gallery adapter; the gallery's scene target is half-float instead of the reviewed 8-bit default so the dark staging does not band once the post-applied gamma expands near-black gradients",
+          "the GUI sliders are replaced by gallery diagnostic modes that flip the material's own bounces, dispersion, and mip-correction uniforms and toggle the BVH helper"
+        ]
+      }
+    ],
+    "threejs-procedural-materials/spectral-dispersive-glass": [
+      {
+        "source": "author-local-glass-sculpture",
+        "files": [
+          "index.html"
+        ],
+        "mechanisms": [
+          "double-sided back-face data pass writing geometric world normal in xyz and camera distance in w, with inverted fragment depth so the default less-than test keeps the farthest surface of the union hull",
+          "half-float nearest-filtered RGBA data target sized to the drawing buffer, fetched at explicit LOD 0 so sampling stays legal inside non-uniform loops",
+          "image-space exit search that reprojects the current interior point into the data buffer, rebuilds the stored surface position along the camera ray, and refines the segment length three times per segment",
+          "exact unpolarized Fresnel at every interface, returning 1 past the critical angle so total internal reflection needs no separate test",
+          "bounded internal segment loop with Fresnel-weighted throughput, an early break below 0.004, and a residual term that releases the remaining throughput after the final segment",
+          "Beer-Lambert absorption over the accumulated internal path length, with extinction inverted from a target transmission colour at a chosen depth",
+          "per-wavelength Cauchy index solved on the CPU from a catalogue n_d and Abbe pair, traced once per stratified sample across 415-695 nm",
+          "CIE 1931 piecewise-Gaussian colour matching into XYZ then linear sRGB, normalized by the running weight sum so a dispersion-free spectrum reconstructs the environment exactly",
+          "rotatable equirectangular environment probe read at an explicit mip level and shared between the visible background, the external reflection, and every exit ray",
+          "world-point-to-buffer projection with inverted V for the WebGPU render-target orientation",
+          "thickness, back-face normal, and entry-Fresnel diagnostic outputs"
+        ],
+        "assets": [
+          {
+            "sourcePath": "sculpture.glb",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-materials/spectral-dispersive-glass/assets/sculpture.glb"
+          },
+          {
+            "sourcePath": "bar.exr",
+            "localPath": "dev/example-gallery/examples/threejs-procedural-materials/spectral-dispersive-glass/assets/bar.exr"
+          }
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "on author instruction the example carries no control surface: the GUI-driven uniforms for index, Abbe number, spectral samples, segment budget, frost, tint, tint depth, minimum wall, and environment rotation become named constants at their reviewed default values (1.5, 32, 8, 4, 0, #d0edda, 0.5, 0.08, 0), and the absorption spectrum resolves once on the CPU; only the diagnostic view selector remains a uniform",
+          "with the spectral sample count fixed at 8 the dispersion-off branch that the sample slider could reach is unreachable, so the constant-wavelength path and its unit weight are not carried over",
+          "the Cauchy A and B coefficients are constant for a fixed index and Abbe pair, so they resolve on the CPU instead of being recomputed per fragment; only A + B/lambda squared stays in the shader",
+          "one defect was corrected on explicit instruction, in the example and in the local script alike: the absorption spectrum decoded its sRGB tint literal twice, because a Color built from an sRGB literal already resolves into the linear working space and the added convertSRGBToLinear squared the transfer, inflating extinction about 2.3x; both now parse the literal as LinearSRGBColorSpace and decode exactly once, which also removes the dependence on the color-management flag, and the default tint moves from #e9f7ee to #d0edda so the calibrated appearance is preserved at sigma approximately (0.922, 0.332, 0.710) per unit",
+          "the glass system is packaged as a class that owns its data target, back-face material, mirrored data scene, glass material, and the two-pass entry point, with the optical primitives split into a dependency-light module; the single-file script layout is not carried over",
+          "the data-pass copy is followed rather than snapshotted: the reviewed script clones the subject once at startup, which stays correct only because that subject never moves, so the example re-registers the copy's root world transform plus each descendant's local matrix, visibility, and morph weights before every pass and exposes a rebuild entry point for structural change; geometry and skeletons are already shared by reference, and the whole step is a no-op for a static subject",
+          "the render-target binding is saved and restored around the data pass instead of being reset to the default target",
+          "the background direction is taken from the geometric world normal instead of positionWorld minus cameraPosition: the reviewed revision recentred the renderer's background sphere on the camera in onBeforeRender, which the package-installed revision no longer does, leaving the sphere at the world origin and compressing the whole view into an asin(1/|cameraPosition|) cone; the normal is translation invariant and reproduces the reviewed image under either placement",
+          "model normalization, environment texture configuration, camera, orbit controls, tone mapping and exposure live in the dev gallery adapter; on author instruction the reviewed camera auto-rotation is dropped and the subject is inspected from a stationary orbit",
+          "the gallery renders at a device pixel ratio of 2, matching the reviewed pixel-ratio cap of min(devicePixelRatio, 2) at its default resolution multiplier of 1",
+          "the loading overlay, spinner, error surfacing, unhandled-rejection reporting, backend and frame-rate badge, resolution multiplier, tone-mapping selector, and the whole lil-gui panel are omitted",
+          "the sculpture model and the environment map are dev-gallery assets: the material accepts any placed mesh hierarchy and any equirectangular probe, and the model carries a CC-BY-4.0 attribution requirement that the published package does not take on"
+        ]
+      }
+    ],
+    "threejs-raymarched-space-effects/traversable-wormhole-transit": [
+      {
+        "source": "author-local-wormhole",
+        "files": [
+          "interstellar_wormhole.html"
+        ],
+        "mechanisms": [
+          "ultrastatic spherically symmetric throat metric with a cylindrical neck of half-length a and lensing shoulders of width W = 1.42953 M, evaluated as r(l) = rho + M (x atan x - 0.5 ln(1 + x^2)) with x = 2(|l| - a)/(pi M), fixed at rho = 1, W/rho = 0.05, 2a/rho = 0.01",
+          "exact orbital-plane reduction of every null geodesic to y = (l, psi, p_l) with the conserved quantity b = r^2 dpsi/dt, which removes the polar coordinate singularity",
+          "adaptive RK4 with a step taken from the local curvature scale: linear-exact inside the neck, k min(r, M + 0.9(|l| - a)) outside, k = 0.15, capped at 1024 iterations",
+          "termination on r > 260 with (dr/dl) p_l > 0, on |l| > 1e7, or on the iteration cap, with the sign of l at termination selecting the exterior region",
+          "asymptotic exit direction rebuilt from the radial component (dr/dl) p_l and the tangential component b/r in the frame carried around by the swept angle psi",
+          "observer carried as a sphere point plus a tangent frame A x B = U, parallel-transported along great circles, with r(l)-scaled travel speed and a yaw/pitch basis written in (e_l, A, B) components",
+          "ray-bundle footprint from dFdx/dFdy of the escaped direction, clamped to 0.06 and forced to the maximum for iteration-capped rays so filtering returns mean radiance instead of speckle",
+          "cube-face star lattice with a flux-conserving Gaussian point spread, a 3x-width 4.5% PSF wing, the N(<m) ~ 10^(0.6 m) luminosity law, flux-correlated temperature with 3% giants, and an analytic mean-radiance fallback past one cell per pixel",
+          "galactic sky with a filamentary ridged dust column, wavelength-dependent extinction (1.00, 1.24, 1.52), unresolved band and bulge glow, region-gated HII and reflection nebulae behind sqrt(extinction), and three resolved star layers at 30/104/300 cells",
+          "analytically ray-traced ringed planet with banded C/B/A optical depth, ringlet and gap modulation, mutual planet and ring shadowing, and a depth-correct premultiplied composite against the sky",
+          "display-aware sun point spread: flat core of radius 0.0050, Gaussian limb at 1.2 footprints, peak normalised by the profile integral so total flux stays 420 pi R^2 under sub-pixel motion",
+          "progressive accumulation to 512 samples with a pixel-centred first sample, Halton(2,3) offsets while converging, and a full-weight replace that never blends stale history",
+          "13-tap downsample pyramid over five levels with a soft-knee prefilter at threshold 0.85 and knee 0.55, additive tent upsampling, and an ACES composite with vignette, sRGB transfer, and post-transfer grain"
+        ],
+        "boundary": "reference-extraction",
+        "divergences": [
+          "the example carries no control surface: every parameter is a named constant at its calibrated value (rho 1.0, W/rho 0.05, a/rho 0.005 so 2a/rho = 0.01, 1024 steps, step coefficient 0.15, escape radius 260, field of view 50 degrees, speed 1.0, render scale 0.65, exposure 1.15, bloom 0.62, threshold 0.85, knee 0.55, grain 0.030, vignette 0.34); the diagnostic view selector is the only settable parameter, because the dev gallery debug modes drive it",
+          "M and the throat half-length are pure functions of the fixed shape constants, so they resolve on the CPU instead of being recomputed per call",
+          "five diagnostic views were added that the reviewed script does not have — exit direction, exterior region, RK4 step count, ray-bundle footprint, and iteration-capped mask — gated at the end of main() behind an integer uniform, with a float step counter as the only addition inside the integration loop; the physics path is otherwise unchanged",
+          "a diagnostic view still renders the trace pass into the reduced-resolution target and is presented through a plain copy pass, so it is framed exactly like the image it explains and never reaches accumulation, bloom, or the tone-mapped composite",
+          "the celestial spheres are split into a dependency-light GLSL chunk plus a uniform and galactic-frame factory, so the sky is reusable without the integrator; the single-file script layout is not carried over",
+          "the observer state, its transport, and the accumulation reset it triggers belong to the effect, because the trace shader is driven by (l, U, A, B, yaw, pitch) and not by a Three.js camera; only raw pointer, key, and wheel binding lives in the dev gallery adapter",
+          "renderer.autoClear is saved and restored around the pass chain instead of being set once at startup, because the additive bloom upsample requires it to be false",
+          "the frame counter that decorrelates grain advances only on composited frames",
+          "canvas sizing, the device pixel ratio, the animation loop, the millisecond-to-second delta conversion, and the offline error overlay live in the dev gallery shim"
+        ]
+      }
+    ]
+  }
+}

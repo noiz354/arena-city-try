@@ -40,7 +40,7 @@ Mobile: touch joystick + look-drag + FIRE / E / JUMP / RUN buttons.
 
 - **Open world**: 310×310 m procedural city in 16 m chunks (3 LOD rings), roads
   baked into a single canvas texture, buildings with window textures, trees,
-  streetlights, a 72 m center tower.
+  streetlights, a 72 m landmark tower (north-east of the center intersection).
 - **Living city**: pedestrians that walk, idle, panic from gunfire and speak;
   AI traffic that follows the road grid, turns at intersections and can be
   hijacked; parked cars to steal.

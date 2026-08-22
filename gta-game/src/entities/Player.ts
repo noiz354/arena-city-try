@@ -1,10 +1,10 @@
 import {
-  CapsuleGeometry,
-  Color,
+  BoxGeometry,
   Group,
   MathUtils,
   Mesh,
   MeshStandardMaterial,
+  SphereGeometry,
   Vector3,
 } from 'three'
 import type { InputManager } from '../utils/InputManager'
@@ -41,35 +41,68 @@ export class Player {
   maxHealth = 100
   health = 100
 
-  private readonly body: Mesh
+  private readonly body: Group
   private readonly tmpV = new Vector3()
   private readonly tmpV2 = new Vector3()
   private readonly tmpV3 = new Vector3()
 
   constructor() {
-    // Procedural capsule body (no GLTF asset needed in sandbox)
-    const geo = new CapsuleGeometry(RADIUS, 1.0, 6, 14)
-    const mat = new MeshStandardMaterial({
-      color: 0x2e86de,
-      roughness: 0.6,
-      metalness: 0.15,
-    })
-    this.body = new Mesh(geo, mat)
-    this.body.castShadow = true
-    this.body.position.y = HALF_HEIGHT
+    // Procedural humanoid model (no GLTF asset needed in sandbox): a rigged
+    // set of primitives — legs, shoes, torso/jacket, arms, head + hair — that
+    // reads as a character instead of a bare placeholder capsule.
+    this.body = this.buildHumanoid()
     this.group.add(this.body)
-
-    // face indicator so yaw rotation is visible
-    const noseGeo = new CapsuleGeometry(0.08, 0.35, 4, 8)
-    const noseMat = new MeshStandardMaterial({ color: new Color(0xffd166), roughness: 0.4 })
-    const nose = new Mesh(noseGeo, noseMat)
-    nose.rotation.x = Math.PI / 2
-    // three.js forward is -Z; the nose marks where the character faces
-    nose.position.set(0, HALF_HEIGHT * 0.9, -(RADIUS + 0.2))
-    this.body.add(nose)
 
     this.group.position.set(0, 0, 0)
     this.group.rotation.order = 'YXZ'
+  }
+
+  /** Build a ~1.9m humanoid from box/sphere primitives (feet at local y=0). */
+  private buildHumanoid(): Group {
+    const body = new Group()
+    body.name = 'player-model'
+
+    const jacket = new MeshStandardMaterial({ color: 0x2e86de, roughness: 0.55, metalness: 0.1 })
+    const jacketDark = new MeshStandardMaterial({ color: 0x274f8f, roughness: 0.6 })
+    const pants = new MeshStandardMaterial({ color: 0x2b2f3a, roughness: 0.85 })
+    const skin = new MeshStandardMaterial({ color: 0xe8b98a, roughness: 0.7 })
+    const shoe = new MeshStandardMaterial({ color: 0x1c1f24, roughness: 0.7 })
+    const hair = new MeshStandardMaterial({ color: 0x2a2320, roughness: 0.9 })
+
+    const add = (mesh: Mesh, x: number, y: number, z: number): Mesh => {
+      mesh.position.set(x, y, z)
+      mesh.castShadow = true
+      mesh.receiveShadow = true
+      body.add(mesh)
+      return mesh
+    }
+
+    // legs + shoes
+    add(new Mesh(new BoxGeometry(0.22, 0.82, 0.24), pants), -0.15, 0.41, 0)
+    add(new Mesh(new BoxGeometry(0.22, 0.82, 0.24), pants), 0.15, 0.41, 0)
+    add(new Mesh(new BoxGeometry(0.24, 0.12, 0.34), shoe), -0.15, 0.06, 0.06)
+    add(new Mesh(new BoxGeometry(0.24, 0.12, 0.34), shoe), 0.15, 0.06, 0.06)
+
+    // torso / jacket
+    add(new Mesh(new BoxGeometry(0.52, 0.62, 0.3), jacket), 0, 1.13, 0)
+
+    // arms + hands
+    add(new Mesh(new BoxGeometry(0.14, 0.58, 0.14), jacketDark), -0.36, 1.12, 0)
+    add(new Mesh(new BoxGeometry(0.14, 0.58, 0.14), jacketDark), 0.36, 1.12, 0)
+    add(new Mesh(new BoxGeometry(0.12, 0.12, 0.12), skin), -0.36, 0.86, 0)
+    add(new Mesh(new BoxGeometry(0.12, 0.12, 0.12), skin), 0.36, 0.86, 0)
+
+    // head + hair cap
+    const head = add(new Mesh(new SphereGeometry(0.2, 16, 12), skin), 0, 1.62, 0)
+    const cap = new Mesh(new SphereGeometry(0.21, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), hair)
+    cap.position.set(0, 0.04, 0)
+    cap.castShadow = true
+    head.add(cap)
+
+    // nose/face indicator so yaw rotation is visible (three.js forward is -Z)
+    add(new Mesh(new SphereGeometry(0.05, 8, 8), skin), 0, 1.62, -0.19)
+
+    return body
   }
 
   get position(): Vector3 {

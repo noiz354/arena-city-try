@@ -1,0 +1,763 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "request": "Frame a scale-aware chase camera with thrust lag and a side-camera handoff.",
+      "routes": [
+        {
+          "skill": "threejs-camera-direction",
+          "signals": [
+            "chase",
+            "side",
+            "camera",
+            "handoff"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Animate spin docking with axial/radial error, staging, and a terminal lock.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-animation",
+          "signals": [
+            "docking",
+            "staging",
+            "rotating-frame",
+            "springs"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Design one coherent field bundle that drives terrain height, slope, coast, biome, and roughness.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-fields",
+          "signals": [
+            "scalar/vector fields",
+            "causal masks",
+            "domain warping"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build a gold and walnut physical material with derivative normals and specular antialiasing.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-materials",
+          "signals": [
+            "authored frame pbr",
+            "specular aa",
+            "materials"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build reflective embossed card foil whose star and stripe gratings derive visible colour from wavelength, groove pitch, relief, coherent length, and a fixed strip emitter rather than a rainbow texture.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-materials",
+          "signals": [
+            "reflective wave-optical diffraction gratings",
+            "materials"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Emit a sculpted rail sweep with deliberate caps, UV density, normals, and material groups.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-geometry",
+          "signals": [
+            "sculpted rails",
+            "semantic mesh writers",
+            "material groups"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build a complete procedural submarine with a dimensioned shell loft, hull-owned apertures, swept fittings, a furnished cabin, propeller blades, and fin lofts.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-geometry",
+          "signals": [
+            "complete hard-surface object assemblies",
+            "tilted shell lofts",
+            "UV-owned apertures",
+            "fin lofts"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build a complete procedural humanoid robot from parameter-curve and spine lofts, pillow panels, exact polygon cuts, bevels, five-finger hands, and semantic mechanical subassemblies.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-geometry",
+          "signals": [
+            "humanoid robots",
+            "spine lofts",
+            "pillow panels",
+            "exact polygon cuts"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Model a polished hard-surface ticket machine with real profile extrusion, inset panels, a thick shell, and scale-appropriate bevels instead of intersecting boxes and cylinders.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-geometry",
+          "signals": [
+            "profile extrusion",
+            "solidify",
+            "bevels and fillets",
+            "primitive-built forms"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Audit this generated street fixture for coplanar flicker, loose or non-manifold geometry, detached parts, and substantial interpenetration before material merging.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-geometry",
+          "signals": [
+            "coplanar flicker",
+            "loose/non-manifold geometry",
+            "detached parts",
+            "interpenetration"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build and validate a hinged service hatch whose supports, closed contact, open clearance, shell thickness, and full swept envelope are explicit geometry contracts.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-geometry",
+          "signals": [
+            "shell thickness",
+            "support",
+            "clearance",
+            "swept-envelope defects"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Generate a deterministic deciduous tree species with branch hierarchy, foliage normals, and wind.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-vegetation",
+          "signals": [
+            "trees",
+            "foliage",
+            "wind deformation"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Render millions of virtual flowers without CPU transforms by reconstructing integer IDs, compacting visible tiles into distance tiers, and keeping stems rooted under wind and moving contact.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-vegetation",
+          "signals": [
+            "GPU-culled virtual flower fields",
+            "distance-tiered plant geometry",
+            "rooted wind deformation"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Compile a financial tower from massing tiers, façade bays, cornices, roof modules, and material slots.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-architecture",
+          "signals": [
+            "buildings",
+            "façade grammars",
+            "ornaments"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Create a terrestrial planet with continents, coastlines, biomes, terrain displacement, and close-approach detail.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-planets",
+          "signals": [
+            "planets",
+            "biome fields",
+            "spherical detail"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Implement Rayleigh and Mie sky scattering with a continuous ground-to-space aerial perspective.",
+      "routes": [
+        {
+          "skill": "threejs-atmosphere-aerial-perspective",
+          "signals": [
+            "sky scattering",
+            "aerial perspective",
+            "planetary shells"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Raymarch weather-shaped multi-layer clouds with temporal reconstruction and cloud shadows.",
+      "routes": [
+        {
+          "skill": "threejs-volumetric-clouds",
+          "signals": [
+            "weather-driven",
+            "clouds",
+            "cloud shadows"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build an open ocean from three directional FFT cascades with Jacobian whitecaps.",
+      "routes": [
+        {
+          "skill": "threejs-spectral-ocean",
+          "signals": [
+            "fft oceans",
+            "spectral cascades",
+            "jacobian whitecaps"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Keep the camera underwater beneath a spectral ocean and show an above-water tower through Snell's window with total internal reflection, caustic god rays, and aquatic fog.",
+      "routes": [
+        {
+          "skill": "threejs-spectral-ocean",
+          "signals": [
+            "submerged snell windows",
+            "total internal reflection",
+            "caustic god rays"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build a bounded Gerstner-wave water surface with shared normals, Fresnel, refraction, and Beer-Lambert absorption.",
+      "routes": [
+        {
+          "skill": "threejs-water-optics",
+          "signals": [
+            "authored analytic waves",
+            "heuristic refraction",
+            "fallback absorption"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build falling snow that accumulates on the ground and object tops with shared wind and mask diagnostics.",
+      "routes": [
+        {
+          "skill": "threejs-precipitation-surfaces",
+          "signals": [
+            "falling snow",
+            "snow accumulation",
+            "model snow caps",
+            "shared weather envelopes"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Render a black hole with curved-ray integration, an accretion disk, and a lensed star field.",
+      "routes": [
+        {
+          "skill": "threejs-raymarched-space-effects",
+          "signals": [
+            "curved-ray",
+            "black holes",
+            "accretion disks"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Fly a camera through a wormhole throat into another universe with an integrated metric and a lensed sky.",
+      "routes": [
+        {
+          "skill": "threejs-raymarched-space-effects",
+          "signals": [
+            "throat transits",
+            "curved-ray",
+            "lensed celestial spheres"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build a procedural galactic sky of resolved star layers and dust that a lensed ray direction samples after integration.",
+      "routes": [
+        {
+          "skill": "threejs-raymarched-space-effects",
+          "signals": [
+            "lensed celestial spheres and star fields",
+            "curved-ray"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Author a reentry plasma shell, generated wake, analytic sparks, dissolving debris, and HDR bloom contribution.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-vfx",
+          "signals": [
+            "plasma",
+            "particles",
+            "trails"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build interactive WebGPU voxel fire whose mesh emitters feed a volumetric fluid field around moving signed-distance colliders.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-vfx",
+          "signals": [
+            "voxel fire and smoke",
+            "volumetric fluid fields",
+            "sdf fire collisions"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Render finite-footprint raymarched aurora curtains with uniform volume integration and an equirectangular radiance probe.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-vfx",
+          "signals": [
+            "raymarched aurora curtains",
+            "finite-footprint emissive slabs",
+            "uniform volume integration",
+            "equirectangular radiance probes"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build screen-space frost that accumulates and clears through touch history, blur, and refraction.",
+      "routes": [
+        {
+          "skill": "threejs-temporal-surfaces",
+          "signals": [
+            "accumulated screen frost",
+            "touch clearing",
+            "refraction masks"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Render procedural rain droplets on a window that refract and blur the background image.",
+      "routes": [
+        {
+          "skill": "threejs-temporal-surfaces",
+          "signals": [
+            "wet-window rain",
+            "droplet refraction",
+            "view-aligned blur"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Grow deterministic ivy along a painted path over arbitrary mesh surfaces with hinged leaf wind.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-vegetation",
+          "signals": [
+            "surface-following ivy",
+            "painted vines",
+            "petiole-hinge wind"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Combine PBR soil textures with procedural mound displacement, moisture patches, and dry-earth cracks.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-materials",
+          "signals": [
+            "hybrid texture-backed PBR soil/moss",
+            "moisture",
+            "dry-earth cracks"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Grow a procedural moss coverage field over texture-backed soil and settle the same moss onto upward-facing areas of an arbitrary model.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-materials",
+          "signals": [
+            "ground and model moss accumulation",
+            "hybrid texture-backed PBR soil/moss"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Render a believable diamond whose facets bounce light internally and split it into rainbow fire as it refracts the environment.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-materials",
+          "signals": [
+            "raytraced diamond",
+            "gem refraction"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Make a scanned glass sculpture transmit its surroundings with real chromatic dispersion, internal reflection past the critical angle, and a tint that deepens with thickness.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-materials",
+          "signals": [
+            "dispersive glass transmission",
+            "volume absorption"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Fake deep flange geometry with TSL parallax occlusion mapping that clips curved silhouettes and self-shadows.",
+      "routes": [
+        {
+          "skill": "threejs-parallax-occlusion-mapping",
+          "signals": [
+            "silhouette-aware POM",
+            "curved relief shells",
+            "relief self-shadowing"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Stabilize directional shadows over a moving large-world camera using cached clipmaps.",
+      "routes": [
+        {
+          "skill": "threejs-shadow-systems",
+          "signals": [
+            "large-world shadows",
+            "clipmaps",
+            "cached updates"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Add half-resolution GTAO with bent normals and bilateral reconstruction.",
+      "routes": [
+        {
+          "skill": "threejs-screen-space-ambient-occlusion",
+          "signals": [
+            "gtao",
+            "bent normals",
+            "bilateral reconstruction"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Tune selective HDR bloom while guaranteeing restoration of substituted materials.",
+      "routes": [
+        {
+          "skill": "threejs-bloom",
+          "signals": [
+            "hdr bloom",
+            "selective emission"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Implement encoded luminance metering, eye adaptation, one tone-map owner, and a display LUT.",
+      "routes": [
+        {
+          "skill": "threejs-exposure-color-grading",
+          "signals": [
+            "eye adaptation",
+            "tone mapping",
+            "lut grading"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Coordinate shared depth and normal buffers across GTAO, bloom, exposure, tone mapping, and grading.",
+      "routes": [
+        {
+          "skill": "threejs-image-pipeline",
+          "signals": [
+            "shared depth/normal/velocity ownership",
+            "multi-pass ordering"
+          ]
+        },
+        {
+          "skill": "threejs-screen-space-ambient-occlusion",
+          "signals": [
+            "gtao"
+          ]
+        },
+        {
+          "skill": "threejs-bloom",
+          "signals": [
+            "bloom"
+          ]
+        },
+        {
+          "skill": "threejs-exposure-color-grading",
+          "signals": [
+            "eye adaptation",
+            "tone mapping"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Produce deterministic final, no-post, diagnostic, seed, camera-scale, temporal, and GPU evidence.",
+      "routes": [
+        {
+          "skill": "threejs-visual-validation",
+          "signals": [
+            "fixed-view diagnostics",
+            "seed sweeps",
+            "budget evidence"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Project a cyan hologram above a plinth: a Fresnel rim shell with drifting scanlines that dissolves one shape upward into the next.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-vfx",
+          "signals": [
+            "holographic projections",
+            "fresnel rim shells",
+            "scanline banding"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Generate a complete open-wheel race car: one continuous body loft from parameter curves, superellipse sidepods, and real airfoil wings.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-geometry",
+          "signals": [
+            "procedural vehicles",
+            "parameter-curve section tracks",
+            "spanwise airfoil lofts"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build a supersport motorcycle from a steering-geometry contract with slot-tagged parts, spoked wheels, and a hanging chain.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-geometry",
+          "signals": [
+            "procedural vehicles",
+            "material slots and groups",
+            "semantic mesh writers"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Show an above-water structure through Snell's window from below without a screen-space trace, and stop the cascades combing at the horizon.",
+      "routes": [
+        {
+          "skill": "threejs-spectral-ocean",
+          "signals": [
+            "forward-refracted structures",
+            "pixel-footprint spectral LOD",
+            "submerged snell windows"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Build the close beach view where procedural breaker waves hand into a moving swash film, persistent foam, wet sand, and a curved signed-distance shoreline.",
+      "routes": [
+        {
+          "skill": "threejs-spectral-ocean",
+          "signals": [
+            "coastal breaker transitions",
+            "signed-distance coastlines",
+            "shallow-water swash chains",
+            "wet sand"
+          ]
+        }
+      ]
+    },
+    {
+      "request": "Create physically moving soap bubbles whose colour comes from wavelength-dependent air-film-air interference, with front and rear membranes instead of glass refraction.",
+      "routes": [
+        {
+          "skill": "threejs-procedural-materials",
+          "signals": [
+            "thin-film soap bubbles",
+            "airy interference"
+          ]
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "skill": "threejs-camera-direction",
+      "mustMention": [
+        "$threejs-procedural-animation"
+      ]
+    },
+    {
+      "skill": "threejs-procedural-animation",
+      "mustMention": [
+        "$threejs-camera-direction"
+      ]
+    },
+    {
+      "skill": "threejs-procedural-materials",
+      "mustMention": [
+        "$threejs-procedural-fields",
+        "$threejs-procedural-planets",
+        "$threejs-parallax-occlusion-mapping",
+        "$threejs-temporal-surfaces"
+      ]
+    },
+    {
+      "skill": "threejs-parallax-occlusion-mapping",
+      "mustMention": [
+        "$threejs-procedural-materials",
+        "$threejs-procedural-geometry"
+      ]
+    },
+    {
+      "skill": "threejs-procedural-geometry",
+      "mustMention": [
+        "$threejs-procedural-materials",
+        "$threejs-procedural-architecture",
+        "$threejs-procedural-vegetation"
+      ]
+    },
+    {
+      "skill": "threejs-procedural-planets",
+      "mustMention": [
+        "$threejs-procedural-fields",
+        "$threejs-atmosphere-aerial-perspective"
+      ]
+    },
+    {
+      "skill": "threejs-atmosphere-aerial-perspective",
+      "mustMention": [
+        "$threejs-volumetric-clouds",
+        "$threejs-procedural-vfx"
+      ]
+    },
+    {
+      "skill": "threejs-volumetric-clouds",
+      "mustMention": [
+        "$threejs-atmosphere-aerial-perspective",
+        "$threejs-procedural-vfx"
+      ]
+    },
+    {
+      "skill": "threejs-spectral-ocean",
+      "mustMention": [
+        "$threejs-water-optics"
+      ]
+    },
+    {
+      "skill": "threejs-water-optics",
+      "mustMention": [
+        "$threejs-spectral-ocean",
+        "$threejs-precipitation-surfaces"
+      ]
+    },
+    {
+      "skill": "threejs-procedural-vfx",
+      "mustMention": [
+        "$threejs-temporal-surfaces",
+        "$threejs-precipitation-surfaces",
+        "$threejs-volumetric-clouds",
+        "$threejs-atmosphere-aerial-perspective"
+      ]
+    },
+    {
+      "skill": "threejs-temporal-surfaces",
+      "mustMention": [
+        "$threejs-procedural-vfx",
+        "$threejs-precipitation-surfaces",
+        "$threejs-procedural-materials"
+      ]
+    },
+    {
+      "skill": "threejs-precipitation-surfaces",
+      "mustMention": [
+        "$threejs-water-optics",
+        "$threejs-procedural-vfx",
+        "$threejs-temporal-surfaces"
+      ]
+    },
+    {
+      "skill": "threejs-screen-space-ambient-occlusion",
+      "mustMention": [
+        "$threejs-image-pipeline"
+      ]
+    },
+    {
+      "skill": "threejs-image-pipeline",
+      "mustMention": [
+        "$threejs-screen-space-ambient-occlusion",
+        "$threejs-bloom",
+        "$threejs-exposure-color-grading"
+      ]
+    },
+    {
+      "skill": "threejs-raymarched-space-effects",
+      "mustMention": [
+        "$threejs-procedural-vfx",
+        "$threejs-bloom",
+        "$threejs-exposure-color-grading"
+      ]
+    },
+    {
+      "skill": "threejs-bloom",
+      "mustMention": [
+        "$threejs-exposure-color-grading",
+        "$threejs-raymarched-space-effects"
+      ]
+    }
+  ]
+}
