@@ -323,6 +323,106 @@ html, body {
   pointer-events: none;
 }
 
+/* --- mobile controls --- */
+.mc-stick {
+  position: fixed;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  z-index: 20;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mc-stick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+}
+
+.mc-buttons {
+  position: fixed;
+  right: 16px;
+  bottom: 120px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(2, 56px);
+  gap: 10px;
+  pointer-events: none;
+}
+
+.mc-btn {
+  pointer-events: auto;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.mc-fire {
+  background: rgba(220, 50, 50, 0.35);
+  border-color: rgba(255, 120, 120, 0.6);
+}
+
+/* --- loading screen --- */
+#loading {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #0b1026;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  transition: opacity 0.6s ease;
+}
+
+#loading h1 {
+  font-size: 40px;
+  letter-spacing: 6px;
+  color: #ffe066;
+  margin: 0 0 8px;
+  text-shadow: 0 0 24px rgba(255, 224, 102, 0.5);
+}
+
+#loading p {
+  opacity: 0.7;
+  margin: 0;
+}
+
+#loading .spin {
+  width: 42px;
+  height: 42px;
+  margin: 18px 0;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top-color: #ffe066;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .hud__dialogue {
   position: fixed;
   bottom: 120px;

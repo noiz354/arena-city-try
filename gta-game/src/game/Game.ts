@@ -7,6 +7,7 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three'
+import { AmbientLight, DirectionalLight } from 'three'
 import { World } from './World'
 import { Player } from '../entities/Player'
 import { Vehicle } from '../entities/Vehicle'
@@ -21,6 +22,13 @@ import { TrafficSystem } from '../systems/TrafficSystem'
 import { WantedSystem } from '../systems/WantedSystem'
 import { MissionSystem } from '../systems/MissionSystem'
 import { MinimapSystem } from '../systems/MinimapSystem'
+import { AudioManager } from '../systems/AudioManager'
+import { DayNightSystem } from '../systems/DayNightSystem'
+import { WeatherSystem } from '../systems/WeatherSystem'
+import { ParticleSystem } from '../systems/ParticleSystem'
+import { PostFX } from '../systems/PostFX'
+import { AutoQuality } from '../systems/AutoQuality'
+import { MobileControls } from '../systems/MobileControls'
 import { WEAPON_LIST } from '../data/weapons'
 
 const SAVE_KEY = 'cityrush_save_v1'
@@ -58,6 +66,13 @@ export class Game {
   readonly wanted: WantedSystem
   readonly missions: MissionSystem
   readonly minimap: MinimapSystem
+  readonly audio: AudioManager
+  readonly dayNight: DayNightSystem
+  readonly weather: WeatherSystem
+  readonly particles: ParticleSystem
+  readonly postfx: PostFX
+  readonly quality: AutoQuality
+  readonly mobile: MobileControls
 
   mode: PlayerMode = 'foot'
   vehicle: Vehicle | null = null
@@ -65,6 +80,7 @@ export class Game {
   kills = 0
   respawnTimer = 0
   private saveTimer = 30
+  private readonly exploded = new Set<Vehicle>()
   /** HUD hooks — wired from main.ts */
   onPlayerDamaged?: () => void
   onWeaponHit?: () => void
@@ -104,6 +120,21 @@ export class Game {
     this.scene.background = this.world.skyColor
     this.scene.add(this.world.root)
 
+    // --- Polish: audio, day/night, weather, particles, post-processing ---
+    this.audio = new AudioManager()
+    this.postfx = new PostFX(this.renderer, this.scene, this.camera)
+    this.quality = new AutoQuality(this.renderer, this.postfx)
+
+    // moon light (dim, fills the night)
+    const moon = new DirectionalLight(0x8fa8ff, 0.3)
+    moon.position.set(-80, 60, -40)
+    this.scene.add(moon)
+    const ambient = this.world.root.children.find(c => c instanceof AmbientLight) as AmbientLight
+    this.dayNight = new DayNightSystem(this.world.sun, ambient, moon, this.world.skyColor, this.world.fog)
+    this.weather = new WeatherSystem(this.scene, this.world.fog)
+    this.particles = new ParticleSystem(this.scene)
+    this.mobile = new MobileControls(this.input)
+
     // --- Player + third-person camera rig ---
     this.player = new Player()
     this.player.group.position.set(SPAWN_X, 0.95, SPAWN_Z)
@@ -136,6 +167,7 @@ export class Game {
     this.scene.add(this.missions.markers)
     this.missions.hooks.onMissionStart = def => this.onPickup?.(`MISSION: ${def.name}`)
     this.missions.hooks.onMissionComplete = (def, reward) => {
+      this.audio.playMissionComplete()
       this.onPickup?.(`MISSION COMPLETE: ${def.name} · +$${reward}`)
       this.save()
     }
@@ -152,8 +184,12 @@ export class Game {
       this.enemies,
       () => this.world.getCollidables().concat(this.vehicles.getCollidables()),
       {
-        onHit: () => this.onWeaponHit?.(),
-        onShoot: () => {
+        onHit: () => {
+          this.onWeaponHit?.()
+          this.audio.playHit()
+        },
+        onShoot: weapon => {
+          this.audio.playShoot(weapon)
           const p = this.player.position
           this.pedestrians.panicNear(p, 40)
           // firing near police officers counts as a crime
@@ -169,8 +205,11 @@ export class Game {
         },
         onKill: kind => {
           this.kills++
+          this.audio.playKill()
           if (kind === 'civilian') this.wanted.reportCrime(2, this.player.position)
         },
+        onReload: () => this.audio.playReload(),
+        onEmpty: () => this.audio.playEmpty(),
       },
       () => this.pedestrians.alive,
     )
@@ -182,10 +221,12 @@ export class Game {
       {
         onWeapon: id => {
           this.weapons.giveWeapon(id)
+          this.audio.playPickup()
           this.onPickup?.(`${WEAPON_LIST.find(w => w.id === id)?.name ?? id} acquired!`)
         },
         onAmmo: () => {
           this.weapons.giveAmmo(0.4)
+          this.audio.playPickup()
           this.onPickup?.('+ AMMO')
         },
       },
@@ -200,6 +241,15 @@ export class Game {
 
     // --- Resize ---
     window.addEventListener('resize', this.resize)
+
+    // unlock WebAudio on the first user gesture
+    const unlock = (): void => {
+      this.audio.ensure()
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+    }
+    window.addEventListener('pointerdown', unlock)
+    window.addEventListener('keydown', unlock)
 
     this.clock.start()
   }
@@ -227,6 +277,8 @@ export class Game {
     this.vehicles.dispose()
     this.traffic.dispose()
     this.wanted.dispose()
+    this.particles.dispose()
+    this.mobile.dispose()
     this.renderer.dispose()
   }
 
@@ -280,10 +332,51 @@ export class Game {
 
     this.handlePlayerDeath(delta)
 
+    // --- polish systems ---
+    this.dayNight.update(delta)
+    this.weather.update(delta, this.camera.position)
+    this.particles.update(delta)
+    this.updateExplosions()
+    this.updateEngineAudio()
+    this.postfx.update(delta)
+    this.quality.frame()
+    this.quality.update(delta)
+
     this.updateCallbacks.forEach(cb => cb(delta))
-    this.renderer.render(this.scene, this.camera)
+
+    this.postfx.applyShake(this.camera)
+    if (this.postfx.enabled) {
+      this.postfx.composer.render()
+    } else {
+      this.renderer.render(this.scene, this.camera)
+    }
+    this.postfx.restoreShake(this.camera)
 
     this.input.endFrame()
+  }
+
+  /** Explode + smoke on newly wrecked vehicles. */
+  private updateExplosions(): void {
+    for (const v of this.vehicles.vehicles) {
+      if (v.wrecked && !this.exploded.has(v)) {
+        this.exploded.add(v)
+        this.particles.explosion(v.position, 1)
+        this.audio.playExplosion()
+        this.postfx.addShake(0.9)
+      } else if (v.wrecked) {
+        this.particles.smoke(v.position, 1 / 60)
+      }
+    }
+  }
+
+  private updateEngineAudio(): void {
+    if (this.mode === 'driving' && this.vehicle) {
+      const v = this.vehicle
+      this.audio.setEngine(!v.wrecked, Math.abs(v.speed) / v.config.maxSpeed)
+    } else {
+      this.audio.setEngine(false, 0)
+    }
+    if (this.input.wasPressed('KeyM')) this.audio.setMuted(!this.audio.muted)
   }
 
   private updateOnFoot(delta: number, buildings: ReturnType<World['getCollidables']>): void {
@@ -306,6 +399,8 @@ export class Game {
       const dz = enemy.position.z - this.player.position.z
       if (dx * dx + dz * dz < ATTACK_RANGE * ATTACK_RANGE) {
         this.player.takeDamage(enemy.attackDamage)
+        this.audio.playDamage()
+        this.postfx.addShake(0.3)
         this.onPlayerDamaged?.()
       }
     }
@@ -435,5 +530,6 @@ export class Game {
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(width, height)
+    this.postfx.setSize(width, height)
   }
 }

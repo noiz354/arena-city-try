@@ -39,6 +39,8 @@ export interface WeaponHooks {
   onHit?: () => void
   onKill?: (kind: 'enemy' | 'civilian') => void
   onShoot?: (weapon: WeaponDef) => void
+  onReload?: () => void
+  onEmpty?: () => void
 }
 
 /**
@@ -137,6 +139,7 @@ export class WeaponSystem {
     if (st.reloading || st.reserve <= 0 || st.mag >= this.currentDef.magSize) return
     st.reloading = true
     st.reloadTimer = this.currentDef.reloadTime
+    this.hooks.onReload?.()
   }
 
   update(dt: number): void {
@@ -166,6 +169,7 @@ export class WeaponSystem {
     const def = this.currentDef
     const st = this.currentState
     if (st.mag <= 0) {
+      this.hooks.onEmpty?.()
       if (st.reserve > 0) this.startReload()
       return
     }

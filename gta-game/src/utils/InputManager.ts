@@ -85,12 +85,36 @@ export class InputManager {
 
   /** True while any of the given key codes are held. */
   isDown(...codes: string[]): boolean {
-    return codes.some(c => this.keys.has(c))
+    return codes.some(c => this.keys.has(c) || this.virtualKeys.has(c))
   }
 
-  /** True only for the frame the key was first pressed. */
+  /** True only for the frame the key was first pressed (physical or virtual). */
   wasPressed(...codes: string[]): boolean {
-    return codes.some(c => this.pressed.has(c))
+    let hit = false
+    for (const c of codes) {
+      if (this.pressed.has(c)) hit = true
+      if (this.virtualPressed.has(c)) {
+        this.virtualPressed.delete(c)
+        hit = true
+      }
+    }
+    return hit
+  }
+
+  private readonly virtualPressed = new Set<string>()
+
+  /** Edge-triggered virtual key (mobile buttons): true once until consumed. */
+  consumeVirtualPress(code: string): boolean {
+    return this.virtualPressed.delete(code)
+  }
+
+  pressVirtualKey(code: string): void {
+    this.virtualPressed.add(code)
+    this.virtualKeys.add(code)
+  }
+
+  releaseVirtualKey(code: string): void {
+    this.virtualKeys.delete(code)
   }
 
   /** True while the left mouse button is held. */
@@ -108,6 +132,31 @@ export class InputManager {
     const c = this.clickQueued
     this.clickQueued = false
     return c
+  }
+
+  // --- virtual input (mobile controls inject here) ---
+
+  private readonly virtualKeys = new Set<string>()
+
+  setVirtualKey(code: string, down: boolean): void {
+    if (down) {
+      this.virtualKeys.add(code)
+    } else {
+      this.virtualKeys.delete(code)
+    }
+  }
+
+  injectClick(): void {
+    this.clickQueued = true
+  }
+
+  setMouseHeld(down: boolean): void {
+    this.mouseHeld = down
+  }
+
+  addMouseDelta(x: number, y: number): void {
+    this.mouseDelta.x += x
+    this.mouseDelta.y += y
   }
 
   /** Call once per frame at the end of the update. */

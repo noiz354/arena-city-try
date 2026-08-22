@@ -15,7 +15,7 @@ in `reference/`.
 | 4 | Combat & Weapons | ✅ done — 4 hitscan weapons, ammo/reload, enemies, pickups, death/respawn |
 | 5 | NPCs & Traffic | ✅ done — pedestrians (walk/idle/flee/dialogue), AI traffic, wanted stars + cops |
 | 6 | Missions & Progression | ✅ done — delivery/race/assassination/chase, waypoints, minimap, money/XP, save/load |
-| 7 | Polish & Performance | ⏳ next — day/night, weather, particles, audio, post-processing, mobile |
+| 7 | Polish & Performance | ✅ done — day/night, rain, particles, audio, bloom, screen-shake, auto-quality, mobile |
 
 ## Run
 
