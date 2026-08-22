@@ -253,12 +253,6 @@ export class ChunkManager {
       foliage.position.set(x, 4.4, z)
       foliage.rotation.y = prop.rot
       chunk.props.add(trunk, foliage)
-    } else {
-      // parked car placeholder
-      const body = new Mesh(new BoxGeometry(2.2, 0.7, 4.4), mats.carBody)
-      body.position.set(x, 0.45, z)
-      body.rotation.y = prop.rot
-      chunk.props.add(body)
     }
   }
 
@@ -299,7 +293,6 @@ interface PropMaterials {
   lamp: MeshStandardMaterial
   trunk: MeshStandardMaterial
   foliage: MeshStandardMaterial
-  carBody: MeshStandardMaterial
 }
 
 function makePropMaterials(): PropMaterials {
@@ -307,6 +300,5 @@ function makePropMaterials(): PropMaterials {
     lamp: new MeshStandardMaterial({ color: 0xfff3c4, emissive: 0xffd166, emissiveIntensity: 0.7 }),
     trunk: new MeshStandardMaterial({ color: 0x6b5b45, roughness: 0.9 }),
     foliage: new MeshStandardMaterial({ color: 0x3d8f52, roughness: 0.9 }),
-    carBody: new MeshStandardMaterial({ color: 0xc0392b, roughness: 0.3, metalness: 0.6 }),
   }
 }

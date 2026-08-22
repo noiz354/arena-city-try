@@ -41,7 +41,7 @@ export interface BuildingSpec {
 }
 
 export interface PropSpec {
-  kind: 'streetlight' | 'tree' | 'car'
+  kind: 'streetlight' | 'tree'
   x: number
   z: number
   rot: number

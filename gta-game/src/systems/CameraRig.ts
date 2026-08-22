@@ -12,12 +12,19 @@ const WALL_MARGIN = 0.35 // keep camera this far from obstacles
 
 /**
  * Third-person chase camera with wall avoidance — adapted from Edelweiss
- * CameraControl.js and 3d-game camera.js: spherical offset behind the player,
+ * CameraControl.js and 3d-game camera.js: spherical offset behind the target,
  * obstacle ray (ray-vs-AABB slab test) shortens the distance, smooth damp.
+ *
+ * Yaw model: the user's mouse contributes a persistent offset (`mouseYaw`).
+ *   - On foot:      yaw = mouseYaw
+ *   - Driving:      yaw = vehicle heading + mouseYaw  (GTA-style follow)
  */
 export class CameraRig {
   yaw = Math.PI * 0.35
   pitch = 0.3
+  followYaw: number | null = null
+
+  private mouseYaw = this.yaw
   private distance = START_DISTANCE
   private targetDistance = START_DISTANCE
 
@@ -27,10 +34,24 @@ export class CameraRig {
 
   constructor(readonly camera: PerspectiveCamera) {}
 
+  /** Entering a vehicle: snap the camera behind the car, reset mouse offset. */
+  onEnterVehicle(vehicleYaw: number): void {
+    this.followYaw = vehicleYaw
+    this.mouseYaw = 0
+    this.yaw = vehicleYaw
+    this.distance = MathUtils.clamp(this.distance, MIN_DISTANCE + 2, MAX_DISTANCE)
+  }
+
+  /** Back to on-foot free orbit (keep the current view heading). */
+  onExitVehicle(): void {
+    this.followYaw = null
+  }
+
   update(dt: number, input: InputManager, targetPos: Vector3, collidables: Collidable[]): void {
     // --- orbit with mouse drag ---
-    this.yaw -= input.mouseDelta.x * MOUSE_SENSITIVITY
+    this.mouseYaw -= input.mouseDelta.x * MOUSE_SENSITIVITY
     this.pitch = MathUtils.clamp(this.pitch + input.mouseDelta.y * MOUSE_SENSITIVITY, 0.05, PITCH_LIMIT)
+    this.yaw = this.followYaw === null ? this.mouseYaw : this.followYaw + this.mouseYaw
 
     // --- scroll zoom ---
     if (input.wheelDelta !== 0) {
@@ -47,7 +68,7 @@ export class CameraRig {
     this.dirToCamera.set(Math.sin(this.yaw) * cp, Math.sin(this.pitch), Math.cos(this.yaw) * cp)
     this.desired.copy(targetPos).addScaledVector(this.dirToCamera, this.distance)
 
-    // --- wall avoidance: ray from player head toward desired camera spot ---
+    // --- wall avoidance: ray from target head toward desired camera spot ---
     this.origin.copy(targetPos)
     this.origin.y += LOOK_HEIGHT
     let finalDist = this.distance

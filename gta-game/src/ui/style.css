@@ -71,6 +71,43 @@ html, body {
   transition: width 0.1s linear;
 }
 
+.hud__speed {
+  font-size: 15px;
+  font-weight: 700;
+  color: #7ef0a6;
+}
+
+.hud__vhealth {
+  display: inline-block;
+  width: 90px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.hud__vhealth-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: #2ecc71;
+  border-radius: 5px;
+  transition: width 0.1s linear;
+}
+
+.hud__prompt {
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffe066;
+  display: inline-block;
+  min-height: 0;
+}
+
 .hud__hint {
   margin-top: 8px;
   background: rgba(0, 0, 0, 0.35);
