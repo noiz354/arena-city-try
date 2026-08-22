@@ -4,7 +4,6 @@ import {
   PCFSoftShadowMap,
   PerspectiveCamera,
   Scene,
-  Vector3,
   WebGLRenderer,
 } from 'three'
 import { AmbientLight, DirectionalLight } from 'three'
@@ -32,6 +31,7 @@ import { MobileControls } from '../systems/MobileControls'
 import { WeaponView } from '../systems/WeaponView'
 import { SaveManager } from '../systems/SaveManager'
 import { PauseMenu } from '../ui/pauseMenu'
+import { ModeController, SPAWN_X, SPAWN_Z } from '../systems/ModeController'
 import type { GameTelemetry } from '../analytics/gameTelemetry'
 import { WEAPON_LIST } from '../data/weapons'
 
@@ -39,16 +39,11 @@ export interface GameOptions {
   container: HTMLElement
 }
 
-type PlayerMode = 'foot' | 'driving'
-
-const SPAWN_X = 0
-const SPAWN_Z = 0
-const ATTACK_RANGE = 2.4
-
 /**
  * Core game shell — adapted from the mavonengine-core BaseGame/Game pattern.
- * Owns renderer, camera, scene, input, player, vehicles, enemies, weapons,
- * pickups, and the animation loop.
+ * Owns the renderer/camera/scene, wires all systems together, and runs the
+ * animation loop. The foot/driving player state machine lives in
+ * ModeController (A-1 refactor); Game.ts focuses on orchestration.
  */
 export class Game {
   readonly clock = new Clock()
@@ -78,12 +73,9 @@ export class Game {
   readonly weaponView: WeaponView
   readonly saveManager: SaveManager
   readonly pauseMenu: PauseMenu
+  readonly modeCtrl: ModeController
 
-  mode: PlayerMode = 'foot'
-  vehicle: Vehicle | null = null
-  nearestVehicle: Vehicle | null = null
   kills = 0
-  respawnTimer = 0
   paused = false
   private saveTimer = 30
   private readonly exploded = new Set<Vehicle>()
@@ -96,11 +88,28 @@ export class Game {
   onPickup?: (message: string) => void
   onDialogue?: (line: string) => void
   onObjective?: (text: string) => void
-  private readonly exitOffset = new Vector3()
 
   private readonly updateCallbacks = new Set<(delta: number) => void>()
   private animationId = 0
   private running = false
+
+  // --- public API kept for HUD/main (delegates to ModeController) ---
+
+  get mode(): 'foot' | 'driving' {
+    return this.modeCtrl.mode
+  }
+
+  get vehicle(): Vehicle | null {
+    return this.modeCtrl.vehicle
+  }
+
+  get nearestVehicle(): Vehicle | null {
+    return this.modeCtrl.nearestVehicle
+  }
+
+  get respawnTimer(): number {
+    return this.modeCtrl.respawnTimer
+  }
 
   constructor({ container }: GameOptions) {
     // --- Renderer ---
@@ -271,6 +280,24 @@ export class Game {
 
     this.cameraRig = new CameraRig(this.camera)
 
+    // --- Player mode state machine ---
+    this.modeCtrl = new ModeController({
+      player: this.player,
+      cameraRig: this.cameraRig,
+      input: this.input,
+      vehicles: this.vehicles,
+      traffic: this.traffic,
+      world: this.world,
+      missions: this.missions,
+      weapons: this.weapons,
+      weaponView: this.weaponView,
+      enemies: this.enemies,
+      audio: this.audio,
+      postfx: this.postfx,
+      telemetry: () => this.telemetry,
+      onPlayerDamaged: () => this.onPlayerDamaged?.(),
+    })
+
     // --- Resize ---
     window.addEventListener('resize', this.resize)
 
@@ -332,11 +359,10 @@ export class Game {
     // spatial audio listener follows the camera
     this.audio.setListener(this.camera.position, this.camera.quaternion)
 
-    const px = this.mode === 'driving' ? this.vehicle!.position.x : this.player.position.x
-    const pz = this.mode === 'driving' ? this.vehicle!.position.z : this.player.position.z
-    this.world.update(px, pz)
-    this.world.updateSun(px, pz)
-    this.vehicles.update(px, pz)
+    const pos = this.modeCtrl.activePosition
+    this.world.update(pos.x, pos.z)
+    this.world.updateSun(pos.x, pos.z)
+    this.vehicles.update(pos.x, pos.z)
 
     const buildings = this.world.getCollidables()
     const allCollidables = buildings.concat(this.vehicles.getCollidables())
@@ -345,20 +371,17 @@ export class Game {
     const losBuildings = this.world.chunks.queryCircle(this.player.position.x, this.player.position.z, 70)
     this.enemies.update(delta, this.player.position, losBuildings)
     this.pedestrians.update(delta, buildings)
-    this.traffic.update(delta, px, pz, allCollidables)
+    this.traffic.update(delta, pos.x, pos.z, allCollidables)
     this.checkCarPedestrianCollisions()
     this.pickups.update(delta)
     this.weapons.update(delta)
 
-    if (this.mode === 'foot') {
-      this.updateOnFoot(delta, buildings)
-      this.wanted.update(delta, this.player.position)
-    } else {
-      this.updateDriving(delta)
-    }
+    // player mode state machine (foot/driving + enter/exit + death/respawn)
+    this.modeCtrl.update(delta, buildings)
+    if (this.modeCtrl.mode === 'foot') this.wanted.update(delta, this.player.position)
 
     // civilian dialogue
-    if (this.mode === 'foot' && this.player.health > 0) {
+    if (this.modeCtrl.mode === 'foot' && this.player.health > 0) {
       const line = this.pedestrians.maybeSpeak(this.player.position)
       if (line) this.onDialogue?.(line)
     }
@@ -374,8 +397,6 @@ export class Game {
       this.save()
     }
 
-    this.handlePlayerDeath(delta)
-
     // wanted-level telemetry (fires only when the stars change)
     if (this.wanted.stars !== this.lastWantedStars) {
       this.lastWantedStars = this.wanted.stars
@@ -384,7 +405,7 @@ export class Game {
 
     // weapon viewmodel (bob + recoil; hidden while driving via player group)
     const pv = this.player.velocity
-    this.weaponView.update(delta, this.mode === 'foot' && Math.hypot(pv.x, pv.z) > 0.5, Math.min(1, Math.hypot(pv.x, pv.z) / 9.5))
+    this.weaponView.update(delta, this.modeCtrl.mode === 'foot' && Math.hypot(pv.x, pv.z) > 0.5, Math.min(1, Math.hypot(pv.x, pv.z) / 9.5))
 
     // --- polish systems ---
     this.dayNight.update(delta)
@@ -422,120 +443,13 @@ export class Game {
   }
 
   private updateEngineAudio(): void {
-    if (this.mode === 'driving' && this.vehicle) {
-      const v = this.vehicle
+    const v = this.modeCtrl.vehicle
+    if (this.modeCtrl.mode === 'driving' && v) {
       this.audio.setEngine(!v.wrecked, Math.abs(v.speed) / v.config.maxSpeed)
     } else {
       this.audio.setEngine(false, 0)
     }
     if (this.input.wasPressed('KeyM')) this.audio.setMuted(!this.audio.muted)
-  }
-
-  private updateOnFoot(delta: number, buildings: ReturnType<World['getCollidables']>): void {
-    const all = buildings.concat(this.vehicles.getCollidables())
-    this.player.update(delta, this.input, this.cameraRig.yaw, all)
-    this.cameraRig.followYaw = null
-    this.cameraRig.update(delta, this.input, this.player.position, all)
-    this.weapons.enabled = true
-
-    // weapon switching + reload
-    for (const def of WEAPON_LIST) {
-      if (this.input.wasPressed(`Digit${def.key}`)) {
-        this.weapons.switchWeapon(def.id)
-        this.weaponView.setWeapon(def.id)
-      }
-    }
-    if (this.input.wasPressed('KeyR')) this.weapons.startReload()
-
-    // enemy melee attacks (thugs 8, cops 5)
-    for (const enemy of this.enemies.alive) {
-      if (!enemy.lastAttacked) continue
-      const dx = enemy.position.x - this.player.position.x
-      const dz = enemy.position.z - this.player.position.z
-      if (dx * dx + dz * dz < ATTACK_RANGE * ATTACK_RANGE) {
-        this.player.takeDamage(enemy.attackDamage)
-        this.audio.playDamage()
-        this.postfx.addShake(0.3)
-        this.onPlayerDamaged?.()
-      }
-    }
-
-    // mission start zone interaction
-    if (!this.missions.active && this.input.wasPressed('KeyE')) {
-      const zone = this.missions.zoneAt(this.player.position.x, this.player.position.z)
-      if (zone) this.missions.startMission(zone)
-    }
-
-    // nearest enterable vehicle: parked or traffic
-    this.nearestVehicle =
-      this.vehicles.getNearest(this.player.position.x, this.player.position.z) ??
-      this.traffic.getNearest(this.player.position.x, this.player.position.z)
-    if (this.nearestVehicle && this.input.wasPressed('KeyE')) {
-      this.enterVehicle(this.nearestVehicle)
-    }
-  }
-
-  private updateDriving(delta: number): void {
-    const v = this.vehicle!
-    const all = this.world.getCollidables().concat(this.vehicles.getCollidables(v))
-    this.weapons.enabled = false
-
-    const throttle = (this.input.isDown('KeyW') ? 1 : 0) - (this.input.isDown('KeyS') ? 1 : 0)
-    const steer = (this.input.isDown('KeyD') ? 1 : 0) - (this.input.isDown('KeyA') ? 1 : 0)
-    v.update(delta, { throttle, steer }, all)
-
-    this.cameraRig.followYaw = v.yaw
-    this.cameraRig.update(delta, this.input, v.position, all)
-
-    // mission start zone interaction while driving too
-    if (!this.missions.active && this.input.wasPressed('KeyE')) {
-      const zone = this.missions.zoneAt(v.position.x, v.position.z)
-      if (zone) this.missions.startMission(zone)
-    }
-
-    this.nearestVehicle = null
-    if (this.input.wasPressed('KeyE')) this.exitVehicle()
-  }
-
-  private enterVehicle(v: Vehicle): void {
-    this.vehicle = v
-    v.occupied = true
-    v.stolen = true
-    v.speed = 0
-    this.mode = 'driving'
-    this.player.group.visible = false
-    this.cameraRig.onEnterVehicle(v.yaw)
-    this.telemetry?.vehicleEnter()
-  }
-
-  private exitVehicle(): void {
-    const v = this.vehicle!
-    this.exitOffset.set(Math.cos(v.yaw), 0, -Math.sin(v.yaw))
-    this.player.group.position.copy(v.position).addScaledVector(this.exitOffset, 2.8)
-    this.player.group.position.y = 0.95
-    this.player.velocity.set(0, 0, 0)
-
-    v.occupied = false
-    this.vehicle = null
-    this.mode = 'foot'
-    this.player.group.visible = true
-    this.cameraRig.onExitVehicle()
-    this.telemetry?.vehicleExit()
-  }
-
-  private handlePlayerDeath(delta: number): void {
-    if (this.respawnTimer > 0) {
-      this.respawnTimer -= delta
-      if (this.respawnTimer <= 0) {
-        this.player.respawnAt(SPAWN_X, SPAWN_Z)
-        this.telemetry?.playerRespawn()
-      }
-      return
-    }
-    if (this.player.health <= 0) {
-      this.respawnTimer = 3
-      this.telemetry?.playerDied()
-    }
   }
 
   /**
@@ -573,9 +487,12 @@ export class Game {
   }
 
   private updateMinimap(): void {
-    const p = this.mode === 'driving' && this.vehicle ? this.vehicle.position : this.player.position
-    const yaw = this.mode === 'driving' && this.vehicle ? this.vehicle.yaw : this.player.yaw
-    this.minimap.update(p, yaw, this.missions.waypoint(), this.missions.markerPositions())
+    this.minimap.update(
+      this.modeCtrl.activePosition,
+      this.modeCtrl.activeYaw,
+      this.missions.waypoint(),
+      this.missions.markerPositions(),
+    )
   }
 
   /** Full save: profile + player state + weapon inventory (localStorage). */

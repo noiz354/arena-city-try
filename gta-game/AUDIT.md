@@ -195,9 +195,14 @@ pada posisi player/camera (jarak senjata, mesin mobil).
 ### P0 — selesai ✅ (B-1, B-2)
 ### P1 — selesai ✅ (P-1, P-2 sebagian)
 ### P2 — selesai ✅ (I-2, I-3, I-4, I-5, A-4, A-5, A-6)
-### P3 — selesai ✅ (A-2, I-1, CI, A-3, Playwright) · sisa kecil:
-1. **A-1** — refactor Game.ts lebih lanjut (mode controller; SaveManager & pause sudah diekstrak)
+### P3 — selesai ✅ (A-2, I-1, CI, A-3, Playwright, **A-1**)
+1. **A-1 refactor Game.ts** ✅ — state machine foot/driving dipindah ke `src/systems/ModeController.ts`
+   (enter/exit kendaraan, input on-foot/driving, melee, respawn; 196 baris, di-test mandiri).
+   Game.ts fokus orkestrasi (556 baris); API publik `game.mode/vehicle/nearestVehicle/respawnTimer`
+   dipertahankan via getter delegasi; telemetry lazy getter (di-set setelah konstruksi).
 2. (opsional) analytics endpoint nyata / dashboard
+
+**Baseline:** `npm test` 39/39 lolos · `tsc` bersih · build 168 kB gzip
 
 ---
 

@@ -115,6 +115,7 @@ src/
   systems/         # ChunkManager, CityGenerator, CameraRig, VehicleManager,
                    # TrafficSystem, PedestrianSystem, EnemySystem, WeaponSystem,
                    # PickupSystem, WantedSystem, MissionSystem, MinimapSystem,
+                   # ModeController (foot/driving state machine),
                    # AudioManager, DayNightSystem, WeatherSystem,
                    # ParticleSystem, PostFX, AutoQuality, MobileControls
   data/            # vehicles.ts, weapons.ts, missions.ts (data-driven configs)

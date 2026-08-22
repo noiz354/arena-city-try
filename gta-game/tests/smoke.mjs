@@ -22,6 +22,11 @@ import { SaveManager } from '../src/systems/SaveManager.ts'
 import { ChunkManager } from '../src/systems/ChunkManager.ts'
 import { Tracker } from '../src/analytics/tracker.ts'
 import { initErrorHandling } from '../src/utils/errors.ts'
+import { ModeController } from '../src/systems/ModeController.ts'
+import { Player } from '../src/entities/Player.ts'
+import { CameraRig } from '../src/systems/CameraRig.ts'
+import { WeaponView } from '../src/systems/WeaponView.ts'
+import { AudioManager } from '../src/systems/AudioManager.ts'
 import { WEAPONS } from '../src/data/weapons.ts'
 
 // ChunkManager.update() builds CanvasTextures — stub the DOM bits three needs.
@@ -211,6 +216,33 @@ ok('tracker persists queue to localStorage', t2.queuedCount === 3)
 let reported = 0
 initErrorHandling({ onReport: () => { reported++ }, overlay: false })
 ok('error handler init does not throw (guarded)', true)
+
+// --- A-1: ModeController foot/driving state machine ---
+const mcCam = new PerspectiveCamera()
+const mcPlayer = new Player()
+const mcDeps = {
+  player: mcPlayer,
+  cameraRig: new CameraRig(mcCam),
+  input: new InputManager(),
+  vehicles: new VehicleManager(),
+  traffic: new TrafficSystem(),
+  world: { getCollidables: () => [] },
+  missions: new MissionSystem(enemies, () => mcPlayer.position, () => []),
+  weapons: new WeaponSystem(new Scene(), mcCam, input, enemies, () => [], {}),
+  weaponView: new WeaponView(),
+  enemies,
+  audio: new AudioManager(),
+  postfx: { addShake: () => {} },
+}
+const mc = new ModeController(mcDeps)
+ok('mode starts on foot', mc.mode === 'foot')
+const car = mcDeps.vehicles.vehicles[0]
+mc.enterVehicle(car)
+ok('enter → driving + occupied + stolen', mc.mode === 'driving' && car.occupied && car.stolen)
+ok('player hidden while driving', mcPlayer.group.visible === false)
+mc.exitVehicle()
+ok('exit → foot + player visible + car free', mc.mode === 'foot' && mcPlayer.group.visible && !car.occupied)
+ok('exit places player beside the car', Math.hypot(mcPlayer.position.x - car.position.x, mcPlayer.position.z - car.position.z) > 1)
 
 console.log(`\nRESULT: ${pass} passed, ${fail} failed`)
 process.exit(fail > 0 ? 1 : 0)
