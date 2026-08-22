@@ -79,11 +79,14 @@ export class ModeController {
   // --- on foot ---
 
   private updateOnFoot(delta: number, buildings: ReturnType<World['getCollidables']>): void {
-    const { player, cameraRig, input, vehicles, weapons, weaponView } = this.deps
-    const all = buildings.concat(vehicles.getCollidables())
-    player.update(delta, input, cameraRig.yaw, all)
+    const { player, cameraRig, input, vehicles, traffic, weapons, weaponView } = this.deps
+    // player is solid vs traffic; the camera avoids only static obstacles so
+    // moving cars don't cause snap-jitter in the wall-avoidance ray
+    const solid = buildings.concat(vehicles.getCollidables())
+    const withTraffic = solid.concat(traffic.getCollidables())
+    player.update(delta, input, cameraRig.yaw, withTraffic)
     cameraRig.followYaw = null
-    cameraRig.update(delta, input, player.position, all)
+    cameraRig.update(delta, input, player.position, solid)
     weapons.enabled = true
 
     // weapon switching + reload
@@ -139,16 +142,18 @@ export class ModeController {
       this.mode = 'foot'
       return
     }
-    const { input, cameraRig, weapons, world, vehicles, missions } = this.deps
-    const all = world.getCollidables().concat(vehicles.getCollidables(v))
+    const { input, cameraRig, weapons, world, vehicles, traffic, missions } = this.deps
+    // vehicle is solid vs traffic (exclude itself if it's a stolen traffic car)
+    const solid = world.getCollidables().concat(vehicles.getCollidables(v))
+    const withTraffic = solid.concat(traffic.getCollidables(v))
     weapons.enabled = false
 
     const throttle = (input.isDown('KeyW') ? 1 : 0) - (input.isDown('KeyS') ? 1 : 0)
     const steer = (input.isDown('KeyD') ? 1 : 0) - (input.isDown('KeyA') ? 1 : 0)
-    v.update(delta, { throttle, steer }, all)
+    v.update(delta, { throttle, steer }, withTraffic)
 
     cameraRig.followYaw = v.yaw
-    cameraRig.update(delta, input, v.position, all)
+    cameraRig.update(delta, input, v.position, solid)
 
     // mission start zone interaction while driving too — consumes E so exit doesn't also fire
     if (!missions.active && input.wasPressed('KeyE')) {
@@ -198,7 +203,7 @@ export class ModeController {
 
   private handlePlayerDeath(delta: number): void {
     if (this.respawnTimer > 0) {
-      this.respawnTimer -= delta
+      this.respawnTimer = Math.max(0, this.respawnTimer - delta)
       if (this.respawnTimer <= 0) {
         this.deps.player.respawnAt(SPAWN_X, SPAWN_Z)
         this.telemetry?.playerRespawn()

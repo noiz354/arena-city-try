@@ -98,6 +98,21 @@ export class TrafficSystem {
     return best
   }
 
+  /**
+   * Collidables for visible traffic cars (solid obstacles). Excludes the given
+   * vehicle (the caller's own car) and any car culled by distance, so no
+   * invisible collider blocks the player. Wrecked cars remain solid obstacles.
+   */
+  getCollidables(exclude?: Vehicle): Collidable[] {
+    const list: Collidable[] = []
+    for (const car of this.cars) {
+      const v = car.vehicle
+      if (v === exclude || !v.group.visible) continue
+      list.push({ box: v.getCollidableBox() })
+    }
+    return list
+  }
+
   /** Drive all AI cars (skip occupied/stolen). */
   update(dt: number, playerX: number, playerZ: number, collidables: Collidable[]): void {
     for (const car of this.cars) {
@@ -118,25 +133,20 @@ export class TrafficSystem {
     const r = car.route
     const pos = v.position
 
+    // Combined obstacle set: static collidables (buildings + parked cars) PLUS
+    // other visible traffic (excluding self). Used for both the stop-ahead
+    // check and physical push-out, so cars — including the player's — can't
+    // overlap each other.
+    const obstacles = collidables.concat(this.getCollidables(v))
+
     // blocked check: is there an obstacle ahead within SAFE_GAP?
     let blocked = false
     const aheadX = pos.x + Math.sin(v.yaw) * SAFE_GAP
     const aheadZ = pos.z + Math.cos(v.yaw) * SAFE_GAP
-    for (const { box } of collidables) {
+    for (const { box } of obstacles) {
       if (
         aheadX > box.min.x - 0.5 && aheadX < box.max.x + 0.5 &&
         aheadZ > box.min.z - 0.5 && aheadZ < box.max.z + 0.5
-      ) {
-        blocked = true
-        break
-      }
-    }
-    for (const other of this.cars) {
-      if (other.vehicle === v) continue
-      const b = other.vehicle.getCollidableBox()
-      if (
-        aheadX > b.min.x - 0.5 && aheadX < b.max.x + 0.5 &&
-        aheadZ > b.min.z - 0.5 && aheadZ < b.max.z + 0.5
       ) {
         blocked = true
         break
@@ -165,7 +175,7 @@ export class TrafficSystem {
       }
     }
 
-    v.aiDrive(dt, targetYaw, targetSpeed, collidables)
+    v.aiDrive(dt, targetYaw, targetSpeed, obstacles)
 
     // keep inside the city
     pos.x = Math.max(-CITY_LIMIT, Math.min(CITY_LIMIT, pos.x))

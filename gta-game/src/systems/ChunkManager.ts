@@ -239,7 +239,7 @@ export class ChunkManager {
     if (content.props.length > 0) {
       const mats = makePropMaterials()
       // track prop materials so they can be disposed with the chunk
-      chunk.materials.push([mats.lamp, mats.trunk, mats.foliage])
+      chunk.materials.push([mats.lamp, mats.trunk, mats.foliage, mats.hydrant, mats.bench, mats.rock])
       for (const prop of content.props) {
         this.buildProp(chunk, prop, originX, originZ, mats)
       }
@@ -320,12 +320,49 @@ export class ChunkManager {
       head.position.set(x, 6.2, z)
       chunk.props.add(pole, head)
     } else if (prop.kind === 'tree') {
-      const trunk = new Mesh(new CylinderGeometry(0.25, 0.4, 3.2, 8), mats.trunk)
-      trunk.position.set(x, 1.6, z)
-      const foliage = new Mesh(new IcosahedronGeometry(2.1, 0), mats.foliage)
-      foliage.position.set(x, 4.4, z)
-      foliage.rotation.y = prop.rot
-      chunk.props.add(trunk, foliage)
+      // growth-hierarchy tree (threejs-procedural-vegetation): a tapered trunk,
+      // a few angled branches, and leaf clusters at the tips — deterministic
+      // from the tree's world position so it is stable across chunk reloads.
+      const tree = buildTree(x, z, prop.rot, mats)
+      chunk.props.add(tree)
+    } else if (prop.kind === 'bush') {
+      // two overlapping low icosahedra for a fuller shrub silhouette
+      const bush = new Mesh(new IcosahedronGeometry(0.8, 0), mats.foliage)
+      bush.position.set(x, 0.55, z)
+      bush.rotation.y = prop.rot
+      bush.castShadow = true
+      const bush2 = new Mesh(new IcosahedronGeometry(0.55, 0), mats.foliage)
+      bush2.position.set(x + 0.4, 0.4, z + 0.2)
+      bush2.rotation.y = prop.rot
+      bush2.castShadow = true
+      chunk.props.add(bush, bush2)
+    } else if (prop.kind === 'hydrant') {
+      const body = new Mesh(new CylinderGeometry(0.22, 0.26, 0.7, 8), mats.hydrant)
+      body.position.set(x, 0.35, z)
+      const cap = new Mesh(new SphereGeometry(0.22, 10, 8), mats.hydrant)
+      cap.position.set(x, 0.72, z)
+      chunk.props.add(body, cap)
+    } else if (prop.kind === 'bench') {
+      const seat = new Mesh(new BoxGeometry(1.6, 0.08, 0.5), mats.bench)
+      seat.position.set(x, 0.5, z)
+      const back = new Mesh(new BoxGeometry(1.6, 0.5, 0.08), mats.bench)
+      back.position.set(x, 0.72, z - 0.22)
+      const leg1 = new Mesh(new BoxGeometry(0.1, 0.5, 0.4), mats.bench)
+      leg1.position.set(x - 0.7, 0.25, z)
+      const leg2 = new Mesh(new BoxGeometry(0.1, 0.5, 0.4), mats.bench)
+      leg2.position.set(x + 0.7, 0.25, z)
+      const group = new Group()
+      group.add(seat, back, leg1, leg2)
+      group.rotation.y = prop.rot
+      group.position.set(x, 0, z)
+      chunk.props.add(group)
+    } else if (prop.kind === 'rock') {
+      const rock = new Mesh(new IcosahedronGeometry(0.7, 0), mats.rock)
+      rock.position.set(x, 0.3, z)
+      rock.scale.set(1, 0.6, 0.8)
+      rock.rotation.y = prop.rot
+      rock.castShadow = true
+      chunk.props.add(rock)
     }
   }
 
@@ -377,6 +414,72 @@ interface PropMaterials {
   lamp: MeshStandardMaterial
   trunk: MeshStandardMaterial
   foliage: MeshStandardMaterial
+  hydrant: MeshStandardMaterial
+  bench: MeshStandardMaterial
+  rock: MeshStandardMaterial
+}
+
+/** Deterministic 0..1 value from a tree's world position (stable across reloads). */
+function treeSeed(x: number, z: number): number {
+  let h = (Math.round(x * 16) + 7) * 374761393 + (Math.round(z * 16) + 11) * 668265263
+  h = (h ^ (h >> 13)) * 1274126177
+  return ((h ^ (h >> 16)) >>> 0) / 4294967296
+}
+
+/**
+ * Build a growth-hierarchy tree as a Group (trunk → branches → leaf clusters).
+ * Branch count/angles/canopy scale vary deterministically with `seed` so the
+ * forest reads varied without any randomness at render time.
+ */
+function buildTree(x: number, z: number, rot: number, mats: PropMaterials): Group {
+  const group = new Group()
+  const s = treeSeed(x, z)
+
+  // tapered trunk
+  const trunkH = 2.4 + s * 1.2
+  const trunk = new Mesh(new CylinderGeometry(0.16, 0.34, trunkH, 7), mats.trunk)
+  trunk.position.y = trunkH / 2
+  trunk.castShadow = true
+  group.add(trunk)
+
+  // branches: 2–4, angled outward from the upper trunk
+  const branchCount = 2 + Math.floor(s * 3)
+  for (let i = 0; i < branchCount; i++) {
+    const a = (i / branchCount) * Math.PI * 2 + s * 1.7
+    const lift = 0.5 + s * 0.4
+    const len = 1.1 + ((i * 0.37 + s) % 1) * 1.0
+    const branch = new Mesh(new CylinderGeometry(0.05, 0.12, len, 5), mats.trunk)
+    branch.position.set(
+      Math.cos(a) * 0.35,
+      trunkH * (0.55 + 0.3 * ((i % 2) + s * 0.5)),
+      Math.sin(a) * 0.35,
+    )
+    branch.rotation.z = Math.cos(a) * (Math.PI / 2 - lift)
+    branch.rotation.x = Math.sin(a) * (Math.PI / 2 - lift)
+    branch.castShadow = true
+    group.add(branch)
+
+    // leaf cluster at each branch tip
+    const leaf = new Mesh(new IcosahedronGeometry(0.7 + s * 0.4, 0), mats.foliage)
+    const tip = branch.position
+      .clone()
+      .add(new Vector3(Math.cos(a) * len * 0.6, Math.sin(lift) * len * 0.6, Math.sin(a) * len * 0.6))
+    leaf.position.copy(tip)
+    leaf.scale.setScalar(0.8 + ((i * 0.31 + s) % 1) * 0.6)
+    leaf.castShadow = true
+    group.add(leaf)
+  }
+
+  // central canopy
+  const canopy = new Mesh(new IcosahedronGeometry(1.6 + s * 0.9, 0), mats.foliage)
+  canopy.position.y = trunkH + 0.7
+  canopy.scale.y = 0.8
+  canopy.castShadow = true
+  group.add(canopy)
+
+  group.position.set(x, 0, z)
+  group.rotation.y = rot
+  return group
 }
 
 function makePropMaterials(): PropMaterials {
@@ -384,5 +487,8 @@ function makePropMaterials(): PropMaterials {
     lamp: new MeshStandardMaterial({ color: 0xfff3c4, emissive: 0xffd166, emissiveIntensity: 0.7 }),
     trunk: new MeshStandardMaterial({ color: 0x6b5b45, roughness: 0.9 }),
     foliage: new MeshStandardMaterial({ color: 0x3d8f52, roughness: 0.9 }),
+    hydrant: new MeshStandardMaterial({ color: 0xc0392b, roughness: 0.5, metalness: 0.2 }),
+    bench: new MeshStandardMaterial({ color: 0x8a6b4a, roughness: 0.85 }),
+    rock: new MeshStandardMaterial({ color: 0x8b8f96, roughness: 0.95 }),
   }
 }

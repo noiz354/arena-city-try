@@ -123,12 +123,7 @@ export class Vehicle {
     this.resolveCollisions(collidables)
     this.resolveWorldBounds()
 
-    // --- damage from impacts ---
-    const impact = this.lastCollided ? Math.abs(this.speed) : 0
-    if (impact > IMPACT_DAMAGE_THRESHOLD) {
-      const dmg = (impact - IMPACT_DAMAGE_THRESHOLD) * IMPACT_DAMAGE_SCALE
-      this.takeDamage(dmg * dt * 60) // frame-rate independent-ish
-    }
+    this.applyImpactDamage(dt)
   }
 
   /**
@@ -154,6 +149,7 @@ export class Vehicle {
     this.integrate(dt, 0)
     this.resolveCollisions(collidables)
     this.resolveWorldBounds()
+    this.applyImpactDamage(dt)
   }
 
   /** Shared position/visual integration used by both player and AI driving. */
@@ -176,6 +172,15 @@ export class Vehicle {
       this.health = 0
       this.wrecked = true
       this.speed = 0
+    }
+  }
+
+  /** Impact damage from the most recent frame's collision (player + AI). */
+  private applyImpactDamage(dt: number): void {
+    const impact = this.lastCollided ? Math.abs(this.speed) : 0
+    if (impact > IMPACT_DAMAGE_THRESHOLD) {
+      const dmg = (impact - IMPACT_DAMAGE_THRESHOLD) * IMPACT_DAMAGE_SCALE
+      this.takeDamage(dmg * dt * 60) // frame-rate independent-ish
     }
   }
 

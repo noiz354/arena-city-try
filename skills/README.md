@@ -93,6 +93,44 @@ game development. React/R3F category excluded (this project uses plain Three.js)
 | `mobile/` (4) | performance, battery-optimization, memory-management, touch-input | Mobile/touch support |
 | `typescript/` (3) | type-safe game dev patterns | TypeScript strict-mode patterns |
 
+### 2e. `community/threejs-awesome-graphics/` — 24 skills
+**Source:** [scottstts/Threejs-Awesome-Graphics-Agent-Skills](https://github.com/scottstts/Threejs-Awesome-Graphics-Agent-Skills)
+
+A Three.js graphics-excellence skill pack (mesh design, lighting, PBR materials,
+textures, shaders, TSL/WebGPU, GLSL, post-processing, realism, stylization,
+particles, procedural visuals, color management, tone mapping). Ships each skill
+with a `SKILL.md` + `references/` + runnable `examples/` + `assets/`, and a router
+(`threejs-skill-router`) that decomposes a visual target into the right experts.
+The `dev/` example-gallery mirror was skipped to stay under the snapshot budget —
+all example source already lives inside `skills/*/examples/`.
+
+| Skill | Expertise |
+|---|---|
+| `threejs-skill-router` | Decompose a visual target into the smallest relevant expert systems. **Load first.** |
+| `threejs-camera-direction` | Authored lenses/shots, chase/side/orbit rigs, pointer look, floating origins |
+| `threejs-procedural-animation` | Analytic timelines, gravity turns, springs, quaternion alignment, debris motion |
+| `threejs-procedural-fields` | Shared scalar/vector fields, frequency bands, domain warping, procedural normals |
+| `threejs-procedural-materials` | Hybrid texture-backed PBR, atlas filtering, terrain wetness, lava/emissive, raytraced gems, dispersive glass |
+| `threejs-parallax-occlusion-mapping` | TSL height marching, relief shells, self-shadowing |
+| `threejs-procedural-geometry` | Polygon modeling, loft/revolve/sweep, crafted assemblies, defect audits |
+| `threejs-procedural-vegetation` | Growth hierarchies, ivy, GPU grass, flower fields, foliage normals, wind |
+| `threejs-procedural-architecture` | Massing/façade grammars, module compilation |
+| `threejs-procedural-planets` | Spherical terrain, ridges, craters, biomes, altitude filtering |
+| `threejs-spectral-ocean` | Validated FFT synthesis, hybrid FFT/Gerstner water, caustics, Jacobian foam |
+| `threejs-water-optics` | Shared analytic waves/normals, pool heightfields, ripples, refraction |
+| `threejs-precipitation-surfaces` | Snow/rain accumulation, snow caps, wet puddles, ripple normals |
+| `threejs-atmosphere-aerial-perspective` | Rayleigh/Mie atmosphere, sky, depth-based scattering |
+| `threejs-volumetric-clouds` | Weather-shaped density, raymarching, cloud lighting/shadows |
+| `threejs-raymarched-space-effects` | Black holes, accretion disks, wormholes, lensed star fields |
+| `threejs-procedural-vfx` | Aurora curtains, WebGPU fire/smoke, reentry shells, sparks, dissolving debris |
+| `threejs-temporal-surfaces` | Frost, wet-window droplets, refraction, blur |
+| `threejs-shadow-systems` | Stable cascades, cached clipmap shadows |
+| `threejs-screen-space-ambient-occlusion` | GTAO, bent normals, bilateral/temporal reconstruction |
+| `threejs-bloom` | HDR extraction, multi-scale filtering, selective contribution |
+| `threejs-exposure-color-grading` | Luminance metering, tone mapping, generated 3D LUT |
+| `threejs-image-pipeline` | Render-signal ownership/ordering across image-space systems |
+| `threejs-visual-validation` | Fixed-view captures, diagnostic mosaics, seed sweeps, GPU evidence |
+
 ---
 
 ## How to use
@@ -106,5 +144,8 @@ game development. React/R3F category excluded (this project uses plain Three.js)
 4. **Deep architecture questions** (ECS, systems, perf) → read the
    `community/threejs-ecs-ts/` guides.
 5. **Full production-grade patterns** → load `community/ok-skills/threejs-master/SKILL.md`.
+6. **"Awesome graphics" upgrade** (sky/ocean/clouds/vegetation/PBR/post-FX) →
+   load `community/threejs-awesome-graphics/skills/threejs-skill-router/SKILL.md`;
+   it routes to the other 23 experts.
 
 Each pack keeps its own `README.md` + `LICENSE` (all MIT).

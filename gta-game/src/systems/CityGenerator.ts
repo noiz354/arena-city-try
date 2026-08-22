@@ -12,6 +12,18 @@ export const CHUNK_COUNT = Math.ceil(CITY_SIZE / CHUNK_SIZE) + 2 // 20 + margin 
 export const CHUNK_GRID_HALF = (CHUNK_COUNT * CHUNK_SIZE) / 2 // 176
 export const CHUNK_CENTER = Math.floor(CHUNK_GRID_HALF / CHUNK_SIZE) // center chunk index
 
+/**
+ * Landmark tower. Placed at the center of the north-east central block (20,20)
+ * — NOT at the origin — so it no longer blocks the central road intersection
+ * where the player spawns and AI traffic passes. Previously it sat at (0,0)
+ * and swallowed the intersection, wedging the player + starter cars and
+ * deadlocking traffic on both center roads (see PLAYTEST_BUGS BUG-001/002).
+ */
+export const TOWER_X = 20
+export const TOWER_Z = 20
+export const TOWER_SIZE = 16
+export const TOWER_HEIGHT = 72
+
 /** Road center lines per axis (between blocks). */
 export const ROADS_X: number[] = Array.from({ length: BLOCK_COUNT - 1 }, (_, i) =>
   i * CELL - CITY_HALF + BLOCK_SIZE + ROAD_WIDTH / 2,
@@ -47,7 +59,7 @@ export interface BuildingSpec {
 }
 
 export interface PropSpec {
-  kind: 'streetlight' | 'tree'
+  kind: 'streetlight' | 'tree' | 'bush' | 'hydrant' | 'bench' | 'rock'
   x: number
   z: number
   rot: number
@@ -85,15 +97,16 @@ export function generateChunk(cx: number, cz: number): ChunkContent {
 
   const palette = [0x8fa3b8, 0xb5c4d4, 0xc9b58f, 0xa8b8a0, 0xcfd8e3, 0x9b8aa6, 0x7d9aad]
 
-  // --- landmark: central tower at the city center (chunk containing world 0,0) ---
-  const isCenterChunk = cx === CHUNK_CENTER && cz === CHUNK_CENTER
-  if (isCenterChunk) {
+  // --- landmark: tower in the NE central block (clear of the center intersection) ---
+  const towerCx = Math.floor((TOWER_X + CHUNK_GRID_HALF) / CHUNK_SIZE)
+  const towerCz = Math.floor((TOWER_Z + CHUNK_GRID_HALF) / CHUNK_SIZE)
+  if (cx === towerCx && cz === towerCz) {
     buildings.push({
-      cx: 0,
-      cz: 0,
-      w: 16,
-      d: 16,
-      h: 72,
+      cx: TOWER_X,
+      cz: TOWER_Z,
+      w: TOWER_SIZE,
+      d: TOWER_SIZE,
+      h: TOWER_HEIGHT,
       color: 0x5d7a9e,
     })
   }
@@ -121,8 +134,10 @@ export function generateChunk(cx: number, cz: number): ChunkContent {
           if (plotCx < worldMinX || plotCx >= worldMinX + CHUNK_SIZE) continue
           if (plotCz < worldMinZ || plotCz >= worldMinZ + CHUNK_SIZE) continue
 
-          // keep the central tower footprint clear
-          if (isCenterChunk && Math.abs(plotCx) < 14 && Math.abs(plotCz) < 14) continue
+          // keep the tower footprint clear — checked per-plot (not per-chunk) so
+          // plots in every chunk that overlaps the tower are skipped
+          const towerClear = TOWER_SIZE / 2 + plotSize / 2
+          if (Math.abs(plotCx - TOWER_X) < towerClear && Math.abs(plotCz - TOWER_Z) < towerClear) continue
 
           if (rng() < 0.7) {
             buildings.push({
@@ -139,16 +154,44 @@ export function generateChunk(cx: number, cz: number): ChunkContent {
           if (pi === 0 && pj === 0) {
             props.push({ kind: 'streetlight', x: blockMinX + 1, z: blockMinZ + 1, rot: rng() * Math.PI * 2 })
           }
+          // fire hydrant on the opposite corner of some blocks
+          if (pi === 1 && pj === 1 && rng() < 0.5) {
+            props.push({ kind: 'hydrant', x: blockMinX + BLOCK_SIZE - 1, z: blockMinZ + BLOCK_SIZE - 1, rot: rng() * Math.PI * 2 })
+          }
         }
       }
 
-      // a few trees along the road at random spots within this chunk
-      const treeCount = Math.floor(rng() * 3)
+      // --- street furniture & vegetation scattered within this chunk ---
+      // trees along the road/sidewalk strip
+      const treeCount = 1 + Math.floor(rng() * 4)
       for (let t = 0; t < treeCount; t++) {
         const tx = worldMinX + rng() * CHUNK_SIZE
         const tz = worldMinZ + rng() * CHUNK_SIZE
         if (!inRoad(tx, tz)) continue
         props.push({ kind: 'tree', x: tx, z: tz, rot: rng() * Math.PI * 2 })
+      }
+
+      // bushes inside blocks (not on roads)
+      const bushCount = 1 + Math.floor(rng() * 4)
+      for (let b = 0; b < bushCount; b++) {
+        const tx = worldMinX + rng() * CHUNK_SIZE
+        const tz = worldMinZ + rng() * CHUNK_SIZE
+        if (inRoad(tx, tz)) continue
+        props.push({ kind: 'bush', x: tx, z: tz, rot: rng() * Math.PI * 2 })
+      }
+
+      // occasional rock in open block areas
+      if (rng() < 0.4) {
+        const tx = worldMinX + rng() * CHUNK_SIZE
+        const tz = worldMinZ + rng() * CHUNK_SIZE
+        if (!inRoad(tx, tz)) props.push({ kind: 'rock', x: tx, z: tz, rot: rng() * Math.PI * 2 })
+      }
+
+      // occasional bench along the sidewalk
+      if (rng() < 0.3) {
+        const tx = worldMinX + rng() * CHUNK_SIZE
+        const tz = worldMinZ + rng() * CHUNK_SIZE
+        if (inRoad(tx, tz)) props.push({ kind: 'bench', x: tx, z: tz, rot: rng() * Math.PI * 2 })
       }
     }
   }

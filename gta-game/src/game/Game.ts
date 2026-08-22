@@ -30,6 +30,9 @@ import { AutoQuality } from '../systems/AutoQuality'
 import { MobileControls } from '../systems/MobileControls'
 import { WeaponView } from '../systems/WeaponView'
 import { SaveManager } from '../systems/SaveManager'
+import { Vegetation } from '../systems/Vegetation'
+import { WetSurfaceSystem } from '../systems/WetSurfaceSystem'
+import { ColliderDebug } from '../systems/ColliderDebug'
 import { PauseMenu } from '../ui/pauseMenu'
 import { ModeController, SPAWN_X, SPAWN_Z } from '../systems/ModeController'
 import type { GameTelemetry } from '../analytics/gameTelemetry'
@@ -66,6 +69,9 @@ export class Game {
   readonly audio: AudioManager
   readonly dayNight: DayNightSystem
   readonly weather: WeatherSystem
+  readonly vegetation: Vegetation
+  readonly wet: WetSurfaceSystem
+  readonly colliderDebug: ColliderDebug
   readonly particles: ParticleSystem
   readonly postfx: PostFX
   readonly quality: AutoQuality
@@ -148,8 +154,26 @@ export class Game {
     moon.position.set(-80, 60, -40)
     this.scene.add(moon)
     const ambient = this.world.root.children.find(c => c instanceof AmbientLight) as AmbientLight
-    this.dayNight = new DayNightSystem(this.world.sun, ambient, moon, this.world.skyColor, this.world.fog)
+    this.dayNight = new DayNightSystem(
+      this.world.sun,
+      ambient,
+      this.world.hemi,
+      moon,
+      this.world.skyColor,
+      this.world.fog,
+      this.world.sky,
+    )
     this.weather = new WeatherSystem(this.scene, this.world.fog)
+    this.vegetation = new Vegetation()
+    this.scene.add(this.vegetation.root)
+
+    // rain → wet surfaces (shares the WeatherSystem envelope)
+    this.wet = new WetSurfaceSystem(this.world.groundMaterial, () => this.weather.rainAmount)
+    for (const m of this.wet.meshes) this.scene.add(m)
+
+    // debug collider visualizer (off by default; F3 toggles)
+    this.colliderDebug = new ColliderDebug()
+    this.scene.add(this.colliderDebug.root)
     this.particles = new ParticleSystem(this.scene)
     this.mobile = new MobileControls(this.input)
 
@@ -334,6 +358,9 @@ export class Game {
     this.input.detach()
     window.removeEventListener('resize', this.resize)
     this.world.dispose()
+    this.vegetation.dispose()
+    this.wet.dispose()
+    this.colliderDebug.dispose()
     this.vehicles.dispose()
     this.traffic.dispose()
     this.wanted.dispose()
@@ -361,11 +388,18 @@ export class Game {
 
     const pos = this.modeCtrl.activePosition
     this.world.update(pos.x, pos.z)
-    this.world.updateSun(pos.x, pos.z)
+    // day/night must run first: it computes the shared sun direction + light
+    // colors, which updateSun then uses to position the light/shadow frustum
+    this.dayNight.update(delta)
+    this.world.updateSun(pos.x, pos.z, this.dayNight.sunDirection)
     this.vehicles.update(pos.x, pos.z)
 
     const buildings = this.world.getCollidables()
     const allCollidables = buildings.concat(this.vehicles.getCollidables())
+
+    // debug: F3 toggles the collider wireframe visualizer
+    if (this.input.wasPressed('F3')) this.colliderDebug.toggle()
+    this.colliderDebug.update(delta, allCollidables)
 
     // enemy LOS only needs buildings near the chase area (spatial query, not full list)
     const losBuildings = this.world.chunks.queryCircle(this.player.position.x, this.player.position.z, 70)
@@ -373,6 +407,7 @@ export class Game {
     this.pedestrians.update(delta, buildings)
     this.traffic.update(delta, pos.x, pos.z, allCollidables)
     this.checkCarPedestrianCollisions()
+    this.checkTrafficPlayerCollision()
     this.pickups.update(delta)
     this.weapons.update(delta)
 
@@ -407,12 +442,15 @@ export class Game {
     const pv = this.player.velocity
     this.weaponView.update(delta, this.modeCtrl.mode === 'foot' && Math.hypot(pv.x, pv.z) > 0.5, Math.min(1, Math.hypot(pv.x, pv.z) / 9.5))
 
-    // --- polish systems ---
-    this.dayNight.update(delta)
+    // --- polish systems (day/night already updated above, before updateSun) ---
     this.weather.update(delta, this.camera.position)
+    this.vegetation.update(this.clock.elapsedTime)
+    this.wet.update(delta)
     this.particles.update(delta)
     this.updateExplosions()
     this.updateEngineAudio()
+    // single-owner exposure: scene-light model (day amount) → tone-map exposure
+    this.postfx.setExposure(0.55 + this.dayNight.day * 0.6)
     this.postfx.update(delta)
     this.quality.frame()
     this.quality.update(delta)
@@ -493,6 +531,41 @@ export class Game {
       this.missions.waypoint(),
       this.missions.markerPositions(),
     )
+  }
+
+  /**
+   * On-foot player hit by fast traffic: damage + knockback in the car's travel
+   * direction. Makes passing cars a real dodge challenge instead of letting the
+   * player no-clip through them. Cooldown-gated so one hit isn't applied every
+   * frame.
+   */
+  private lastTrafficHit = 0
+  private checkTrafficPlayerCollision(): void {
+    if (this.modeCtrl.mode !== 'foot' || this.player.health <= 0) return
+    const now = performance.now()
+    if (now - this.lastTrafficHit < 400) return
+
+    const p = this.player.position
+    for (const car of this.traffic.cars) {
+      const v = car.vehicle
+      if (!v.group.visible) continue
+      const speed = Math.abs(v.speed)
+      if (speed < 2.5) continue
+      const b = v.getCollidableBox()
+      const r = 0.45 // player radius
+      if (p.x < b.min.x - r || p.x > b.max.x + r || p.z < b.min.z - r || p.z > b.max.z + r) continue
+
+      // hit — damage scales with speed, capped
+      this.player.takeDamage(Math.min(40, Math.round((speed - 2.5) * 6)))
+      this.onPlayerDamaged?.()
+      this.audio.playDamage()
+      this.postfx.addShake(0.4)
+      this.lastTrafficHit = now
+      // fling the player away in the car's travel direction
+      this.player.velocity.set(Math.sin(v.yaw) * speed * 0.6, 3.5, Math.cos(v.yaw) * speed * 0.6)
+      this.player.grounded = false
+      break
+    }
   }
 
   /** Full save: profile + player state + weapon inventory (localStorage). */

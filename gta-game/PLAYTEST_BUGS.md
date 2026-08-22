@@ -1,26 +1,29 @@
-﻿# PLAYTEST BUGS - CITY RUSH
+# PLAYTEST BUGS - CITY RUSH
 
 **Date:** 2026-08-22
 
 ## CRITICAL
 
-### BUG-001: Spawn vehicle wedged between buildings
+### BUG-001: Spawn vehicle wedged between buildings — ✅ FIXED
 - **Location:** Vehicle at (9.1, 0.0, 7.0)
 - **Reproduction:** Start game, press E to enter sedan
 - **Result:** Speed stays 0 km/h, vehicle cannot move
 - **Impact:** Core driving feature broken on first vehicle
-- **Root cause:** CityGenerator places sedan in collision with building geometry
-- **Fix:** Move sedan spawn to open road position, e.g. (12, 0.0, 16)
+- **Root cause:** the 16×16 m landmark tower sat at the origin, on top of the
+  central road intersection — the starter cars spawned inside/against its walls
+- **Fix:** tower relocated to (20,20) (NE central block), clearing the intersection
 
 ## HIGH
 
-### BUG-002: Player spawn stuck between buildings/trees
-- **Location:** Player spawns at (0, 0.9, 9.8)
+### BUG-002: Player spawn stuck between buildings/trees — ✅ FIXED
+- **Location:** Player spawns at (0, 0.95, 0)
 - **Reproduction:** Fresh game start
-- **Result:** Player is wedged between buildings, hard to move out
-- **Impact:** Poor first impression, confusing UX
-- **Root cause:** Spawn point collision with nearby building/tree geometry
-- **Fix:** Move spawn to open area, e.g. (0, 0.9, 16) or check clearance
+- **Result:** Player is wedged inside the landmark tower collider, hard to move out
+- **Impact:** Poor first impression, confusing UX — reads as an invisible wall
+- **Root cause:** the 16×16 m tower collider covered the spawn origin (0,0); the
+  player spawned dead-center inside it
+- **Fix:** tower relocated to (20,20); spawn origin verified clear via a
+  regression test (`tests/smoke.mjs`) that no active collider overlaps (0,0)
 
 ## MEDIUM
 
@@ -41,3 +44,15 @@
 ### BUG-005: PCFSoftShadowMap deprecated warning
 - **Console:** WebGLRenderer shadow map type PCFSoftShadowMap is deprecated
 - **Fix:** Use PCFShadowMap instead
+
+## FEATURE ADDED (post-audit)
+
+### Traffic is now solid — player can no longer no-clip through AI cars
+- **Location:** `ModeController.ts`, `TrafficSystem.ts`, `Vehicle.ts`, `Game.ts`
+- **Result:** player (on foot) and the driven vehicle collide with visible AI
+  traffic; AI cars physically push out of the player's car and each other, and
+  take impact damage (can wreck into stationary obstacles)
+- **Extra:** on-foot player hit by a fast car takes damage + knockback (dodge
+  challenge); camera intentionally ignores traffic in wall-avoidance to avoid
+  snap-jitter from moving cars
+- **Tests:** `TrafficSystem.getCollidables` visibility/exclusion + AI impact damage
