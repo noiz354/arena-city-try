@@ -1,3 +1,11 @@
+# CI Workflow (pending GitHub App permission)
+
+The push of `.github/workflows/ci.yml` was rejected because the GitHub App token
+used for this session lacks the `workflows` permission. The workflow is preserved
+here — restore it by creating `.github/workflows/ci.yml` with this content and
+pushing it with an account/token that has the `workflows` permission:
+
+```yaml
 name: CI
 
 on:
@@ -37,3 +45,4 @@ jobs:
         with:
           name: dist
           path: gta-game/dist
+```
