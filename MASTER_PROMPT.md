@@ -45,6 +45,18 @@ Load these skill files from `skills/` directory as needed. Each contains archite
 - **skills/Astray.md** — Maze generation, merged geometry rendering, smooth camera follow, state machine. Load when: building interiors, procedural rooms.
 
 
+## KNOWLEDGE BASE EXTRA: 34 COMMUNITY SKILLS (downloaded)
+
+In addition to the 12 core skills above, these community skill packs are downloaded
+under `skills/community/` (see `skills/README.md` for the full index):
+
+- **`skills/community/threejs-game-skills/`** (9 skills) — End-to-end game-building system with a **director skill** (`threejs-game-director`) that routes gameplay, AAA graphics, UI, QA, debug, and AI asset generation. Load the director for complete builds/iteration.
+- **`skills/community/threejs-foundations/`** (10 skills) — Three.js API references: fundamentals, geometry, materials, lighting, textures, animation, loaders, shaders, postprocessing, interaction.
+- **`skills/community/ok-skills/threejs-master/`** — Production-grade Three.js game-building skill (r170+, patterns for every system).
+- **`skills/community/threejs-ecs-ts/`** — ECS architecture + game systems (AI, audio, camera, collision, combat, input, inventory, level, physics, spawn, UI) + Three.js deep guides + mobile/touch + TypeScript patterns.
+
+All packs are MIT-licensed; each keeps its own README/LICENSE.
+
 ## BUILD ORDER: 7-PHASE WORKFLOW
 
 ### Phase 0: Project Scaffold
