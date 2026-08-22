@@ -15,10 +15,11 @@ export class HUD {
     this.el = document.createElement('div')
     this.el.className = 'hud'
     this.el.innerHTML = `
-      <div class="hud__title">CITY RUSH — Phase 1: Player Controller</div>
+      <div class="hud__title">CITY RUSH — Phase 2: Open World Streaming</div>
       <div class="hud__stats">
         <span id="hud-fps">FPS: --</span>
         <span id="hud-pos">POS: --</span>
+        <span id="hud-chunk">CHUNK: --</span>
         <span class="hud__stamina"><span id="hud-stamina-fill" class="hud__stamina-fill"></span></span>
       </div>
       <div class="hud__hint">WASD move · SHIFT sprint · SPACE jump · LMB-drag look · WHEEL zoom</div>
@@ -39,9 +40,12 @@ export class HUD {
       this.lastSecond = now
 
       const p = game.player.position
+      const { cx, cz } = game.world.chunks.worldToChunk(p.x, p.z)
       document.getElementById('hud-fps')!.textContent = `FPS: ${this.fps}`
       document.getElementById('hud-pos')!.textContent =
         `POS: ${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`
+      document.getElementById('hud-chunk')!.textContent =
+        `CHUNK ${cx},${cz} · ACTIVE ${game.world.chunks.activeCount}`
     }
   }
 }

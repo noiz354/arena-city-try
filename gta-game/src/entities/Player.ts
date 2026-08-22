@@ -9,6 +9,7 @@ import {
 } from 'three'
 import type { InputManager } from '../utils/InputManager'
 import type { Collidable } from '../game/World'
+import { CITY_HALF } from '../systems/CityGenerator'
 
 const GRAVITY = 26 // m/s^2, slightly snappy for game feel
 const JUMP_SPEED = 9.2
@@ -19,7 +20,7 @@ const ACCEL_AIR = 2.5
 const HALF_HEIGHT = 0.95 // capsule half-height (feet = y - HALF_HEIGHT)
 const RADIUS = 0.45
 const MAX_FALL = -28
-const WORLD_HALF = 49 // clamp inside the 100x100 world
+const WORLD_HALF = CITY_HALF - 3 // clamp inside the city bounds
 
 const SPRINT_DRAIN = 22 // stamina/sec
 const STAMINA_REGEN = 14 // stamina/sec (grounded, not sprinting)

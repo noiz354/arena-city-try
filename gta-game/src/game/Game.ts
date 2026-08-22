@@ -65,6 +65,7 @@ export class Game {
     this.player = new Player()
     this.player.group.position.set(0, 0.95, 0)
     this.scene.add(this.player.group)
+    this.world.update(this.player.position.x, this.player.position.z)
 
     this.cameraRig = new CameraRig(this.camera)
 
@@ -106,11 +107,14 @@ export class Game {
   }
 
   private update(delta: number): void {
-    const collidables = this.world.getCollidables()
-
     // gameplay update
-    this.player.update(delta, this.input, this.cameraRig.yaw, collidables)
-    this.cameraRig.update(delta, this.input, this.player.position, collidables)
+    this.player.update(delta, this.input, this.cameraRig.yaw, this.world.getCollidables())
+
+    // open-world streaming: activate/deactivate chunks around the player
+    this.world.update(this.player.position.x, this.player.position.z)
+    this.world.updateSun(this.player.position.x, this.player.position.z)
+
+    this.cameraRig.update(delta, this.input, this.player.position, this.world.getCollidables())
 
     // external systems + render
     this.updateCallbacks.forEach(cb => cb(delta))
