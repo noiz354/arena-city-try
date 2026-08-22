@@ -21,15 +21,18 @@ echo ">> Building with GH_PAGES=1 (base /arena-city-try/)"
 (cd "$GAME" && GH_PAGES=1 npm run build)
 
 echo ">> Cloning fresh worktree (repo untouched)"
-git clone --quiet --branch gh-pages "$REMOTE" "$WORK/gh" 2>/dev/null || {
+if git clone --quiet --branch gh-pages "$REMOTE" "$WORK/gh" 2>/dev/null; then
+  : # existing gh-pages branch checked out
+else
   git clone --quiet "$REMOTE" "$WORK/gh"
-  (cd "$WORK/gh" && git checkout --quiet --orphan gh-pages >/dev/null 2>&1 || true)
-}
+  (cd "$WORK/gh" && git checkout --quiet --orphan gh-pages)
+fi
 
 echo ">> Replacing contents with the fresh build"
 (
   cd "$WORK/gh"
-  git rm -rq --ignore-unmatch . >/dev/null 2>&1 || true
+  # wipe everything except .git so no stale repo files leak into the site
+  find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
   cp -r "$GAME/dist/." .
   touch .nojekyll
   git add -A
