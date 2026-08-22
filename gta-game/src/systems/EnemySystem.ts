@@ -280,6 +280,7 @@ export class EnemySystem {
   update(dt: number, playerPos: Vector3, collidables: Collidable[]): void {
     this.elapsed += dt
     for (const e of this.enemies) {
+      e.lastAttacked = false // reset before update so melee hit is consumed this frame
       e.update(dt, playerPos, collidables, this.enemies)
       e.updateHealthBar()
     }
@@ -319,7 +320,8 @@ export class EnemySystem {
     const i = this.enemies.indexOf(enemy)
     if (i >= 0) {
       this.enemies.splice(i, 1)
-      this.spawnPoints.splice(i, 1)
+      // only remove spawnPoint if this enemy had one (original enemies have spawn points, cops added via spawnCop do too)
+      if (i < this.spawnPoints.length) this.spawnPoints.splice(i, 1)
     }
     this.group.remove(enemy.group)
   }

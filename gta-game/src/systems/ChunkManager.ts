@@ -238,6 +238,8 @@ export class ChunkManager {
     chunk.props = new Group()
     if (content.props.length > 0) {
       const mats = makePropMaterials()
+      // track prop materials so they can be disposed with the chunk
+      chunk.materials.push([mats.lamp, mats.trunk, mats.foliage])
       for (const prop of content.props) {
         this.buildProp(chunk, prop, originX, originZ, mats)
       }

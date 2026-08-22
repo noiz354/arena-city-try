@@ -48,6 +48,7 @@ export class MissionSystem {
   readonly hooks: MissionHooks = {}
 
   private chaseTarget: Vehicle | null = null
+  private chaseTargetOriginalSpeed = 0
 
   constructor(
     private readonly enemies: EnemySystem,
@@ -100,7 +101,10 @@ export class MissionSystem {
       this.chaseTarget = candidates.length > 0
         ? candidates[Math.floor(Math.random() * candidates.length)]
         : null
-      if (this.chaseTarget) this.chaseTarget.speed = Math.max(this.chaseTarget.speed, 14)
+      if (this.chaseTarget) {
+        this.chaseTargetOriginalSpeed = this.chaseTarget.speed
+        this.chaseTarget.speed = Math.max(this.chaseTarget.speed, 14)
+      }
     }
     this.hooks.onMissionStart?.(def)
     this.emitObjective()
@@ -216,6 +220,10 @@ export class MissionSystem {
 
   complete(): void {
     const m = this.active!
+    // restore chase target speed before clearing
+    if (this.chaseTarget) {
+      this.chaseTarget.speed = this.chaseTargetOriginalSpeed
+    }
     this.addReward(m.def.reward, m.def.xp)
     this.profile.done.push(m.def.id)
     this.active = null
@@ -225,6 +233,9 @@ export class MissionSystem {
   }
 
   abort(): void {
+    if (this.chaseTarget) {
+      this.chaseTarget.speed = this.chaseTargetOriginalSpeed
+    }
     this.active = null
     this.chaseTarget = null
     this.rebuildMarkers(this.markerPositions())
@@ -260,7 +271,19 @@ export class MissionSystem {
   }
 
   private rebuildMarkers(want: Array<{ pos: Vector3; color: number }>): void {
-    for (const mm of this.markerCache) mm.group.parent?.remove(mm.group)
+    for (const mm of this.markerCache) {
+      mm.group.traverse(obj => {
+        if (obj instanceof Mesh) {
+          obj.geometry.dispose()
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach(m => m.dispose())
+          } else {
+            obj.material.dispose()
+          }
+        }
+      })
+      mm.group.parent?.remove(mm.group)
+    }
     this.markerCache = []
     for (const { pos, color } of want) {
       const group = makeMarker(pos, color)

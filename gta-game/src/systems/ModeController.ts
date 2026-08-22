@@ -108,18 +108,25 @@ export class ModeController {
       }
     }
 
-    // mission start zone interaction
+    // mission start zone interaction — consumes E so vehicle enter doesn't also fire
     if (!this.deps.missions.active && input.wasPressed('KeyE')) {
       const zone = this.deps.missions.zoneAt(player.position.x, player.position.z)
-      if (zone) this.deps.missions.startMission(zone)
-    }
-
-    // nearest enterable vehicle: parked or traffic
-    this.nearestVehicle =
-      vehicles.getNearest(player.position.x, player.position.z) ??
-      this.deps.traffic.getNearest(player.position.x, player.position.z)
-    if (this.nearestVehicle && input.wasPressed('KeyE')) {
-      this.enterVehicle(this.nearestVehicle)
+      if (zone) {
+        this.deps.missions.startMission(zone)
+      } else {
+        // no mission zone — check vehicle enter
+        this.nearestVehicle =
+          vehicles.getNearest(player.position.x, player.position.z) ??
+          this.deps.traffic.getNearest(player.position.x, player.position.z)
+        if (this.nearestVehicle) {
+          this.enterVehicle(this.nearestVehicle)
+        }
+      }
+    } else {
+      // no E press or mission already active — still update nearest vehicle for prompt
+      this.nearestVehicle =
+        vehicles.getNearest(player.position.x, player.position.z) ??
+        this.deps.traffic.getNearest(player.position.x, player.position.z)
     }
   }
 
@@ -143,14 +150,19 @@ export class ModeController {
     cameraRig.followYaw = v.yaw
     cameraRig.update(delta, input, v.position, all)
 
-    // mission start zone interaction while driving too
+    // mission start zone interaction while driving too — consumes E so exit doesn't also fire
     if (!missions.active && input.wasPressed('KeyE')) {
       const zone = missions.zoneAt(v.position.x, v.position.z)
-      if (zone) missions.startMission(zone)
+      if (zone) {
+        missions.startMission(zone)
+      } else {
+        this.exitVehicle()
+      }
+    } else if (input.wasPressed('KeyE')) {
+      this.exitVehicle()
     }
 
     this.nearestVehicle = null
-    if (input.wasPressed('KeyE')) this.exitVehicle()
   }
 
   // --- mode transitions ---

@@ -2,6 +2,7 @@ import { Vehicle } from '../entities/Vehicle'
 import { VEHICLE_CONFIGS, type VehicleData } from '../data/vehicles'
 import { BLOCK_COUNT, BLOCK_SIZE, CELL, CITY_HALF, seededRng } from './CityGenerator'
 import type { Collidable } from '../game/World'
+import { Mesh, type Material } from 'three'
 
 const PARKED_COUNT = 20
 const VISIBLE_DIST = 95 // parked cars beyond this are hidden (fog covers them)
@@ -108,6 +109,19 @@ export class VehicleManager {
   }
 
   dispose(): void {
+    for (const v of this.vehicles) {
+      v.group.traverse(obj => {
+        if (obj instanceof Mesh) {
+          obj.geometry.dispose()
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach((m: Material) => m.dispose())
+          } else {
+            obj.material.dispose()
+          }
+        }
+      })
+      v.group.parent?.remove(v.group)
+    }
     this.vehicles.length = 0
   }
 }

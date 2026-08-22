@@ -65,7 +65,10 @@ export class InputManager {
     this.wheelDelta += e.deltaY
   }
 
+  private attachTarget: HTMLElement | null = null
+
   attach(target: HTMLElement): void {
+    this.attachTarget = target
     window.addEventListener('keydown', this.onKeyDown)
     window.addEventListener('keyup', this.onKeyUp)
     target.addEventListener('mousedown', this.onMouseDown)
@@ -77,7 +80,10 @@ export class InputManager {
   detach(): void {
     window.removeEventListener('keydown', this.onKeyDown)
     window.removeEventListener('keyup', this.onKeyUp)
-    window.removeEventListener('mousedown', this.onMouseDown)
+    if (this.attachTarget) {
+      this.attachTarget.removeEventListener('mousedown', this.onMouseDown)
+      this.attachTarget = null
+    }
     window.removeEventListener('mousemove', this.onMouseMove)
     window.removeEventListener('mouseup', this.onMouseUp)
     window.removeEventListener('wheel', this.onWheel)

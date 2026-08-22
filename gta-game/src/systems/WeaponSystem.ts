@@ -86,7 +86,7 @@ export class WeaponSystem {
   }
 
   get currentState(): AmmoState {
-    return this.ammo.get(this.currentWeaponId)!
+    return this.ammo.get(this.currentWeaponId) ?? this.ammo.values().next().value!
   }
 
   get mag(): number {
@@ -112,8 +112,10 @@ export class WeaponSystem {
   }
 
   giveWeapon(id: string): void {
+    if (!WEAPONS[id]) return
     this.owned.add(id)
-    const st = this.ammo.get(id)!
+    const st = this.ammo.get(id)
+    if (!st) return
     st.mag = Math.max(st.mag, Math.floor(WEAPONS[id].magSize * 0.8))
     st.reserve = Math.min(st.reserve + Math.floor(WEAPONS[id].reserveMax * 0.5), WEAPONS[id].reserveMax)
     this.currentWeaponId = id
@@ -142,7 +144,7 @@ export class WeaponSystem {
     if (WEAPONS[data.current]) this.currentWeaponId = data.current
     for (const [id, st] of Object.entries(data.ammo)) {
       const state = this.ammo.get(id)
-      if (!state) continue
+      if (!state || !WEAPONS[id]) continue
       state.mag = Math.min(st.mag, WEAPONS[id].magSize)
       state.reserve = Math.min(st.reserve, WEAPONS[id].reserveMax)
       state.reloading = false

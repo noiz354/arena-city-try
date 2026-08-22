@@ -7,7 +7,7 @@ export default defineConfig({
   base: GH_PAGES ? '/arena-city-try/' : '/',
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 7777,
     // Sandbox preview serves the app from a host different from localhost
     allowedHosts: true,
   },

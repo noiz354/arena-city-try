@@ -71,6 +71,9 @@ telemetry.sessionStart()
 // flush analytics when the tab closes
 window.addEventListener('pagehide', () => void tracker.flush(true))
 
+// --- start the game loop (was missing — game stuck on loading screen) ---
+game.start()
+
 // Expose for debugging from the browser console
 ;(window as unknown as { game: Game }).game = game
 ;(window as unknown as { tracker: typeof tracker }).tracker = tracker

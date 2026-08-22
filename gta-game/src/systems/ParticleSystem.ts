@@ -10,6 +10,7 @@ interface Particle {
 }
 
 const POOL_SIZE = 140
+const SMOKE_COLOR = new Color(0x888899)
 
 /**
  * Pooled particle system (interstellar-armada pools.js + SYNTHBLAST Particle
@@ -107,18 +108,18 @@ export class ParticleSystem {
       mat.opacity = Math.max(0, (p.life / p.maxLife) * 0.9)
       p.mesh.scale.multiplyScalar(1 + p.scaleVel * dt)
       // smoke rises slower and fades gray
-      if (p.gravity < 0) mat.color.lerp(new Color(0x888899), dt * 0.4)
+      if (p.gravity < 0) mat.color.lerp(SMOKE_COLOR, dt * 0.4)
     }
   }
 
   dispose(): void {
-    for (const p of this.pool) {
+    for (const p of [...this.pool, ...this.active]) {
+      p.mesh.visible = false
+      this.scene.remove(p.mesh)
       p.mesh.geometry.dispose()
       ;(p.mesh.material as MeshBasicMaterial).dispose()
     }
-    for (const p of this.active) {
-      p.mesh.geometry.dispose()
-      ;(p.mesh.material as MeshBasicMaterial).dispose()
-    }
+    this.pool.length = 0
+    this.active.length = 0
   }
 }

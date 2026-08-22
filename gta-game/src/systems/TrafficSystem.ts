@@ -2,6 +2,7 @@ import { Vehicle } from '../entities/Vehicle'
 import { VEHICLE_CONFIGS } from '../data/vehicles'
 import { BLOCK_COUNT, BLOCK_SIZE, CELL, CITY_HALF, ROAD_WIDTH, seededRng } from './CityGenerator'
 import type { Collidable } from '../game/World'
+import { Mesh, type Material } from 'three'
 
 /** Road center lines per axis (one road between each pair of blocks). */
 function roadLines(): number[] {
@@ -176,6 +177,19 @@ export class TrafficSystem {
   }
 
   dispose(): void {
+    for (const car of this.cars) {
+      car.vehicle.group.traverse(obj => {
+        if (obj instanceof Mesh) {
+          obj.geometry.dispose()
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach((m: Material) => m.dispose())
+          } else {
+            obj.material.dispose()
+          }
+        }
+      })
+      car.vehicle.group.parent?.remove(car.vehicle.group)
+    }
     this.cars.length = 0
   }
 }

@@ -210,10 +210,8 @@ export class HUD {
       this.lastSecond = now
 
       const p = driving && game.vehicle ? game.vehicle.position : game.player.position
-      const { cx, cz } = game.world.chunks.worldToChunk(p.x, p.z)
       document.getElementById('hud-fps')!.textContent = `FPS: ${this.fps}`
       document.getElementById('hud-pos')!.textContent = `POS: ${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)}`
-      document.getElementById('hud-chunk')!.textContent = `CHUNK ${cx},${cz} · ACTIVE ${game.world.chunks.activeCount}`
     }
   }
 }
