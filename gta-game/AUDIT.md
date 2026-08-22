@@ -2,7 +2,23 @@
 
 **Tanggal audit:** 2026-08-22
 **Cakupan:** `gta-game/` (7 fase selesai, ~5.250 baris TS, 30 file)
-**Baseline:** `npm test` 13/13 lolos · `tsc --noEmit` bersih · `npm run build` OK (161 kB gzip) · working tree clean
+**Baseline (sebelum perbaikan):** `npm test` 13/13 lolos · `tsc --noEmit` bersih · `npm run build` OK (161 kB gzip) · working tree clean
+
+## Status perbaikan (2026-08-22, putaran 2)
+
+| ID | Item | Status |
+|---|---|---|
+| B-1 | Hitbox musuh/pedestrian di kaki | ✅ **Diperbaiki** — ray-vs-capsule (4 sphere sampling) di `utils/raycast.ts`; `Enemy.hitHeight=1.8`, `Pedestrian.hitHeight=1.8`; chest/head shot kini kena |
+| B-2 | Kontrol mobile mati | ✅ **Diperbaiki** — rewrite `MobileControls.ts`: multi-touch map (joystick/look/button), `lookId` benar, FIRE inject click utk semi-auto, handler window + dispose bersih |
+| P-1 | Marker misi rebuild tiap frame | ✅ **Diperbaiki** — `updateMarkers()` rebuild hanya saat set/color berubah; waypoint bergerak hanya di-reposition |
+| P-2 | Alokasi per-frame hot path | ✅ **Sebagian** — `Vehicle.getCollidableBox()` di-cache (dirty flag), LOS enemy tanpa clone, DayNight tanpa `new Color` per frame; sisa: `markerPositions()` & `waypoint()` alloc kecil |
+| I-2 | Prop geometry bocor saat dispose | ✅ **Diperbaiki** — `disposeChunk` kini deep-traversal |
+| I-3 | Mobil tidak menabrak pedestrian | ✅ **Diperbaiki** — `Game.checkCarPedestrianCollisions()`: knock-down/run-over by speed, car melambat, cooldown per ped |
+| I-4 | Wanted tidak naik saat menabrak | ✅ **Diperbaiki** — run-over fatal = crime 2, non-fatal = crime 1 |
+| I-1 | Engine oscillator tidak di-stop | ⏳ minor — node tunggal, gain di-ramp ke 0; aman dibiarkan |
+| I-5..I-8, A-1..A-6 | Lihat roadmap bawah | ⏳ belum |
+
+**Baseline baru:** `npm test` 18/18 lolos · `tsc --noEmit` bersih · build OK (162 kB gzip)
 
 ---
 
@@ -164,26 +180,20 @@ pada posisi player/camera (jarak senjata, mesin mobil).
 
 ## 8. ROADMAP PRIORITAS
 
-### P0 — sebelum demo/rilis (bug pemecah gameplay)
-1. **B-1** — hitbox musuh/pedestrian di tinggi dada (ray-vs-capsule atau dual-sphere)
-2. **B-2** — perbaiki kontrol mobile: joystick (pointer-events), look (lookId), semi-auto fire (injectClick)
-
-### P1 — kualitas & performa
-3. **P-1** — marker misi: rebuild only-on-change + move marker via position
-4. **P-2** — hilangkan alokasi per-frame di hot path (pool Vector3/Box3, cache AABB kendaraan)
-
-### P2 — fitur GTA-esque
-5. **I-3/I-4** — mobil menabrak pedestrian + wanted dari mengemudi
-6. **I-5** — save/load lengkap (inventory, ammo, mission state)
-7. **A-4** — weapon viewmodel
-8. **A-6** — audio spatial (PannerNode)
+### P0 — selesai ✅ (B-1, B-2)
+### P1 — selesai ✅ (P-1, P-2 sebagian)
+### P2 — fitur GTA-esque (sisa)
+1. **I-5** — save/load lengkap (inventory, ammo, mission state)
+2. **A-4** — weapon viewmodel
+3. **A-6** — audio spatial (PannerNode)
+4. **I-1** — stop engine oscillator saat keluar mobil (minor)
 
 ### P3 — polish & engineering
-9. **A-1** — refactor Game.ts (mode controller, save manager, systems wiring)
-10. **A-2** — collidable spatial hash per chunk
-11. **A-3** — InstancedMesh bangunan
-12. **A-5** — pause menu + settings
-13. Lint + CI + Playwright smoke (canvas screenshot + FPS check)
+5. **A-1** — refactor Game.ts (mode controller, save manager, systems wiring)
+6. **A-2** — collidable spatial hash per chunk
+7. **A-3** — InstancedMesh bangunan
+8. **A-5** — pause menu + settings
+9. Lint + CI + Playwright smoke (canvas screenshot + FPS check)
 
 ---
 

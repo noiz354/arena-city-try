@@ -43,7 +43,10 @@ export class Pedestrian {
   readonly group = new Group()
   health = 100
   dead = false
-  hitRadius = 0.42
+  hitRadius = 0.38
+  hitHeight = 1.8
+  /** timestamp of the last car hit (cooldown against multi-frame re-hits) */
+  carHitAt = -9999
   private state: State = { kind: 'idle', timer: 0, angle: 0 }
   private readonly rng: () => number
   private readonly spawnX: number
@@ -73,6 +76,19 @@ export class Pedestrian {
     // getting hurt → flee
     this.state = { kind: 'flee', timer: FLEE_DURATION, angle: this.state.angle, panicSource: new Vector3() }
     return false
+  }
+
+  /** Knocked down by a vehicle — dies on hard hits, otherwise dazed + flees. */
+  runOver(carSpeed: number): boolean {
+    if (this.dead) return false
+    const dmg = carSpeed * 9
+    const killed = this.takeDamage(dmg)
+    if (!killed) {
+      // dazed: fall over briefly, then scramble away
+      this.state = { kind: 'flee', timer: FLEE_DURATION + 1.5, angle: this.state.angle, panicSource: new Vector3() }
+      this.group.rotation.x = -0.5
+    }
+    return killed
   }
 
   /** Gunfire nearby → civilians panic and run. */

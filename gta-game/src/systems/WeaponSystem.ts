@@ -10,7 +10,7 @@ import {
 } from 'three'
 import { WEAPONS, type WeaponDef } from '../data/weapons'
 import type { InputManager } from '../utils/InputManager'
-import { rayAABB, raySphere } from '../utils/raycast'
+import { rayAABB, rayCapsule } from '../utils/raycast'
 import type { Collidable } from '../game/World'
 import type { EnemySystem } from './EnemySystem'
 
@@ -28,10 +28,12 @@ interface TransientEffect {
   maxLife: number
 }
 
-/** Soft targets (pedestrians) that can also be shot. */
+/** Soft targets (enemies/pedestrians) that can also be shot. */
 export interface ShootableTarget {
-  position: Vector3
+  position: Vector3 // feet position
   hitRadius: number
+  /** total body height for the hit capsule (default 1.8) */
+  hitHeight?: number
   takeDamage(amount: number): boolean // returns true when killed
 }
 
@@ -197,11 +199,11 @@ export class WeaponSystem {
         if (t !== null && t < envT) envT = t
       }
 
-      // enemy hit (ray-sphere against each alive enemy)
+      // enemy hit (ray-capsule against each alive enemy — body from feet to head)
       let bestEnemy: EnemySystem['alive'][number] | null = null
       let bestT = envT
       for (const enemy of this.enemies.alive) {
-        const t = raySphere(origin, dir, enemy.position, enemy.hitRadius, envT)
+        const t = rayCapsule(origin, dir, enemy.position, enemy.hitRadius, enemy.hitHeight, envT)
         if (t !== null && t < bestT) {
           bestT = t
           bestEnemy = enemy
@@ -211,7 +213,7 @@ export class WeaponSystem {
       // extra soft targets (pedestrians) — nearest wins over enemies
       let bestExtra: ShootableTarget | null = null
       for (const target of this.getExtraTargets()) {
-        const t = raySphere(origin, dir, target.position, target.hitRadius, bestT)
+        const t = rayCapsule(origin, dir, target.position, target.hitRadius, target.hitHeight ?? 1.8, bestT)
         if (t !== null && t < bestT) {
           bestT = t
           bestExtra = target

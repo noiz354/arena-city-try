@@ -149,7 +149,7 @@ export class MissionSystem {
   }
 
   update(dt: number): void {
-    this.rebuildMarkers()
+    this.updateMarkers()
     if (!this.active) return
     const m = this.active
     const d = m.def
@@ -221,35 +221,55 @@ export class MissionSystem {
     this.active = null
     this.chaseTarget = null
     this.hooks.onMissionComplete?.(m.def, m.def.reward)
-    this.rebuildMarkers()
+    this.rebuildMarkers(this.markerPositions())
   }
 
   abort(): void {
     this.active = null
     this.chaseTarget = null
-    this.rebuildMarkers()
+    this.rebuildMarkers(this.markerPositions())
   }
 
   private emitObjective(): void {
     if (this.active) this.hooks.onObjective?.(this.active.def, this.objectiveText())
   }
 
-  /** Rebuild the 3D marker meshes (called every frame; cheap enough). */
-  private rebuildMarkers(): void {
+  /**
+   * Update 3D markers without per-frame rebuilds:
+   * - marker *set* changes (mission start/complete/objective) rebuild the meshes
+   * - moving waypoints (assassination target / chase car) only reposition the
+   *   existing marker — no allocation, no geometry churn.
+   */
+  private updateMarkers(): void {
     const want = this.markerPositions()
-    if (this.markerCache.length === want.length && this.markerCache.every((mm, i) => mm.matches(want[i]))) {
+    if (this.markerCache.length !== want.length) {
+      this.rebuildMarkers(want)
       return
     }
-    for (const mm of this.markerCache) mm.group.parent?.remove(mm.group)
-    this.markerCache = []
-    for (const { pos, color } of want) {
-      const mm = makeMarker(pos, color)
-      this.markers.add(mm.group)
-      this.markerCache.push(mm)
+    // same set: check color anchors (only changes on start/complete/objective)
+    for (let i = 0; i < want.length; i++) {
+      if (this.markerCache[i].color !== want[i].color) {
+        this.rebuildMarkers(want)
+        return
+      }
+    }
+    // reposition moving waypoints
+    for (let i = 0; i < want.length; i++) {
+      this.markerCache[i].group.position.copy(want[i].pos)
     }
   }
 
-  private markerCache: Array<{ group: Group; matches(w: { pos: Vector3; color: number }): boolean }> = []
+  private rebuildMarkers(want: Array<{ pos: Vector3; color: number }>): void {
+    for (const mm of this.markerCache) mm.group.parent?.remove(mm.group)
+    this.markerCache = []
+    for (const { pos, color } of want) {
+      const group = makeMarker(pos, color)
+      this.markers.add(group)
+      this.markerCache.push({ group, color })
+    }
+  }
+
+  private markerCache: Array<{ group: Group; color: number }> = []
 
   /** Serialize profile for localStorage. */
   serialize(): string {
@@ -274,7 +294,7 @@ function distToPos(pos: Vector3, x: number, z: number): number {
   return Math.sqrt(dx * dx + dz * dz)
 }
 
-function makeMarker(pos: Vector3, color: number): { group: Group; matches(w: { pos: Vector3; color: number }): boolean } {
+function makeMarker(pos: Vector3, color: number): Group {
   const group = new Group()
   group.position.copy(pos)
 
@@ -302,11 +322,5 @@ function makeMarker(pos: Vector3, color: number): { group: Group; matches(w: { p
   base.position.y = 0.08
   group.add(base)
 
-  const anchor = pos.clone()
-  return {
-    group,
-    matches(w) {
-      return w.pos.distanceToSquared(anchor) < 0.5 && w.color === color
-    },
-  }
+  return group
 }

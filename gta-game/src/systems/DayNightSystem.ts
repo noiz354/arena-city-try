@@ -18,6 +18,8 @@ export class DayNightSystem {
   timeOfDay = 0.55
   private readonly tmpSky = new Color()
   private readonly tmpFog = new Color()
+  private readonly duskTint = new Color(0xff9a5a)
+  private readonly sunDay = new Color(0xfff4e0)
 
   constructor(
     private readonly sun: DirectionalLight,
@@ -64,7 +66,7 @@ export class DayNightSystem {
 
     // sun light
     this.sun.intensity = MathUtils.lerp(0.15, 2.6, day)
-    this.sun.color.setHex(0xfff4e0).lerp(new Color(0xff9a5a), dusk * 0.6)
+    this.sun.color.copy(this.sunDay).lerp(this.duskTint, dusk * 0.6)
 
     // ambient
     this.ambient.intensity = MathUtils.lerp(0.12, 0.45, day)

@@ -39,6 +39,10 @@ export class Vehicle {
   /** Hijacked from traffic — AI never resumes driving it. */
   stolen = false
   private lastCollided = false
+  private readonly cachedBox = new Box3()
+  private readonly cachedBoxMin = new Vector3()
+  private readonly cachedBoxMax = new Vector3()
+  private boxDirty = true
 
   private readonly wheels: Mesh[] = []
   private readonly hitboxHalf: { x: number; z: number }
@@ -58,29 +62,33 @@ export class Vehicle {
     return this.group.position
   }
 
-  get forward(): Vector3 {
-    return new Vector3(Math.sin(this.yaw), 0, Math.cos(this.yaw))
+  /** Reusable forward vector (fills the passed target to avoid allocation). */
+  forwardInto(target: Vector3): Vector3 {
+    return target.set(Math.sin(this.yaw), 0, Math.cos(this.yaw))
   }
 
   get speedKmh(): number {
     return Math.abs(this.speed) * 3.6
   }
 
-  /** AABB footprint for vehicle-vs-vehicle and camera collision. */
+  /**
+   * AABB footprint for vehicle-vs-vehicle and camera collision. Cached and
+   * recomputed only when the vehicle moved/turned (no per-frame allocation).
+   */
   getCollidableBox(): Box3 {
-    const p = this.group.position
-    const yaw = this.yaw
-    // approximate rotated footprint with an axis-aligned box (safe margin)
-    const halfW = this.hitboxHalf.x
-    const halfL = this.hitboxHalf.z
-    const cos = Math.abs(Math.cos(yaw))
-    const sin = Math.abs(Math.sin(yaw))
-    const rx = halfW * cos + halfL * sin
-    const rz = halfW * sin + halfL * cos
-    return new Box3(
-      new Vector3(p.x - rx, 0, p.z - rz),
-      new Vector3(p.x + rx, this.config.height, p.z + rz),
-    )
+    if (this.boxDirty) {
+      const p = this.group.position
+      // approximate rotated footprint with an axis-aligned box (safe margin)
+      const cos = Math.abs(Math.cos(this.yaw))
+      const sin = Math.abs(Math.sin(this.yaw))
+      const rx = this.hitboxHalf.x * cos + this.hitboxHalf.z * sin
+      const rz = this.hitboxHalf.x * sin + this.hitboxHalf.z * cos
+      this.cachedBoxMin.set(p.x - rx, 0, p.z - rz)
+      this.cachedBoxMax.set(p.x + rx, this.config.height, p.z + rz)
+      this.cachedBox.set(this.cachedBoxMin, this.cachedBoxMax)
+      this.boxDirty = false
+    }
+    return this.cachedBox
   }
 
   update(dt: number, controls: VehicleControls, collidables: Collidable[]): void {
@@ -158,6 +166,7 @@ export class Vehicle {
     for (const wheel of this.wheels) {
       wheel.rotation.x += (this.speed / this.config.wheelRadius) * dt
     }
+    this.boxDirty = true
   }
 
   takeDamage(amount: number): void {

@@ -51,3 +51,41 @@ export function raySphere(
   const t = b - Math.sqrt(disc)
   return t >= 0 && t <= maxDist ? t : null
 }
+
+/**
+ * Ray vs vertical capsule approximated by sampling N spheres along the axis.
+ * `feet` is the bottom of the capsule, `height` its total height, `radius` its
+ * width. Deterministic and robust — the 4 samples cover feet, hips, chest and
+ * head, so shots aimed at the chest connect with the body.
+ */
+export function rayCapsule(
+  origin: Vector3,
+  dir: Vector3,
+  feet: Vector3,
+  radius: number,
+  height: number,
+  maxDist: number,
+): number | null {
+  // sample 4 points along the axis (0 = feet … 1 = top of head)
+  const SAMPLES = [0.08, 0.38, 0.68, 0.95]
+  let best: number | null = null
+  const p = new Vector3()
+  const r = radius * 1.15 // slight inflation for the gaps between samples
+  for (const s of SAMPLES) {
+    p.copy(feet)
+    p.y += height * s
+    const t = raySphere(origin, dir, p, r, maxDist)
+    if (t !== null && (best === null || t < best)) best = t
+  }
+  return best
+}
+
+/** Standard humanoid hit capsule (feet-based). */
+export function rayHuman(
+  origin: Vector3,
+  dir: Vector3,
+  feet: Vector3,
+  maxDist: number,
+): number | null {
+  return rayCapsule(origin, dir, feet, 0.4, 1.75, maxDist)
+}

@@ -28,6 +28,7 @@ export class Enemy {
   dead = false
   attackCooldown = 0
   hitRadius = HIT_RADIUS
+  hitHeight = 1.8
   respawnTimer = 0
   readonly role: EnemyRole
   readonly attackDamage: number
@@ -35,6 +36,8 @@ export class Enemy {
   private readonly wanderSpeed: number
   private state: 'idle' | 'chase' = 'idle'
   private readonly tmpDir = new Vector3()
+  private readonly losStart = new Vector3()
+  private readonly losDir = new Vector3()
 
   constructor(
     x: number,
@@ -90,14 +93,16 @@ export class Enemy {
     toPlayer.y = 0
     const dist = toPlayer.length()
 
-    // --- line of sight (buildings block vision) ---
+    // --- line of sight (buildings block vision) — zero-allocation ---
     let hasLOS = true
     if (dist > 1) {
-      const start = this.group.position.clone()
+      const start = this.losStart
+      start.copy(this.group.position)
       start.y += 0.9
-      const end = playerPos.clone()
-      end.y += 0.9
-      const dir = end.clone().sub(start).normalize()
+      const dir = this.losDir
+      dir.copy(playerPos)
+      dir.y += 0.9
+      dir.sub(start).normalize()
       const maxDist = dist + 0.5
       for (const { box } of collidables) {
         const t = rayAABB(start, dir, box.min, box.max, maxDist)

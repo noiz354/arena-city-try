@@ -277,8 +277,11 @@ export class ChunkManager {
   }
 
   private disposeChunk(chunk: Chunk): void {
+    // dispose geometry of buildings AND prop meshes (deep traversal)
+    chunk.group.traverse(obj => {
+      if (obj instanceof Mesh) obj.geometry.dispose()
+    })
     for (const child of [...chunk.group.children]) {
-      if (child instanceof Mesh) child.geometry.dispose()
       chunk.group.remove(child)
     }
     chunk.group.remove(chunk.props)

@@ -5,23 +5,24 @@ const JOY_RADIUS = 48
 /**
  * Mobile touch controls (shown on touch devices only):
  * - left half: virtual joystick → WASD virtual keys
- * - right half: drag to look (injects mouse deltas)
+ * - right half: drag to look (injects mouse deltas into the camera)
  * - buttons: JUMP, SPRINT, E (enter/action), FIRE
- * All injected through the shared InputManager so the rest of the game is
- * unaware of the input source.
+ *
+ * Touch ids are mapped to roles (joystick / look / button) so multi-touch
+ * works. FIRE emits a click on release so semi-auto weapons fire too.
+ * All input flows through the shared InputManager.
  */
 export class MobileControls {
   readonly active: boolean
-  private joystickActive = false
-  private joystickId = -1
-  private lookId = -1
-  private lookX = 0
-  private lookY = 0
-  private readonly stickCenter = { x: 0, y: 0 }
-  private readonly stickKnob = { x: 0, y: 0 }
   private readonly stickEl: HTMLDivElement
   private readonly knobEl: HTMLDivElement
   private readonly buttons: HTMLDivElement
+
+  private readonly touches = new Map<number, 'joystick' | 'look'>()
+  private joystickId = -1
+  private lookId = -1
+  private readonly stickCenter = { x: 0, y: 0 }
+  private readonly stickVec = { x: 0, y: 0 }
 
   constructor(private readonly input: InputManager) {
     this.active = window.matchMedia?.('(pointer: coarse)').matches ?? false
@@ -32,12 +33,14 @@ export class MobileControls {
       return
     }
 
-    // joystick
+    // joystick overlay
     this.stickEl = document.createElement('div')
     this.stickEl.className = 'mc-stick'
     this.knobEl = document.createElement('div')
     this.knobEl.className = 'mc-stick-knob'
     this.stickEl.appendChild(this.knobEl)
+
+    // buttons (right side)
     this.buttons = document.createElement('div')
     this.buttons.className = 'mc-buttons'
 
@@ -47,9 +50,15 @@ export class MobileControls {
       b.textContent = label
       b.addEventListener('touchstart', e => {
         e.preventDefault()
+        e.stopPropagation()
         onDown()
       }, { passive: false })
       b.addEventListener('touchend', e => {
+        e.preventDefault()
+        e.stopPropagation()
+        onUp?.()
+      }, { passive: false })
+      b.addEventListener('touchcancel', e => {
         e.preventDefault()
         onUp?.()
       }, { passive: false })
@@ -59,6 +68,8 @@ export class MobileControls {
     mk('FIRE', 'mc-fire', () => {
       this.input.setMouseHeld(true)
     }, () => {
+      // release fires semi-auto weapons (pistol/shotgun)
+      this.input.injectClick()
       this.input.setMouseHeld(false)
     })
     mk('E', 'mc-e', () => this.input.pressVirtualKey('KeyE'))
@@ -68,27 +79,45 @@ export class MobileControls {
     document.getElementById('ui-root')!.appendChild(this.stickEl)
     document.getElementById('ui-root')!.appendChild(this.buttons)
 
-    this.stickEl.addEventListener('touchstart', e => this.onStickStart(e), { passive: false })
-    window.addEventListener('touchmove', e => this.onTouchMove(e), { passive: false })
-    window.addEventListener('touchend', e => this.onTouchEnd(e), { passive: false })
+    // global touch routing: left half → joystick, right half → look
+    window.addEventListener('touchstart', this.boundStart, { passive: false })
+    window.addEventListener('touchmove', this.boundMove, { passive: false })
+    window.addEventListener('touchend', this.boundEnd, { passive: false })
+    window.addEventListener('touchcancel', this.boundEnd, { passive: false })
   }
 
-  private onStickStart(e: TouchEvent): void {
+  private readonly boundStart = (e: TouchEvent): void => this.onTouchStart(e)
+  private readonly boundMove = (e: TouchEvent): void => this.onTouchMove(e)
+  private readonly boundEnd = (e: TouchEvent): void => this.onTouchEnd(e)
+
+  private onTouchStart(e: TouchEvent): void {
+    for (const t of e.changedTouches) {
+      // ignore touches that began on a button (they handle themselves)
+      const target = t.target as HTMLElement
+      if (target.closest('.mc-btn')) continue
+
+      const role = t.clientX < window.innerWidth / 2 ? 'joystick' : 'look'
+      this.touches.set(t.identifier, role)
+      if (role === 'joystick' && this.joystickId === -1) {
+        this.joystickId = t.identifier
+        this.stickCenter.x = t.clientX
+        this.stickCenter.y = t.clientY
+        this.stickEl.style.left = `${t.clientX}px`
+        this.stickEl.style.top = `${t.clientY}px`
+        this.stickEl.style.opacity = '1'
+        this.knobEl.style.transform = 'translate(-50%, -50%)'
+        this.stickVec.x = 0
+        this.stickVec.y = 0
+      } else if (role === 'look' && this.lookId === -1) {
+        this.lookId = t.identifier
+      }
+    }
     e.preventDefault()
-    const t = e.changedTouches[0]
-    this.joystickActive = true
-    this.joystickId = t.identifier
-    this.stickCenter.x = t.clientX
-    this.stickCenter.y = t.clientY
-    this.stickEl.style.left = `${t.clientX}px`
-    this.stickEl.style.top = `${t.clientY}px`
-    this.stickEl.style.opacity = '1'
-    this.knobEl.style.transform = 'translate(-50%, -50%)'
   }
 
   private onTouchMove(e: TouchEvent): void {
     for (const t of e.changedTouches) {
-      if (this.joystickActive && t.identifier === this.joystickId) {
+      if (t.identifier === this.joystickId) {
         let dx = t.clientX - this.stickCenter.x
         let dy = t.clientY - this.stickCenter.y
         const len = Math.hypot(dx, dy)
@@ -96,38 +125,56 @@ export class MobileControls {
           dx = (dx / len) * JOY_RADIUS
           dy = (dy / len) * JOY_RADIUS
         }
-        this.stickKnob.x = dx / JOY_RADIUS
-        this.stickKnob.y = dy / JOY_RADIUS
+        this.stickVec.x = dx / JOY_RADIUS
+        this.stickVec.y = dy / JOY_RADIUS
         this.knobEl.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`
         this.updateKeys()
-      } else if (this.lookId === t.identifier) {
-        this.input.addMouseDelta(t.clientX - this.lookX, t.clientY - this.lookY)
-        this.lookX = t.clientX
-        this.lookY = t.clientY
+      } else if (t.identifier === this.lookId) {
+        // reuse input.mouseDelta via the manager's accumulator
+        const prev = this.lastLook.get(t.identifier)
+        if (prev) {
+          this.input.addMouseDelta(t.clientX - prev.x, t.clientY - prev.y)
+        }
+        this.lastLook.set(t.identifier, { x: t.clientX, y: t.clientY })
       }
     }
+    e.preventDefault()
   }
+
+  private readonly lastLook = new Map<number, { x: number; y: number }>()
 
   private onTouchEnd(e: TouchEvent): void {
     for (const t of e.changedTouches) {
-      if (this.joystickActive && t.identifier === this.joystickId) {
-        this.joystickActive = false
+      this.lastLook.delete(t.identifier)
+      this.touches.delete(t.identifier)
+      if (t.identifier === this.joystickId) {
         this.joystickId = -1
         this.stickEl.style.opacity = '0'
-        this.input.setVirtualKey('KeyW', false)
-        this.input.setVirtualKey('KeyS', false)
-        this.input.setVirtualKey('KeyA', false)
-        this.input.setVirtualKey('KeyD', false)
-      }
-      // right-half touch without joystick = look
-      if (t.clientX > window.innerWidth / 2 && !this.joystickActive) {
+        this.stickVec.x = 0
+        this.stickVec.y = 0
+        this.updateKeys()
+        // if a look touch is still active, keep using it
+        for (const [id, role] of this.touches) {
+          if (role === 'look' && this.lookId === -1) {
+            this.lookId = id
+            break
+          }
+        }
+      } else if (t.identifier === this.lookId) {
         this.lookId = -1
+        // promote another look touch if any remains
+        for (const [id, role] of this.touches) {
+          if (role === 'look') {
+            this.lookId = id
+            break
+          }
+        }
       }
     }
   }
 
   private updateKeys(): void {
-    const { x, y } = this.stickKnob
+    const { x, y } = this.stickVec
     this.input.setVirtualKey('KeyW', y < -0.25)
     this.input.setVirtualKey('KeyS', y > 0.25)
     this.input.setVirtualKey('KeyA', x < -0.25)
@@ -137,5 +184,9 @@ export class MobileControls {
   dispose(): void {
     this.stickEl.remove()
     this.buttons.remove()
+    window.removeEventListener('touchstart', this.boundStart)
+    window.removeEventListener('touchmove', this.boundMove)
+    window.removeEventListener('touchend', this.boundEnd)
+    window.removeEventListener('touchcancel', this.boundEnd)
   }
 }

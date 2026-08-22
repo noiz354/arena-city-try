@@ -17,6 +17,7 @@ import { WantedSystem } from '../src/systems/WantedSystem.ts'
 import { MissionSystem } from '../src/systems/MissionSystem.ts'
 import { MISSIONS } from '../src/data/missions.ts'
 import { PerspectiveCamera, Scene, Vector3 } from 'three'
+import { rayCapsule } from '../src/utils/raycast.ts'
 
 let pass = 0
 let fail = 0
@@ -75,15 +76,44 @@ ws.update(0.1)
 ws.update(2.0)
 ok('smg drain + reload', ws.mag === 29 && ws.reserve === 90)
 
+// --- B-1 fix: humanoid hit capsules (chest shot must connect) ---
+const enemyFeet = new Vector3(0, 0, 0)
+const chestDir = new Vector3(0, 1.4, 0).sub(cam.position).normalize()
+ok('rayCapsule chest hit', rayCapsule(cam.position, chestDir, enemyFeet, 0.45, 1.8, 100) !== null)
+const headDir = new Vector3(0, 1.7, 0).sub(cam.position).normalize()
+ok('rayCapsule head hit', rayCapsule(cam.position, headDir, enemyFeet, 0.45, 1.8, 100) !== null)
+const highDir = new Vector3(0, 2.7, 0).sub(cam.position).normalize()
+ok('rayCapsule above-head miss', rayCapsule(cam.position, highDir, enemyFeet, 0.45, 1.8, 100) === null)
+
+// --- B-1 integration: shooting an enemy aimed at the chest deals damage ---
+const freshEnemies = new EnemySystem()
+freshEnemies.enemies[0].group.position.set(0, 0, 0) // put the target at the origin
+const freshCam = new PerspectiveCamera()
+freshCam.position.set(0, 1.5, 6)
+freshCam.lookAt(0, 1.4, 0) // chest of the enemy at (0,0,0)
+const freshInput = new InputManager()
+const ws2 = new WeaponSystem(scene, freshCam, freshInput, freshEnemies, () => [], {})
+const target = freshEnemies.enemies[0]
+const before = target.health
+freshInput.consumeClick = () => true
+for (let i = 0; i < 5; i++) ws2.update(0.3) // semi-auto clicks
+ok('chest-aimed shot damages enemy', target.health < before)
+
+// --- I-3/I-4: run-over kills a pedestrian and reports a crime ---
+const peds = new PedestrianSystem()
+const ped = peds.pedestrians[0]
+const killed = ped.runOver(12) // hard hit
+ok('run-over kills at speed 12', killed && ped.dead)
+
 // --- Phase 5: traffic / pedestrians / wanted ---
 const traffic = new TrafficSystem()
 for (let i = 0; i < 300; i++) traffic.update(1 / 60, 0, 0, [])
 ok('traffic stays in bounds', traffic.cars.every(c =>
   Math.abs(c.vehicle.position.x) < 156 && Math.abs(c.vehicle.position.z) < 156))
 
-const peds = new PedestrianSystem()
-peds.update(0.016, [])
-ok('pedestrians alive', peds.alive.length === 22)
+const peds2 = new PedestrianSystem()
+peds2.update(0.016, [])
+ok('pedestrians alive', peds2.alive.length === 22)
 
 const wanted = new WantedSystem(enemies)
 const pp = new Vector3(0, 0, 0)

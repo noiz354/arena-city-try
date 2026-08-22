@@ -303,6 +303,7 @@ export class Game {
     this.enemies.update(delta, this.player.position, buildings)
     this.pedestrians.update(delta, buildings)
     this.traffic.update(delta, px, pz, allCollidables)
+    this.checkCarPedestrianCollisions()
     this.pickups.update(delta)
     this.weapons.update(delta)
 
@@ -476,6 +477,40 @@ export class Game {
     }
     if (this.player.health <= 0) {
       this.respawnTimer = 3
+    }
+  }
+
+  /**
+   * Cars running over pedestrians: knock-down / kill by impact speed, slow the
+   * car, and raise wanted stars (driving recklessly is a crime too).
+   */
+  private checkCarPedestrianCollisions(): void {
+    const now = performance.now()
+    for (const ped of this.pedestrians.pedestrians) {
+      if (ped.dead || now - ped.carHitAt < 400) continue
+      const px = ped.position.x
+      const pz = ped.position.z
+      for (const v of this.vehicles.vehicles) {
+        if (!v.group.visible) continue
+        const speed = Math.abs(v.speed)
+        if (speed < 2.5) continue
+        const dx = v.position.x - px
+        const dz = v.position.z - pz
+        const hitR = Math.max(v.config.width, v.config.length) * 0.6 + 0.35
+        if (dx * dx + dz * dz < hitR * hitR) {
+          const killed = ped.runOver(speed)
+          v.speed *= 0.72
+          ped.carHitAt = now
+          this.postfx.addShake(killed ? 0.5 : 0.2)
+          if (killed) {
+            this.wanted.reportCrime(2, this.player.position)
+            this.audio.playDamage()
+          } else {
+            this.wanted.reportCrime(1, this.player.position)
+          }
+          break
+        }
+      }
     }
   }
 
