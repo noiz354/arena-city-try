@@ -25,6 +25,7 @@ import { MissionSystem } from '../src/systems/MissionSystem.ts'
 import { MISSIONS } from '../src/data/missions.ts'
 import {
   AmbientLight,
+  Box3,
   Color,
   DirectionalLight,
   Fog,
@@ -34,6 +35,8 @@ import {
   Scene,
   Vector3,
 } from 'three'
+import { Vehicle } from '../src/entities/Vehicle.ts'
+import { VEHICLE_SEDAN } from '../src/data/vehicles.ts'
 import { rayCapsule } from '../src/utils/raycast.ts'
 import { SaveManager } from '../src/systems/SaveManager.ts'
 import { ChunkManager } from '../src/systems/ChunkManager.ts'
@@ -340,6 +343,21 @@ for (let i = 0; i < 120; i++) wet.update(1 / 60)
 ok('wetness dries out', wet.wetness < 0.3)
 ok('roughness returns when dry', fakeGround.roughness > 0.8)
 wet.dispose()
+
+// --- Traffic solidity: visible traffic cars become solid obstacles ---
+const trafficSolid = new TrafficSystem()
+ok('traffic collidables empty while all culled', trafficSolid.getCollidables().length === 0)
+const tc1 = trafficSolid.cars[0].vehicle
+tc1.group.visible = true
+ok('visible traffic car is solid', trafficSolid.getCollidables().length === 1)
+ok('getCollidables excludes self', trafficSolid.getCollidables(tc1).length === 0)
+
+// --- AI-driven vehicles take impact damage (realistic crashes) ---
+const crashCar = new Vehicle(VEHICLE_SEDAN, 0, 0, 0) // facing +z (yaw 0)
+crashCar.speed = 20 // already moving fast into a wall ahead
+const wall = { box: new Box3(new Vector3(-3, 0, 0.5), new Vector3(3, 3, 3)) }
+crashCar.aiDrive(1 / 60, 0, 20, [wall])
+ok('AI vehicle takes impact damage on collision', crashCar.health < crashCar.config.maxHealth)
 
 // --- M5: generated grade LUT is well-formed and neutral-preserving ---
 const lut = buildGradeLUT(33)

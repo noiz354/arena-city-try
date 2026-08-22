@@ -17,7 +17,15 @@ Status legend: `[ ]` todo · `[x]` done · `[~]` in progress
 
 ## Review
 
-- [x] Per-slice `npm run check` green (58 tests) + `npm run build` OK (181 kB gzip)
+- [x] Per-slice `npm run check` green (65 tests) + `npm run build` OK (182 kB gzip)
 - [x] Bundle-size reviewed (no asset bloat; procedural only)
 - [ ] Visual verification in-browser (BLOCKED: sandbox has no browser — needs the user's preview)
 - [ ] Full adaptive luminance meter (deferred: needs browser verification; exposure is a scene-light-model knob)
+
+## Traffic collision (post-approval follow-up)
+
+- [x] Player (foot) solid vs traffic — no no-clip (`ModeController` + `TrafficSystem.getCollidables`)
+- [x] Player-driven vehicle solid vs traffic (push-out + impact damage)
+- [x] AI traffic physically collides with the player's car + each other (`TrafficSystem.drive`)
+- [x] AI traffic takes impact damage → can wreck (`Vehicle.applyImpactDamage` in `aiDrive`)
+- [x] On-foot player damaged + knocked back by fast traffic (`Game.checkTrafficPlayerCollision`)

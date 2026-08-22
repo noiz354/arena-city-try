@@ -407,6 +407,7 @@ export class Game {
     this.pedestrians.update(delta, buildings)
     this.traffic.update(delta, pos.x, pos.z, allCollidables)
     this.checkCarPedestrianCollisions()
+    this.checkTrafficPlayerCollision()
     this.pickups.update(delta)
     this.weapons.update(delta)
 
@@ -530,6 +531,41 @@ export class Game {
       this.missions.waypoint(),
       this.missions.markerPositions(),
     )
+  }
+
+  /**
+   * On-foot player hit by fast traffic: damage + knockback in the car's travel
+   * direction. Makes passing cars a real dodge challenge instead of letting the
+   * player no-clip through them. Cooldown-gated so one hit isn't applied every
+   * frame.
+   */
+  private lastTrafficHit = 0
+  private checkTrafficPlayerCollision(): void {
+    if (this.modeCtrl.mode !== 'foot' || this.player.health <= 0) return
+    const now = performance.now()
+    if (now - this.lastTrafficHit < 400) return
+
+    const p = this.player.position
+    for (const car of this.traffic.cars) {
+      const v = car.vehicle
+      if (!v.group.visible) continue
+      const speed = Math.abs(v.speed)
+      if (speed < 2.5) continue
+      const b = v.getCollidableBox()
+      const r = 0.45 // player radius
+      if (p.x < b.min.x - r || p.x > b.max.x + r || p.z < b.min.z - r || p.z > b.max.z + r) continue
+
+      // hit — damage scales with speed, capped
+      this.player.takeDamage(Math.min(40, Math.round((speed - 2.5) * 6)))
+      this.onPlayerDamaged?.()
+      this.audio.playDamage()
+      this.postfx.addShake(0.4)
+      this.lastTrafficHit = now
+      // fling the player away in the car's travel direction
+      this.player.velocity.set(Math.sin(v.yaw) * speed * 0.6, 3.5, Math.cos(v.yaw) * speed * 0.6)
+      this.player.grounded = false
+      break
+    }
   }
 
   /** Full save: profile + player state + weapon inventory (localStorage). */

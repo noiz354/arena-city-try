@@ -44,3 +44,15 @@
 ### BUG-005: PCFSoftShadowMap deprecated warning
 - **Console:** WebGLRenderer shadow map type PCFSoftShadowMap is deprecated
 - **Fix:** Use PCFShadowMap instead
+
+## FEATURE ADDED (post-audit)
+
+### Traffic is now solid — player can no longer no-clip through AI cars
+- **Location:** `ModeController.ts`, `TrafficSystem.ts`, `Vehicle.ts`, `Game.ts`
+- **Result:** player (on foot) and the driven vehicle collide with visible AI
+  traffic; AI cars physically push out of the player's car and each other, and
+  take impact damage (can wreck into stationary obstacles)
+- **Extra:** on-foot player hit by a fast car takes damage + knockback (dodge
+  challenge); camera intentionally ignores traffic in wall-avoidance to avoid
+  snap-jitter from moving cars
+- **Tests:** `TrafficSystem.getCollidables` visibility/exclusion + AI impact damage
