@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./style.css">
+    <title>Final Project: Minecraft</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="toolbar-container">
+      <div id="toolbar">
+        <img class="toolbar-icon" id="toolbar-1" src="./textures/grass.png">
+        <img class="toolbar-icon" id="toolbar-2" src="./textures/dirt.png">
+        <img class="toolbar-icon" id="toolbar-3" src="./textures/stone.png">
+        <img class="toolbar-icon" id="toolbar-4" src="./textures/coal_ore.png">
+        <img class="toolbar-icon selected" id="toolbar-0" src="./textures/pickaxe.png">
+      </div>
+    </div>
+    <div id="info">
+      <div id="player-position"></div>
+    </div>
+    <div id="overlay">
+      <div id="instructions">
+        <h1>MINECRAFT</h1>
+        WASD - Move<br>
+        SHIFT - Sprint<br>
+        SPACE - Jump<br>
+        R - Reset Camera<br>
+        0 - Pickaxe<br>
+        1-4 - Select Block<br>
+        F1 - Save Game<br>
+        F2 - Load Game<br>
+        <h2>PRESS ANY KEY TO START</h2>
+      </div>
+    </div>
+    <div id="status"></div>
+    
+    <script type="module">
+      // Add event listener for any key press
+      document.addEventListener('keydown', () => {
+        const overlay = document.getElementById('overlay');
+        overlay.style.display = 'none'; // Hide the overlay
+      });
+    </script>
+    <script type="module" src="./scripts/main.js"></script>
+  </body>
+</html>
