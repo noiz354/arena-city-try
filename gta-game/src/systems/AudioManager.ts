@@ -234,7 +234,19 @@ export class AudioManager {
       this.engineFilter.frequency.setTargetAtTime(250 + speedRatio * 500, ctx.currentTime, 0.1)
       if (!active && this.engineOn) {
         this.engineOn = false
-        // keep nodes alive; gain already ramped to 0
+        // release the graph once the gain has faded (skip if re-entered a car)
+        const osc = this.engineOsc
+        const gain = this.engineGain
+        setTimeout(() => {
+          if (!this.engineOn) {
+            try {
+              osc.stop()
+            } catch {
+              // already stopped
+            }
+            gain.disconnect()
+          }
+        }, 600)
       }
     }
   }

@@ -41,6 +41,8 @@ interface Chunk {
   props: Group
 }
 
+const boxCenterTmp = new Vector3() // scratch for getCenter without allocation
+
 /** Shared window-pattern texture (one instance reused by all full-detail buildings). */
 let sharedWindowTexture: CanvasTexture | null = null
 
@@ -83,6 +85,8 @@ export class ChunkManager {
   readonly root = new Group()
   private readonly chunks = new Map<string, Chunk>()
   private activeCollidables: Collidable[] = []
+  /** Static building collidables indexed by chunk cell (rebuilt on activation change). */
+  private readonly grid = new Map<string, Collidable[]>()
 
   constructor() {
     for (let cx = 0; cx < CHUNK_COUNT; cx++) {
@@ -149,6 +153,29 @@ export class ChunkManager {
 
   getActiveCollidables(): Collidable[] {
     return this.activeCollidables
+  }
+
+  /**
+   * Spatial query over the static building collidables (zero allocation):
+   * visits every collidable whose chunk cell overlaps the circle around (x,z).
+   * Used by enemy line-of-sight instead of scanning the full active list.
+   */
+  forEachNear(x: number, z: number, radius: number, cb: (c: Collidable) => void): void {
+    const r = Math.ceil(radius / CHUNK_SIZE)
+    const { cx, cz } = this.worldToChunk(x, z)
+    for (let dx = -r; dx <= r; dx++) {
+      for (let dz = -r; dz <= r; dz++) {
+        const list = this.grid.get(`${cx + dx}_${cz + dz}`)
+        if (list) for (const c of list) cb(c)
+      }
+    }
+  }
+
+  /** Same as forEachNear but collects into an array (one alloc per call). */
+  queryCircle(x: number, z: number, radius: number): Collidable[] {
+    const out: Collidable[] = []
+    this.forEachNear(x, z, radius, c => out.push(c))
+    return out
   }
 
   dispose(): void {
@@ -270,8 +297,22 @@ export class ChunkManager {
 
   private rebuildActiveCollidables(): void {
     const list: Collidable[] = []
+    this.grid.clear()
     for (const chunk of this.chunks.values()) {
-      if (chunk.level > 0) list.push(...chunk.collidables)
+      if (chunk.level > 0) {
+        list.push(...chunk.collidables)
+        for (const c of chunk.collidables) {
+          const center = c.box.getCenter(boxCenterTmp)
+          const { cx, cz } = this.worldToChunk(center.x, center.z)
+          const key = `${cx}_${cz}`
+          let cell = this.grid.get(key)
+          if (!cell) {
+            cell = []
+            this.grid.set(key, cell)
+          }
+          cell.push(c)
+        }
+      }
     }
     this.activeCollidables = list
   }

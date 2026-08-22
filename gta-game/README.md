@@ -16,6 +16,7 @@ in `reference/`.
 | 5 | NPCs & Traffic | ✅ pedestrians (walk/idle/flee/dialogue), AI traffic, wanted stars + cops |
 | 6 | Missions & Progression | ✅ delivery/race/assassination/chase, waypoints, minimap, money/XP, save/load |
 | 7 | Polish & Performance | ✅ day/night, rain, particles, procedural audio, bloom, shake, auto-quality, mobile |
+| — | Post-audit | ✅ weapon viewmodel, pause menu, full save/load, spatial audio, spatial LOS query, CI |
 
 ## Controls
 
@@ -30,6 +31,7 @@ in `reference/`.
 | SPACE | Jump |
 | E | Enter/exit vehicle · start mission |
 | M | Mute audio |
+| ESC | Pause menu (resume / mute / restart) |
 | WHEEL | Zoom camera |
 
 Mobile: touch joystick + look-drag + FIRE / E / JUMP / RUN buttons.

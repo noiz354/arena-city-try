@@ -330,7 +330,9 @@ export class Game {
     const buildings = this.world.getCollidables()
     const allCollidables = buildings.concat(this.vehicles.getCollidables())
 
-    this.enemies.update(delta, this.player.position, buildings)
+    // enemy LOS only needs buildings near the chase area (spatial query, not full list)
+    const losBuildings = this.world.chunks.queryCircle(this.player.position.x, this.player.position.z, 70)
+    this.enemies.update(delta, this.player.position, losBuildings)
     this.pedestrians.update(delta, buildings)
     this.traffic.update(delta, px, pz, allCollidables)
     this.checkCarPedestrianCollisions()

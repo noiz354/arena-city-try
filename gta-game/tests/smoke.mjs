@@ -19,6 +19,7 @@ import { MISSIONS } from '../src/data/missions.ts'
 import { PerspectiveCamera, Scene, Vector3 } from 'three'
 import { rayCapsule } from '../src/utils/raycast.ts'
 import { SaveManager } from '../src/systems/SaveManager.ts'
+import { ChunkManager } from '../src/systems/ChunkManager.ts'
 import { WEAPONS } from '../src/data/weapons.ts'
 
 let pass = 0
@@ -30,6 +31,15 @@ const ok = (name, cond) => {
     console.log('FAIL:', name)
   }
 }
+
+// --- A-2: chunk spatial query (grid indexing) ---
+const cm = new ChunkManager()
+const { cx, cz } = cm.worldToChunk(0, 0)
+ok('worldToChunk maps center to center cell', cx === cz)
+let visited = 0
+cm.forEachNear(0, 0, 50, () => visited++)
+ok('forEachNear empty grid no-op', visited === 0)
+ok('queryCircle empty grid', cm.queryCircle(0, 0, 50).length === 0)
 
 // --- Phase 2: chunks ---
 let totalB = 0

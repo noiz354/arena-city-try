@@ -21,8 +21,11 @@
 | A-5 | Pause menu | ✅ **Ditambahkan** — ESC toggle, resume/mute/restart, stats, controls; `InputManager.clearTransient()` cegah klik nyasar |
 | A-6 | Audio spatial | ✅ **Ditambahkan** — `AudioManager.setListener` (camera) + `playExplosionAt` (PannerNode, distance falloff) |
 | — | Karakter tampak jalan mundur | ✅ **Diperbaiki** — nose indicator di -Z lokal (three.js forward) |
+| A-2 | Collidable spatial query | ✅ **Ditambahkan** — grid per-chunk di ChunkManager (`forEachNear`/`queryCircle` zero-alloc); LOS enemy kini pakai circle 70m, bukan full list |
+| I-1 | Engine oscillator cleanup | ✅ **Diperbaiki** — osc di-`stop()` + gain di-disconnect setelah gain fade saat keluar mobil |
+| — | CI | ✅ **Ditambahkan** — `.github/workflows/ci.yml`: npm ci → tsc → npm test → build → artifact; `npm run typecheck` / `npm run check` |
 
-**Baseline baru:** `npm test` 22/22 lolos · `tsc --noEmit` bersih · build OK (164 kB gzip)
+**Baseline baru:** `npm test` 25/25 lolos · `tsc --noEmit` bersih · build OK (164 kB gzip)
 
 ---
 
@@ -187,12 +190,10 @@ pada posisi player/camera (jarak senjata, mesin mobil).
 ### P0 — selesai ✅ (B-1, B-2)
 ### P1 — selesai ✅ (P-1, P-2 sebagian)
 ### P2 — selesai ✅ (I-2, I-3, I-4, I-5, A-4, A-5, A-6)
-### P3 — polish & engineering (sisa)
-1. **I-1** — stop engine oscillator saat keluar mobil (minor)
-2. **A-1** — refactor Game.ts (mode controller, systems wiring; SaveManager sudah diekstrak)
-3. **A-2** — collidable spatial hash per chunk
-4. **A-3** — InstancedMesh bangunan
-5. Lint + CI + Playwright smoke (canvas screenshot + FPS check)
+### P3 — selesai ✅ (A-2, I-1, CI) · sisa:
+1. **A-1** — refactor Game.ts lebih lanjut (mode controller; SaveManager sudah diekstrak)
+2. **A-3** — InstancedMesh bangunan (draw call ↓)
+3. Playwright visual smoke (browser tidak bisa diinstall di sandbox ini — template siap via threejs-game-skills)
 
 ---
 

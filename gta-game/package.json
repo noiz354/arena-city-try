@@ -7,7 +7,9 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc && vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "tsx tests/smoke.mjs"
+    "test": "tsx tests/smoke.mjs",
+    "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit && tsx tests/smoke.mjs"
   },
   "dependencies": {
     "@types/three": "^0.185.4",
