@@ -108,6 +108,133 @@ html, body {
   min-height: 0;
 }
 
+.hud__health {
+  display: inline-block;
+  width: 110px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.hud__health-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #22c55e, #86efac);
+  border-radius: 6px;
+  transition: width 0.12s linear;
+}
+
+.hud__ammo {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 10;
+  text-align: right;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  user-select: none;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud__weapon-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffe066;
+}
+
+#hud-ammo-value {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.hud__ammo-reserve {
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+.hud__reload {
+  margin-top: 6px;
+  width: 150px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-left: auto;
+  transition: opacity 0.2s;
+  opacity: 0;
+}
+
+.hud__reload-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: #ffe066;
+}
+
+.hud__crosshair {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 30%, transparent 65%);
+  mix-blend-mode: difference;
+  opacity: 0.9;
+}
+
+.hud__vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(180, 0, 0, 0.55) 100%);
+}
+
+.hud__hit {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(#fff, #fff) center/100% 2px no-repeat,
+    linear-gradient(#fff, #fff) center/2px 100% no-repeat;
+  filter: drop-shadow(0 0 4px #fff);
+}
+
+.hud__pickup {
+  position: fixed;
+  top: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 11;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffe066;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
 .hud__hint {
   margin-top: 8px;
   background: rgba(0, 0, 0, 0.35);

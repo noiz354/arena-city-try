@@ -10,5 +10,10 @@ game.start()
 const hud = new HUD()
 game.onUpdate(delta => hud.update(delta, game))
 
+// HUD event wiring
+game.onPlayerDamaged = () => hud.showDamage()
+game.onWeaponHit = () => hud.showHit()
+game.onPickup = msg => hud.showPickup(msg)
+
 // Expose for debugging from the browser console
 ;(window as unknown as { game: Game }).game = game

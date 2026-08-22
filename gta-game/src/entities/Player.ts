@@ -38,6 +38,8 @@ export class Player {
   yaw = 0
   grounded = true
   stamina = STAMINA_MAX
+  maxHealth = 100
+  health = 100
 
   private readonly body: Mesh
   private readonly tmpV = new Vector3()
@@ -71,6 +73,24 @@ export class Player {
 
   get position(): Vector3 {
     return this.group.position
+  }
+
+  takeDamage(amount: number): boolean {
+    if (this.health <= 0) return false
+    this.health = Math.max(0, this.health - amount)
+    return this.health <= 0
+  }
+
+  heal(amount: number): void {
+    this.health = Math.min(this.maxHealth, this.health + amount)
+  }
+
+  respawnAt(x: number, z: number): void {
+    this.health = this.maxHealth
+    this.stamina = STAMINA_MAX
+    this.velocity.set(0, 0, 0)
+    this.group.position.set(x, 0.95, z)
+    this.group.visible = true
   }
 
   update(dt: number, input: InputManager, cameraYaw: number, collidables: Collidable[]): void {

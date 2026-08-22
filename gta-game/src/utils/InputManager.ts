@@ -8,6 +8,9 @@ export class InputManager {
   private mouseDown = false
   private lastMouseX = 0
   private lastMouseY = 0
+  private mouseHeld = false
+  private movedSinceDown = 0
+  private clickQueued = false
 
   /** Accumulated drag deltas since the last update() call (pixels). */
   mouseDelta = { x: 0, y: 0 }
@@ -32,6 +35,8 @@ export class InputManager {
   private readonly onMouseDown = (e: MouseEvent): void => {
     if (e.button === 0) {
       this.mouseDown = true
+      this.mouseHeld = true
+      this.movedSinceDown = 0
       this.lastMouseX = e.clientX
       this.lastMouseY = e.clientY
     }
@@ -39,14 +44,21 @@ export class InputManager {
 
   private readonly onMouseMove = (e: MouseEvent): void => {
     if (!this.mouseDown) return
-    this.mouseDelta.x += e.clientX - this.lastMouseX
-    this.mouseDelta.y += e.clientY - this.lastMouseY
+    const dx = e.clientX - this.lastMouseX
+    const dy = e.clientY - this.lastMouseY
+    this.mouseDelta.x += dx
+    this.mouseDelta.y += dy
+    this.movedSinceDown += Math.abs(dx) + Math.abs(dy)
     this.lastMouseX = e.clientX
     this.lastMouseY = e.clientY
   }
 
   private readonly onMouseUp = (e: MouseEvent): void => {
-    if (e.button === 0) this.mouseDown = false
+    if (e.button !== 0) return
+    this.mouseDown = false
+    this.mouseHeld = false
+    // a click = press+release without meaningful drag (used for shooting)
+    if (this.movedSinceDown < 8) this.clickQueued = true
   }
 
   private readonly onWheel = (e: WheelEvent): void => {
@@ -79,6 +91,23 @@ export class InputManager {
   /** True only for the frame the key was first pressed. */
   wasPressed(...codes: string[]): boolean {
     return codes.some(c => this.pressed.has(c))
+  }
+
+  /** True while the left mouse button is held. */
+  isMouseDown(): boolean {
+    return this.mouseHeld
+  }
+
+  /** True while holding and dragging (used to avoid shooting while orbiting). */
+  isDragging(): boolean {
+    return this.mouseHeld && this.movedSinceDown > 8
+  }
+
+  /** Consumes a click event (press+release without drag); returns true once. */
+  consumeClick(): boolean {
+    const c = this.clickQueued
+    this.clickQueued = false
+    return c
   }
 
   /** Call once per frame at the end of the update. */
