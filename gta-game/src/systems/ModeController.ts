@@ -203,7 +203,7 @@ export class ModeController {
 
   private handlePlayerDeath(delta: number): void {
     if (this.respawnTimer > 0) {
-      this.respawnTimer -= delta
+      this.respawnTimer = Math.max(0, this.respawnTimer - delta)
       if (this.respawnTimer <= 0) {
         this.deps.player.respawnAt(SPAWN_X, SPAWN_Z)
         this.telemetry?.playerRespawn()
