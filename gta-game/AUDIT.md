@@ -24,8 +24,11 @@
 | A-2 | Collidable spatial query | ✅ **Ditambahkan** — grid per-chunk di ChunkManager (`forEachNear`/`queryCircle` zero-alloc); LOS enemy kini pakai circle 70m, bukan full list |
 | I-1 | Engine oscillator cleanup | ✅ **Diperbaiki** — osc di-`stop()` + gain di-disconnect setelah gain fade saat keluar mobil |
 | — | CI | ✅ **Ditambahkan** — `.github/workflows/ci.yml`: npm ci → tsc → npm test → build → artifact; `npm run typecheck` / `npm run check` |
+| — | Analytics | ✅ **Ditambahkan** — `src/analytics/tracker.ts` (queue+persist+beacon, zero-loss flush) + `gameTelemetry.ts` (gameplay events + FPS reports), wired ke hooks Game; endpoint opsional via `VITE_ANALYTICS_ENDPOINT` |
+| — | Error handler | ✅ **Ditambahkan** — `utils/logger.ts` (leveled) + `utils/errors.ts` (onerror/unhandledrejection/WebGL-loss, dev overlay, boot-failure screen) |
+| — | CD / GitHub Pages | ✅ **Ditambahkan** — `deploy-pages.yml` (via setup script) + branch `gh-pages` ter-publish (`/arena-city-try/`, base otomatis `GH_PAGES=1`); tinggal aktifkan di Settings → Pages |
 
-**Baseline baru:** `npm test` 25/25 lolos · `tsc --noEmit` bersih · build OK (164 kB gzip)
+**Baseline baru:** `npm test` 30/30 lolos · `tsc --noEmit` bersih · build OK (167 kB gzip)
 
 ---
 

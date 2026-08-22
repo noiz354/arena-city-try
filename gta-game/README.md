@@ -63,7 +63,46 @@ npm install
 npm run dev        # dev server on 0.0.0.0:5173
 npm run build      # type-check + production build
 npm test           # headless smoke tests for core systems
+npm run check      # type-check + tests (CI does the same)
 ```
+
+## CI / CD / Deployment
+
+- **CI**: `.github/workflows/ci.yml` — npm ci → `tsc --noEmit` → `npm test` → `npm run build` → artifact.
+  *(The session's GitHub App token lacks the `workflows` permission, so the file
+  is preserved in `CI_WORKFLOW.md` — restore it with `bash gta-game/scripts/setup-gh-workflows.sh`
+  using an account that has that permission.)*
+- **CD**: `deploy-pages.yml` publishes to GitHub Pages (`https://<owner>.github.io/arena-city-try/`)
+  — Vite `base` switches automatically via `GH_PAGES=1`.
+- **gh-pages branch (no workflows permission needed)**: run
+  `bash gta-game/scripts/publish-gh-pages.sh` (builds with `GH_PAGES=1` and
+  force-pushes the `gh-pages` branch), then enable **Settings → Pages →
+  Deploy from a branch → gh-pages → / (root)**.
+
+## Analytics
+
+Privacy-friendly, zero external scripts/cookies. Events are batched to a local
+queue (localStorage) and optionally beamed to a self-hosted endpoint:
+
+```bash
+# optional — configure at build time
+VITE_ANALYTICS_ENDPOINT=https://your-collector.example/events VITE_ANALYTICS_SITE=cityrush npm run build
+```
+
+Tracked events: `session_start`, `kill` (kind+weapon), `mission_start/complete`,
+`vehicle_enter/exit`, `wanted_changed`, `player_damaged/died/respawn`,
+`weapon_acquired`, `ammo_pickup`, `fps_report` (every 10 s), `error`,
+`boot_failed`. Without an endpoint, events stay local (viewable via
+`window.tracker` in the console).
+
+## Error handling
+
+- `initErrorHandling()` (in `main.ts`) captures `window.onerror`,
+  `unhandledrejection` and WebGL context loss → logs, reports to analytics,
+  shows a dev overlay with the stack.
+- Boot failures render a friendly "The game failed to start" screen (no white
+  page) and are reported as `boot_failed`.
+- `src/utils/logger.ts` — leveled structured logger (`logger.info('system', …)`).
 
 ## Structure
 
