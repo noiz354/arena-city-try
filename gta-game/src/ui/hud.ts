@@ -20,16 +20,25 @@ export class HUD {
     this.el = document.createElement('div')
     this.el.className = 'hud'
     this.el.innerHTML = `
-      <div class="hud__title">CITY RUSH — Phase 5: NPCs & Traffic</div>
+      <div class="hud__title">CITY RUSH — Phase 6: Missions & Progression</div>
       <div class="hud__stats">
         <span class="hud__health"><span id="hud-health-fill" class="hud__health-fill"></span></span>
+        <span id="hud-cash">$0</span>
+        <span id="hud-level">LVL 1</span>
         <span id="hud-fps">FPS: --</span>
         <span id="hud-pos">POS: --</span>
-        <span id="hud-chunk">CHUNK: --</span>
         <span class="hud__stamina"><span id="hud-stamina-fill" class="hud__stamina-fill"></span></span>
         <span id="hud-thugs">THUGS: --</span>
         <span id="hud-speed" class="hud__speed" style="display:none">0 km/h</span>
         <span class="hud__vhealth" style="display:none"><span id="hud-vhealth-fill" class="hud__vhealth-fill"></span></span>
+      </div>
+      <div id="hud-mission" class="hud__mission" style="display:none">
+        <div id="hud-mission-name" class="hud__mission-name"></div>
+        <div id="hud-mission-obj" class="hud__mission-obj"></div>
+      </div>
+      <div id="hud-compass" class="hud__compass" style="display:none">
+        <span id="hud-compass-dist" class="hud__compass-dist">--m</span>
+        <div class="hud__compass-arrow-wrap"><div id="hud-compass-arrow" class="hud__compass-arrow"></div></div>
       </div>
 
       <div id="hud-ammo" class="hud__ammo" style="display:none">
@@ -67,6 +76,13 @@ export class HUD {
   showDialogue(line: string): void {
     this.dialogueText = line
     this.dialogueTimer = 3.2
+  }
+
+  /** Mission objective ticker (persistent until the next objective). */
+  objectiveText = ''
+
+  setObjective(text: string): void {
+    this.objectiveText = text
   }
 
   update(delta: number, game: Game): void {
@@ -127,6 +143,35 @@ export class HUD {
         : `[E] Enter ${game.nearestVehicle.config.name}`
     } else {
       prompt.textContent = ''
+    }
+
+    // cash + level
+    document.getElementById('hud-cash')!.textContent = `$${game.missions.profile.money}`
+    document.getElementById('hud-level')!.textContent = `LVL ${game.missions.profile.level}`
+
+    // mission panel + compass
+    const missionEl = document.getElementById('hud-mission')!
+    const compassEl = document.getElementById('hud-compass')!
+    const active = game.missions.active
+    missionEl.style.display = active ? 'block' : 'none'
+    compassEl.style.display = active && game.missions.waypoint() ? 'block' : 'none'
+    if (active) {
+      document.getElementById('hud-mission-name')!.textContent = active.def.name
+      document.getElementById('hud-mission-obj')!.textContent =
+        this.objectiveText || game.missions.objectiveText()
+      const wp = game.missions.waypoint()
+      if (wp) {
+        const p = driving && game.vehicle ? game.vehicle.position : game.player.position
+        const d = Math.hypot(wp.x - p.x, wp.z - p.z)
+        document.getElementById('hud-compass-dist')!.textContent = `${Math.round(d)}m`
+        // compass arrow: angle between camera forward and direction to waypoint
+        const camYaw = game.cameraRig.yaw
+        const angle = Math.atan2(wp.x - p.x, wp.z - p.z)
+        let rel = angle - camYaw
+        while (rel > Math.PI) rel -= Math.PI * 2
+        while (rel < -Math.PI) rel += Math.PI * 2
+        document.getElementById('hud-compass-arrow')!.style.transform = `rotate(${-rel}rad)`
+      }
     }
 
     // wanted stars

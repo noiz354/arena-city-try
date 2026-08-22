@@ -19,7 +19,11 @@ import { PickupSystem } from '../systems/PickupSystem'
 import { PedestrianSystem } from '../systems/PedestrianSystem'
 import { TrafficSystem } from '../systems/TrafficSystem'
 import { WantedSystem } from '../systems/WantedSystem'
+import { MissionSystem } from '../systems/MissionSystem'
+import { MinimapSystem } from '../systems/MinimapSystem'
 import { WEAPON_LIST } from '../data/weapons'
+
+const SAVE_KEY = 'cityrush_save_v1'
 
 export interface GameOptions {
   container: HTMLElement
@@ -52,17 +56,21 @@ export class Game {
   readonly pedestrians: PedestrianSystem
   readonly traffic: TrafficSystem
   readonly wanted: WantedSystem
+  readonly missions: MissionSystem
+  readonly minimap: MinimapSystem
 
   mode: PlayerMode = 'foot'
   vehicle: Vehicle | null = null
   nearestVehicle: Vehicle | null = null
   kills = 0
   respawnTimer = 0
+  private saveTimer = 30
   /** HUD hooks — wired from main.ts */
   onPlayerDamaged?: () => void
   onWeaponHit?: () => void
   onPickup?: (message: string) => void
   onDialogue?: (line: string) => void
+  onObjective?: (text: string) => void
   private readonly exitOffset = new Vector3()
 
   private readonly updateCallbacks = new Set<(delta: number) => void>()
@@ -118,6 +126,23 @@ export class Game {
     for (const car of this.traffic.cars) this.scene.add(car.vehicle.group)
 
     this.wanted = new WantedSystem(this.enemies)
+
+    // --- Missions + minimap ---
+    this.missions = new MissionSystem(
+      this.enemies,
+      () => this.player.position,
+      () => this.traffic.cars.map(c => c.vehicle),
+    )
+    this.scene.add(this.missions.markers)
+    this.missions.hooks.onMissionStart = def => this.onPickup?.(`MISSION: ${def.name}`)
+    this.missions.hooks.onMissionComplete = (def, reward) => {
+      this.onPickup?.(`MISSION COMPLETE: ${def.name} · +$${reward}`)
+      this.save()
+    }
+    this.missions.hooks.onObjective = (_def, text) => this.onObjective?.(text)
+
+    this.minimap = new MinimapSystem()
+    this.loadSave()
 
     // --- Weapons ---
     this.weapons = new WeaponSystem(
@@ -242,6 +267,17 @@ export class Game {
       if (line) this.onDialogue?.(line)
     }
 
+    // missions + minimap
+    this.missions.update(delta)
+    this.updateMinimap()
+
+    // auto-save every 30s
+    this.saveTimer -= delta
+    if (this.saveTimer <= 0) {
+      this.saveTimer = 30
+      this.save()
+    }
+
     this.handlePlayerDeath(delta)
 
     this.updateCallbacks.forEach(cb => cb(delta))
@@ -274,6 +310,12 @@ export class Game {
       }
     }
 
+    // mission start zone interaction
+    if (!this.missions.active && this.input.wasPressed('KeyE')) {
+      const zone = this.missions.zoneAt(this.player.position.x, this.player.position.z)
+      if (zone) this.missions.startMission(zone)
+    }
+
     // nearest enterable vehicle: parked or traffic
     this.nearestVehicle =
       this.vehicles.getNearest(this.player.position.x, this.player.position.z) ??
@@ -294,6 +336,12 @@ export class Game {
 
     this.cameraRig.followYaw = v.yaw
     this.cameraRig.update(delta, this.input, v.position, all)
+
+    // mission start zone interaction while driving too
+    if (!this.missions.active && this.input.wasPressed('KeyE')) {
+      const zone = this.missions.zoneAt(v.position.x, v.position.z)
+      if (zone) this.missions.startMission(zone)
+    }
 
     this.nearestVehicle = null
     if (this.input.wasPressed('KeyE')) this.exitVehicle()
@@ -333,6 +381,41 @@ export class Game {
     }
     if (this.player.health <= 0) {
       this.respawnTimer = 3
+    }
+  }
+
+  private updateMinimap(): void {
+    const p = this.mode === 'driving' && this.vehicle ? this.vehicle.position : this.player.position
+    const yaw = this.mode === 'driving' && this.vehicle ? this.vehicle.yaw : this.player.yaw
+    this.minimap.update(p, yaw, this.missions.waypoint(), this.missions.markerPositions())
+  }
+
+  /** Save profile + player state to localStorage. */
+  save(): void {
+    try {
+      const data = {
+        profile: this.missions.serialize(),
+        pos: { x: this.player.position.x, z: this.player.position.z },
+        health: this.player.health,
+      }
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data))
+    } catch {
+      // storage unavailable — non-fatal
+    }
+  }
+
+  private loadSave(): void {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY)
+      if (!raw) return
+      const data = JSON.parse(raw) as { profile?: string; pos?: { x: number; z: number }; health?: number }
+      if (data.profile) this.missions.deserialize(data.profile)
+      if (data.pos) {
+        this.player.group.position.set(data.pos.x, 0.95, data.pos.z)
+      }
+      if (typeof data.health === 'number') this.player.health = data.health
+    } catch {
+      // corrupt save — ignore
     }
   }
 
