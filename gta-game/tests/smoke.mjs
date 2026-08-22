@@ -18,6 +18,8 @@ import { MissionSystem } from '../src/systems/MissionSystem.ts'
 import { MISSIONS } from '../src/data/missions.ts'
 import { PerspectiveCamera, Scene, Vector3 } from 'three'
 import { rayCapsule } from '../src/utils/raycast.ts'
+import { SaveManager } from '../src/systems/SaveManager.ts'
+import { WEAPONS } from '../src/data/weapons.ts'
 
 let pass = 0
 let fail = 0
@@ -132,6 +134,31 @@ missions.update(0.016)
 playerPos.set(92, 0.95, -64)
 for (let i = 0; i < 10; i++) missions.update(0.016)
 ok('delivery completes + money', missions.active === null && missions.profile.money === 150)
+
+// --- I-5: weapon inventory save/load roundtrip ---
+const wsA = new WeaponSystem(scene, cam, input, enemies, () => [], {})
+wsA.giveWeapon('rifle')
+wsA.giveWeapon('shotgun')
+wsA.switchWeapon('rifle')
+const snap = wsA.serialize()
+const wsB = new WeaponSystem(scene, cam, input, enemies, () => [], {})
+wsB.deserialize(snap)
+ok('weapon save/load: owned set', wsB.hasWeapon('rifle') && wsB.hasWeapon('shotgun') && !wsB.hasWeapon('smg'))
+ok('weapon save/load: current + ammo', wsB.currentWeaponId === 'rifle' && wsB.mag === WEAPONS.rifle.magSize && wsB.reserve === WEAPONS.rifle.reserveMax)
+
+// --- SaveManager roundtrip with a localStorage mock ---
+const store = new Map()
+globalThis.localStorage = {
+  getItem: k => store.get(k) ?? null,
+  setItem: (k, v) => void store.set(k, String(v)),
+  removeItem: k => void store.delete(k),
+}
+const sm = new SaveManager('test_save_key')
+const saved = sm.save({ profile: '{}', pos: { x: 3, z: 4 }, health: 55, kills: 7, weapons: snap })
+const loaded = sm.load()
+ok('saveManager save+load', saved && loaded?.kills === 7 && loaded.pos.x === 3)
+sm.clear()
+ok('saveManager clear', sm.load() === null)
 
 console.log(`\nRESULT: ${pass} passed, ${fail} failed`)
 process.exit(fail > 0 ? 1 : 0)

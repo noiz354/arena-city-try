@@ -16,9 +16,13 @@
 | I-3 | Mobil tidak menabrak pedestrian | ✅ **Diperbaiki** — `Game.checkCarPedestrianCollisions()`: knock-down/run-over by speed, car melambat, cooldown per ped |
 | I-4 | Wanted tidak naik saat menabrak | ✅ **Diperbaiki** — run-over fatal = crime 2, non-fatal = crime 1 |
 | I-1 | Engine oscillator tidak di-stop | ⏳ minor — node tunggal, gain di-ramp ke 0; aman dibiarkan |
-| I-5..I-8, A-1..A-6 | Lihat roadmap bawah | ⏳ belum |
+| I-5 | Save/load lengkap (inventory, ammo, kills) | ✅ **Diperbaiki** — `WeaponSystem.serialize/deserialize`, `SaveManager` (`src/systems/SaveManager.ts`), save otomatis + saat destroy; test roundtrip |
+| A-4 | Weapon viewmodel | ✅ **Ditambahkan** — `WeaponView.ts`: model procedural per senjata di tangan karakter (3rd-person GTA-style), recoil kick, muzzle flash, movement bob |
+| A-5 | Pause menu | ✅ **Ditambahkan** — ESC toggle, resume/mute/restart, stats, controls; `InputManager.clearTransient()` cegah klik nyasar |
+| A-6 | Audio spatial | ✅ **Ditambahkan** — `AudioManager.setListener` (camera) + `playExplosionAt` (PannerNode, distance falloff) |
+| — | Karakter tampak jalan mundur | ✅ **Diperbaiki** — nose indicator di -Z lokal (three.js forward) |
 
-**Baseline baru:** `npm test` 18/18 lolos · `tsc --noEmit` bersih · build OK (162 kB gzip)
+**Baseline baru:** `npm test` 22/22 lolos · `tsc --noEmit` bersih · build OK (164 kB gzip)
 
 ---
 
@@ -182,18 +186,13 @@ pada posisi player/camera (jarak senjata, mesin mobil).
 
 ### P0 — selesai ✅ (B-1, B-2)
 ### P1 — selesai ✅ (P-1, P-2 sebagian)
-### P2 — fitur GTA-esque (sisa)
-1. **I-5** — save/load lengkap (inventory, ammo, mission state)
-2. **A-4** — weapon viewmodel
-3. **A-6** — audio spatial (PannerNode)
-4. **I-1** — stop engine oscillator saat keluar mobil (minor)
-
-### P3 — polish & engineering
-5. **A-1** — refactor Game.ts (mode controller, save manager, systems wiring)
-6. **A-2** — collidable spatial hash per chunk
-7. **A-3** — InstancedMesh bangunan
-8. **A-5** — pause menu + settings
-9. Lint + CI + Playwright smoke (canvas screenshot + FPS check)
+### P2 — selesai ✅ (I-2, I-3, I-4, I-5, A-4, A-5, A-6)
+### P3 — polish & engineering (sisa)
+1. **I-1** — stop engine oscillator saat keluar mobil (minor)
+2. **A-1** — refactor Game.ts (mode controller, systems wiring; SaveManager sudah diekstrak)
+3. **A-2** — collidable spatial hash per chunk
+4. **A-3** — InstancedMesh bangunan
+5. Lint + CI + Playwright smoke (canvas screenshot + FPS check)
 
 ---
 

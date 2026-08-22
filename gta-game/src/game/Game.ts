@@ -29,9 +29,10 @@ import { ParticleSystem } from '../systems/ParticleSystem'
 import { PostFX } from '../systems/PostFX'
 import { AutoQuality } from '../systems/AutoQuality'
 import { MobileControls } from '../systems/MobileControls'
+import { WeaponView } from '../systems/WeaponView'
+import { SaveManager } from '../systems/SaveManager'
+import { PauseMenu } from '../ui/pauseMenu'
 import { WEAPON_LIST } from '../data/weapons'
-
-const SAVE_KEY = 'cityrush_save_v1'
 
 export interface GameOptions {
   container: HTMLElement
@@ -73,12 +74,16 @@ export class Game {
   readonly postfx: PostFX
   readonly quality: AutoQuality
   readonly mobile: MobileControls
+  readonly weaponView: WeaponView
+  readonly saveManager: SaveManager
+  readonly pauseMenu: PauseMenu
 
   mode: PlayerMode = 'foot'
   vehicle: Vehicle | null = null
   nearestVehicle: Vehicle | null = null
   kills = 0
   respawnTimer = 0
+  paused = false
   private saveTimer = 30
   private readonly exploded = new Set<Vehicle>()
   /** HUD hooks — wired from main.ts */
@@ -135,11 +140,14 @@ export class Game {
     this.particles = new ParticleSystem(this.scene)
     this.mobile = new MobileControls(this.input)
 
-    // --- Player + third-person camera rig ---
+    // --- Player + third-person camera rig + weapon viewmodel ---
     this.player = new Player()
     this.player.group.position.set(SPAWN_X, 0.95, SPAWN_Z)
     this.scene.add(this.player.group)
     this.world.update(this.player.position.x, this.player.position.z)
+
+    this.weaponView = new WeaponView()
+    this.player.group.add(this.weaponView.holder)
 
     // --- Parked vehicles ---
     this.vehicles = new VehicleManager()
@@ -174,7 +182,16 @@ export class Game {
     this.missions.hooks.onObjective = (_def, text) => this.onObjective?.(text)
 
     this.minimap = new MinimapSystem()
-    this.loadSave()
+
+    // --- Save manager + pause menu ---
+    this.saveManager = new SaveManager()
+    this.pauseMenu = new PauseMenu({
+      onResume: () => this.setPaused(false),
+      onRestart: () => this.restart(),
+      onToggleMute: () => this.audio.setMuted(!this.audio.muted),
+      isMuted: () => this.audio.muted,
+      stats: () => this.pauseStats(),
+    })
 
     // --- Weapons ---
     this.weapons = new WeaponSystem(
@@ -190,6 +207,7 @@ export class Game {
         },
         onShoot: weapon => {
           this.audio.playShoot(weapon)
+          this.weaponView.kick()
           const p = this.player.position
           this.pedestrians.panicNear(p, 40)
           // firing near police officers counts as a crime
@@ -221,6 +239,7 @@ export class Game {
       {
         onWeapon: id => {
           this.weapons.giveWeapon(id)
+          this.weaponView.setWeapon(id)
           this.audio.playPickup()
           this.onPickup?.(`${WEAPON_LIST.find(w => w.id === id)?.name ?? id} acquired!`)
         },
@@ -236,6 +255,8 @@ export class Game {
       if (enemy.role === 'cop') this.wanted.reportCrime(3, this.player.position)
     }
     this.spawnInitialPickups()
+    this.loadSave()
+    this.weaponView.setWeapon(this.weapons.currentWeaponId)
 
     this.cameraRig = new CameraRig(this.camera)
 
@@ -270,6 +291,7 @@ export class Game {
   }
 
   destroy(): void {
+    this.save() // persist progress when the session ends
     this.stop()
     this.input.detach()
     window.removeEventListener('resize', this.resize)
@@ -287,10 +309,18 @@ export class Game {
     this.animationId = requestAnimationFrame(this.loop)
 
     const delta = Math.min(this.clock.getDelta(), 0.05)
-    this.update(delta)
+
+    if (this.input.wasPressed('Escape')) this.setPaused(!this.paused)
+
+    if (!this.paused) this.update(delta)
+
+    this.input.endFrame()
   }
 
   private update(delta: number): void {
+    // spatial audio listener follows the camera
+    this.audio.setListener(this.camera.position, this.camera.quaternion)
+
     const px = this.mode === 'driving' ? this.vehicle!.position.x : this.player.position.x
     const pz = this.mode === 'driving' ? this.vehicle!.position.z : this.player.position.z
     this.world.update(px, pz)
@@ -333,6 +363,10 @@ export class Game {
 
     this.handlePlayerDeath(delta)
 
+    // weapon viewmodel (bob + recoil; hidden while driving via player group)
+    const pv = this.player.velocity
+    this.weaponView.update(delta, this.mode === 'foot' && Math.hypot(pv.x, pv.z) > 0.5, Math.min(1, Math.hypot(pv.x, pv.z) / 9.5))
+
     // --- polish systems ---
     this.dayNight.update(delta)
     this.weather.update(delta, this.camera.position)
@@ -352,17 +386,15 @@ export class Game {
       this.renderer.render(this.scene, this.camera)
     }
     this.postfx.restoreShake(this.camera)
-
-    this.input.endFrame()
   }
 
-  /** Explode + smoke on newly wrecked vehicles. */
+  /** Explode + smoke on newly wrecked vehicles (spatial boom at the car). */
   private updateExplosions(): void {
     for (const v of this.vehicles.vehicles) {
       if (v.wrecked && !this.exploded.has(v)) {
         this.exploded.add(v)
         this.particles.explosion(v.position, 1)
-        this.audio.playExplosion()
+        this.audio.playExplosionAt(v.position)
         this.postfx.addShake(0.9)
       } else if (v.wrecked) {
         this.particles.smoke(v.position, 1 / 60)
@@ -389,7 +421,10 @@ export class Game {
 
     // weapon switching + reload
     for (const def of WEAPON_LIST) {
-      if (this.input.wasPressed(`Digit${def.key}`)) this.weapons.switchWeapon(def.id)
+      if (this.input.wasPressed(`Digit${def.key}`)) {
+        this.weapons.switchWeapon(def.id)
+        this.weaponView.setWeapon(def.id)
+      }
     }
     if (this.input.wasPressed('KeyR')) this.weapons.startReload()
 
@@ -520,33 +555,44 @@ export class Game {
     this.minimap.update(p, yaw, this.missions.waypoint(), this.missions.markerPositions())
   }
 
-  /** Save profile + player state to localStorage. */
+  /** Full save: profile + player state + weapon inventory (localStorage). */
   save(): void {
-    try {
-      const data = {
-        profile: this.missions.serialize(),
-        pos: { x: this.player.position.x, z: this.player.position.z },
-        health: this.player.health,
-      }
-      localStorage.setItem(SAVE_KEY, JSON.stringify(data))
-    } catch {
-      // storage unavailable — non-fatal
-    }
+    this.saveManager.save({
+      profile: this.missions.serialize(),
+      pos: { x: this.player.position.x, z: this.player.position.z },
+      health: this.player.health,
+      kills: this.kills,
+      weapons: this.weapons.serialize(),
+    })
   }
 
   private loadSave(): void {
-    try {
-      const raw = localStorage.getItem(SAVE_KEY)
-      if (!raw) return
-      const data = JSON.parse(raw) as { profile?: string; pos?: { x: number; z: number }; health?: number }
-      if (data.profile) this.missions.deserialize(data.profile)
-      if (data.pos) {
-        this.player.group.position.set(data.pos.x, 0.95, data.pos.z)
-      }
-      if (typeof data.health === 'number') this.player.health = data.health
-    } catch {
-      // corrupt save — ignore
-    }
+    const data = this.saveManager.load()
+    if (!data) return
+    if (data.profile) this.missions.deserialize(data.profile)
+    if (data.pos) this.player.group.position.set(data.pos.x, 0.95, data.pos.z)
+    if (typeof data.health === 'number') this.player.health = data.health
+    if (typeof data.kills === 'number') this.kills = data.kills
+    if (data.weapons) this.weapons.deserialize(data.weapons)
+  }
+
+  /** ESC toggling / menu button. */
+  setPaused(paused: boolean): void {
+    if (this.paused === paused) return
+    this.paused = paused
+    this.pauseMenu.setVisible(paused)
+    this.input.clearTransient() // don't let a stray click fire after resume
+  }
+
+  /** Restart: wipe the save and reload the page. */
+  restart(): void {
+    this.saveManager.clear()
+    window.location.reload()
+  }
+
+  private pauseStats(): string {
+    const m = this.missions.profile
+    return `MONEY $${m.money} · LEVEL ${m.level} · KILLS ${this.kills} · WANTED ${'★'.repeat(this.wanted.stars) || '—'}`
   }
 
   private spawnInitialPickups(): void {

@@ -126,6 +126,30 @@ export class WeaponSystem {
     }
   }
 
+  /** Serializable snapshot (weapon inventory + ammo) for save games. */
+  serialize(): { owned: string[]; current: string; ammo: Record<string, { mag: number; reserve: number }> } {
+    const ammo: Record<string, { mag: number; reserve: number }> = {}
+    for (const [id, st] of this.ammo) {
+      ammo[id] = { mag: st.mag, reserve: st.reserve }
+    }
+    return { owned: [...this.owned], current: this.currentWeaponId, ammo }
+  }
+
+  /** Restore a saved inventory snapshot. */
+  deserialize(data: { owned: string[]; current: string; ammo: Record<string, { mag: number; reserve: number }> }): void {
+    this.owned.clear()
+    for (const id of data.owned) if (WEAPONS[id]) this.owned.add(id)
+    if (WEAPONS[data.current]) this.currentWeaponId = data.current
+    for (const [id, st] of Object.entries(data.ammo)) {
+      const state = this.ammo.get(id)
+      if (!state) continue
+      state.mag = Math.min(st.mag, WEAPONS[id].magSize)
+      state.reserve = Math.min(st.reserve, WEAPONS[id].reserveMax)
+      state.reloading = false
+      state.reloadTimer = 0
+    }
+  }
+
   switchWeapon(id: string): void {
     if (!this.owned.has(id) || id === this.currentWeaponId) return
     const st = this.currentState

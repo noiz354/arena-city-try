@@ -1,3 +1,4 @@
+import { Quaternion, Vector3 } from 'three'
 import type { WeaponDef } from '../data/weapons'
 
 /**
@@ -43,6 +44,72 @@ export class AudioManager {
       this.master.gain.setTargetAtTime(muted ? 0 : 0.8, this.ctx.currentTime, 0.05)
     }
   }
+
+  // --- spatial audio ---
+
+  /** Keep the WebAudio listener glued to the camera (call every frame). */
+  setListener(pos: Vector3, quat: Quaternion): void {
+    const ctx = this.ctx
+    if (!ctx) return
+    const l = ctx.listener
+    const fwd = this.tmpFwd.set(0, 0, -1).applyQuaternion(quat)
+    const up = this.tmpUp.set(0, 1, 0).applyQuaternion(quat)
+    if (l.positionX) {
+      l.positionX.value = pos.x
+      l.positionY.value = pos.y
+      l.positionZ.value = pos.z
+      l.forwardX.value = fwd.x
+      l.forwardY.value = fwd.y
+      l.forwardZ.value = fwd.z
+      l.upX.value = up.x
+      l.upY.value = up.y
+      l.upZ.value = up.z
+    } else {
+      l.setPosition(pos.x, pos.y, pos.z)
+      l.setOrientation(fwd.x, fwd.y, fwd.z, up.x, up.y, up.z)
+    }
+  }
+
+  /** Explosion at a world position — volume/pan fall off with distance. */
+  playExplosionAt(pos: Vector3): void {
+    const ctx = this.ctx
+    if (!ctx || !this.master) return
+    const t = ctx.currentTime
+    const dur = 0.7
+    const buffer = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 1.5)
+    }
+    const src = ctx.createBufferSource()
+    src.buffer = buffer
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(3000, t)
+    filter.frequency.exponentialRampToValueAtTime(120, t + dur)
+    const panner = ctx.createPanner()
+    panner.panningModel = 'equalpower'
+    panner.distanceModel = 'inverse'
+    panner.refDistance = 6
+    panner.maxDistance = 120
+    panner.rolloffFactor = 1.4
+    if (panner.positionX) {
+      panner.positionX.value = pos.x
+      panner.positionY.value = pos.y
+      panner.positionZ.value = pos.z
+    } else {
+      panner.setPosition(pos.x, pos.y, pos.z)
+    }
+    const gain = ctx.createGain()
+    gain.gain.setValueAtTime(0.9, t)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur)
+    src.connect(filter).connect(panner).connect(gain).connect(this.master)
+    src.start(t)
+    src.stop(t + dur)
+  }
+
+  private readonly tmpFwd = new Vector3()
+  private readonly tmpUp = new Vector3()
 
   // --- one-shot SFX ---
 

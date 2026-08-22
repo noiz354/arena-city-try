@@ -64,7 +64,8 @@ export class Player {
     const noseMat = new MeshStandardMaterial({ color: new Color(0xffd166), roughness: 0.4 })
     const nose = new Mesh(noseGeo, noseMat)
     nose.rotation.x = Math.PI / 2
-    nose.position.set(0, HALF_HEIGHT * 0.9, RADIUS + 0.2)
+    // three.js forward is -Z; the nose marks where the character faces
+    nose.position.set(0, HALF_HEIGHT * 0.9, -(RADIUS + 0.2))
     this.body.add(nose)
 
     this.group.position.set(0, 0, 0)

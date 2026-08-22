@@ -166,4 +166,12 @@ export class InputManager {
     this.mouseDelta.y = 0
     this.wheelDelta = 0
   }
+
+  /** Drop queued edges (used on pause so no stale click fires after resume). */
+  clearTransient(): void {
+    this.pressed.clear()
+    this.virtualPressed.clear()
+    this.clickQueued = false
+    this.mouseHeld = false
+  }
 }
