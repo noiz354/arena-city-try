@@ -40,6 +40,8 @@ interface Chunk {
   group: Group
   level: number
   built: boolean
+  // ponytail: TypedArray DPZ dirty per openworld-js addobj.js:22 — per-chunk rebuild flag
+  dirty: boolean
   collidables: Collidable[]
   /** full-detail building meshes (level 2) */
   buildingsGroup: Group
@@ -118,6 +120,7 @@ export class ChunkManager {
           group,
           level: 0,
           built: false,
+          dirty: true,
           collidables: [],
           buildingsGroup: new Group(),
           materials: [],
@@ -229,6 +232,7 @@ export class ChunkManager {
   /** Build every representation of a chunk once (meshes + collidables). */
   private buildChunk(chunk: Chunk): void {
     chunk.built = true
+    chunk.dirty = false // ponytail: clear DPZ dirty after build (openworld-js chunkManager.js:34)
     const content = generateChunk(chunk.cx, chunk.cz)
     const originX = this.chunkWorldX(chunk.cx)
     const originZ = this.chunkWorldZ(chunk.cz)
@@ -292,19 +296,32 @@ export class ChunkManager {
 
   /** InstancedMesh of unit boxes scaled/positioned per building, colored by spec. */
   private buildSimpleInstances(content: ChunkContent, originX: number, originZ: number): InstancedMesh {
-    const count = content.buildings.length
+    // ponytail: TypedArray SoA path mirrors openworld-js addobj.js:22 — one Matrix+Color per instance, no AoS alloc
+    const hasTyped = content.buildingData.length > 0
+    const count = hasTyped ? content.buildingData.length / 5 : content.buildings.length
     const geometry = new BoxGeometry(1, 1, 1)
     const material = new MeshStandardMaterial({ roughness: 0.85, vertexColors: true })
     const inst = new InstancedMesh(geometry, material, count)
     inst.castShadow = true
     inst.receiveShadow = true
-
-    content.buildings.forEach((spec, i) => {
-      instMatrix.makeScale(spec.w, spec.h, spec.d)
-      instMatrix.setPosition(spec.cx - originX, spec.h / 2, spec.cz - originZ)
-      inst.setMatrixAt(i, instMatrix)
-      inst.setColorAt(i, instColor.setHex(spec.color))
-    })
+    if (hasTyped) {
+      const d = content.buildingData
+      const c = content.buildingColors
+      for (let i = 0; i < count; i++) {
+        const cx = d[i * 5 + 0], cz = d[i * 5 + 1], w = d[i * 5 + 2], dd = d[i * 5 + 3], h = d[i * 5 + 4]
+        instMatrix.makeScale(w, h, dd)
+        instMatrix.setPosition(cx - originX, h / 2, cz - originZ)
+        inst.setMatrixAt(i, instMatrix)
+        inst.setColorAt(i, instColor.setHex(c[i]))
+      }
+    } else {
+      content.buildings.forEach((spec, i) => {
+        instMatrix.makeScale(spec.w, spec.h, spec.d)
+        instMatrix.setPosition(spec.cx - originX, spec.h / 2, spec.cz - originZ)
+        inst.setMatrixAt(i, instMatrix)
+        inst.setColorAt(i, instColor.setHex(spec.color))
+      })
+    }
     inst.instanceMatrix.needsUpdate = true
     if (inst.instanceColor) inst.instanceColor.needsUpdate = true
     return inst
@@ -414,6 +431,7 @@ export class ChunkManager {
     chunk.collidables = []
     chunk.props = new Group()
     chunk.built = false
+    chunk.dirty = true
   }
 }
 

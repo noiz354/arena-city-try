@@ -68,6 +68,10 @@ export interface PropSpec {
 export interface ChunkContent {
   buildings: BuildingSpec[]
   props: PropSpec[]
+  /** ponytail: TypedArray SoA for instanced path — Float32Array per openworld-js DPZ, falls back to AoS */
+  buildingData: Float32Array // [cx,cz,w,d,h]*N
+  buildingColors: Uint32Array // [color]*N
+  dirty: boolean
 }
 
 /** True when the block plot at world (x,z) belongs to a road (not a block). */
@@ -215,5 +219,18 @@ export function generateChunk(cx: number, cz: number): ChunkContent {
     if (inRoad(tx, tz) && !tooClose(tx, tz, 4)) props.push({ kind: 'bench', x: tx, z: tz, rot: rng() * Math.PI * 2 })
   }
 
-  return { buildings, props }
+  // ponytail: TypedArray pack for B1 — single alloc SoA mirrors openworld-js positionsStatus
+  const N = buildings.length
+  const buildingData = new Float32Array(N * 5)
+  const buildingColors = new Uint32Array(N)
+  for (let i = 0; i < N; i++) {
+    const b = buildings[i]
+    buildingData[i * 5 + 0] = b.cx
+    buildingData[i * 5 + 1] = b.cz
+    buildingData[i * 5 + 2] = b.w
+    buildingData[i * 5 + 3] = b.d
+    buildingData[i * 5 + 4] = b.h
+    buildingColors[i] = b.color >>> 0
+  }
+  return { buildings, props, buildingData, buildingColors, dirty: true }
 }

@@ -392,6 +392,11 @@ ok('emergent: wanted chase spawns cops', wantedE.enemies.filter(e=>e.role==='cop
 const panicPeds = new PedestrianSystem(); const beforePanic = panicPeds.alive.length
 panicPeds.panicNear(new Vector3(panicPeds.pedestrians[0].position.x,0,panicPeds.pedestrians[0].position.z), 40)
 ok('emergent: gunfire panic triggers pedestrian reaction', panicPeds.alive.length===beforePanic) // ponytail: panicNear no kill, just state - check no crash
+// --- B1 TypedArray SoA (openworld-js addobj.js:22) ---
+const b1c = generateChunk(0, 0)
+ok('B1 buildingData SoA packed', b1c.buildingData.length === b1c.buildings.length * 5 && b1c.buildingColors.length === b1c.buildings.length && b1c.dirty === true)
+const cmB1 = new ChunkManager(); cmB1.update(0,0); const someB1 = [...cmB1['chunks'].values()].find(c=>c.built)
+ok('B1 chunk dirty cleared after build', someB1 && someB1.dirty === false)
 
 // --- M5: generated grade LUT is well-formed and neutral-preserving ---
 const lut = buildGradeLUT(33)
