@@ -32,6 +32,9 @@ import type { Collidable } from '../game/World'
 //   d >  2  → level 0: hidden
 const FULL_RADIUS = 1
 const SIMPLE_RADIUS = 3 // ponytail: prefetch Lite A2 2->3 (+24 chunks 25->49) rollback if gzip +2kB blows budget
+// ponytail: B2 infinite sparse — hash(cx,cz) key + LRU 200, fog clamp 420 (mavon skeleton)
+const MAX_SPARSE_CHUNKS = 200
+export function hashChunkKey(cx: number, cz: number): string { return `${cx}_${cz}` } // deterministic seed via chunkSeed(cx,cz)
 
 interface Chunk {
   key: string
@@ -130,6 +133,26 @@ export class ChunkManager {
       }
     }
   }
+  private ensureChunk(cx: number, cz: number): Chunk {
+    const k = this.key(cx, cz)
+    let ch = this.chunks.get(k)
+    if (ch) return ch
+    const group = new Group()
+    group.visible = false
+    this.root.add(group)
+    ch = { key: k, cx, cz, group, level: 0, built: false, dirty: true, collidables: [], buildingsGroup: new Group(), materials: [], props: new Group(), simpleInstances: null }
+    this.chunks.set(k, ch)
+    // ponytail: LRU evict farthest level0 when >200 (mavon skeleton)
+    if (this.chunks.size > MAX_SPARSE_CHUNKS) {
+      let far: Chunk | null = null; let maxD = -1
+      for (const c of this.chunks.values()) if (c.level === 0 && c.built) {
+        const d = Math.max(Math.abs(c.cx - this.lastCx), Math.abs(c.cz - this.lastCz))
+        if (d > maxD) { maxD = d; far = c }
+      }
+      if (far) { this.disposeChunk(far); this.root.remove(far.group); this.chunks.delete(far.key) }
+    }
+    return ch
+  }
 
   /** World position of the chunk grid corner of chunk (cx,cz). */
   chunkWorldX(cx: number): number {
@@ -153,6 +176,8 @@ export class ChunkManager {
     const { cx, cz } = this.worldToChunk(playerX, playerZ)
     if (cx === this.lastCx && cz === this.lastCz) return false
     this.lastCx = cx; this.lastCz = cz
+    // ponytail: ensure sparse chunks around player for B2 infinite (hash seed)
+    for (let dx = -SIMPLE_RADIUS; dx <= SIMPLE_RADIUS; dx++) for (let dz = -SIMPLE_RADIUS; dz <= SIMPLE_RADIUS; dz++) this.ensureChunk(cx + dx, cz + dz)
     let changed = false
 
     for (const chunk of this.chunks.values()) {
