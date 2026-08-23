@@ -56,6 +56,8 @@ import { buildGradeLUT } from '../src/systems/ColorGrade.ts'
 import { worldTexelSize, snapToGrid } from '../src/utils/texel.ts'
 import { SpatialHash } from '../src/utils/SpatialHash.ts'
 import { PoolManager, ObjectPool } from '../src/utils/PoolManager.ts'
+import { createVisualTrack, createPath } from '../src/systems/TrackSpline.ts'
+import { TRACK_1_POINTS } from '../src/data/tracks/track_1.ts'
 
 // ChunkManager.update() builds CanvasTextures — stub the DOM bits three needs.
 const fakeCtx = new Proxy({}, { get: (t, k) => (k === 'canvas' ? fakeCanvas : () => {}), set: () => true })
@@ -401,6 +403,10 @@ ok('B1 chunk dirty cleared after build', someB1 && someB1.dirty === false)
 const far1 = generateChunk(999, 999), far2 = generateChunk(999, 999)
 ok('B2 far chunk deterministic via hash seed', JSON.stringify(far1) === JSON.stringify(far2))
 const cmB2 = new ChunkManager(); cmB2.update(0,0); const beforeSize = cmB2['chunks'].size; cmB2.update(10000,10000); ok('B2 sparse creates beyond CITY 310', cmB2['chunks'].size > beforeSize && cmB2.activeCount === 49)
+// --- B3 spline visual (racing Track.ts:102) + traffic hook ---
+const vis = createVisualTrack(TRACK_1_POINTS); ok('B3 visual track mesh', vis.isMesh && vis.geometry !== null)
+const { pathPoints } = createPath(TRACK_1_POINTS); ok('B3 pathPoints CatmullRom 99', pathPoints.length === 99)
+const tB3 = new TrafficSystem(); tB3.enableRace(pathPoints); ok('B3 traffic race hook', tB3['racePoints'] !== null); tB3.disableRace(); ok('B3 traffic race off', tB3['racePoints'] === null)
 
 // --- M5: generated grade LUT is well-formed and neutral-preserving ---
 const lut = buildGradeLUT(33)

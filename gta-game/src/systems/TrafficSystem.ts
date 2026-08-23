@@ -3,7 +3,8 @@ import { VEHICLE_CONFIGS } from '../data/vehicles'
 import { BLOCK_COUNT, BLOCK_SIZE, CELL, CITY_HALF, ROAD_WIDTH, seededRng } from './CityGenerator'
 import type { Collidable } from '../game/World'
 import { Mesh, type Material } from 'three'
-// import { createPath, nextPointIndex } from './TrackSpline' // ponytail: Lite A3 spline hook (racing Track.ts:94) off by default, enable when race mission needs CatmullRom
+import { nextPointIndex } from './TrackSpline' // ponytail: B3 race hook (racing CPU.ts:21) — null until enableRace() called
+import type { Vector3 } from 'three'
 
 /** Road center lines per axis (one road between each pair of blocks). */
 function roadLines(): number[] {
@@ -56,6 +57,9 @@ interface TrafficCar {
 export class TrafficSystem {
   readonly cars: TrafficCar[] = []
   private readonly rng = seededRng(0x7a11ca9)
+  private racePoints: Vector3[] | null = null // ponytail: B3 set via enableRace(TRACK_1_POINTS)
+  enableRace(points: Vector3[]): void { this.racePoints = points }
+  disableRace(): void { this.racePoints = null }
 
   constructor() {
     for (let i = 0; i < TRAFFIC_COUNT; i++) {
@@ -163,7 +167,12 @@ export class TrafficSystem {
       : [...ROADS].reverse().find(l => l < coord - 1)
 
     let targetYaw = yawFor(r.axis, r.dir)
-    if (nextLine !== undefined && Math.abs(nextLine - coord) < INTERSECTION_REACH) {
+    // ponytail: B3 race spline steering (CPU.ts:21) — overrides grid when race active
+    if (this.racePoints) {
+      const idx = nextPointIndex(pos as unknown as Vector3, this.racePoints)
+      const tgt = this.racePoints[(idx + 1) % this.racePoints.length]
+      targetYaw = Math.atan2(tgt.x - pos.x, tgt.z - pos.z)
+    } else if (nextLine !== undefined && Math.abs(nextLine - coord) < INTERSECTION_REACH) {
       // at an intersection: pick straight/left/right
       const roll = this.rng()
       const right = roll < 0.25
