@@ -13,9 +13,9 @@ const DAY_LENGTH = 180 // seconds per full day/night cycle
 
 const SKY_DAY = new Color(0x87ceeb)
 const SKY_DUSK = new Color(0xff9a5a)
-const SKY_NIGHT = new Color(0x0b1026)
+const SKY_NIGHT = new Color(0x1a2540)
 const FOG_DAY = new Color(0xbfd4e4)
-const FOG_NIGHT = new Color(0x0d1330)
+const FOG_NIGHT = new Color(0x1e2f4a)
 
 /**
  * Day/night cycle: computes the sun DIRECTION (azimuth/elevation) and the
@@ -77,8 +77,8 @@ export class DayNightSystem {
       )
       .normalize()
 
-    // daylight amount 0..1 (smooth transitions)
-    const day = MathUtils.smoothstep(MathUtils.clamp(elevation, -0.15, 0.4), -0.15, 0.4)
+    // daylight amount 0..1 (smooth transitions) // ponytail: widened band 0.25/0.6 to soft dawn/noon, flatten peaks
+    const day = MathUtils.smoothstep(MathUtils.clamp(elevation, -0.25, 0.6), -0.25, 0.6)
     const dusk = Math.max(0, 1 - Math.abs(elevation) * 5) // glow near horizon
     this.day = day
 
@@ -93,20 +93,20 @@ export class DayNightSystem {
     this.fog.color.copy(this.tmpFog)
 
     // --- lights ---
-    this.sun.intensity = MathUtils.lerp(0.15, 2.6, day)
+    this.sun.intensity = MathUtils.lerp(0.35, 1.9, day)
     this.sun.color.copy(this.sunDay).lerp(this.duskTint, dusk * 0.6)
 
-    this.hemi.intensity = MathUtils.lerp(0.12, 0.5, day)
-    this.ambient.intensity = MathUtils.lerp(0.12, 0.45, day)
+    this.hemi.intensity = MathUtils.lerp(0.25, 0.4, day)
+    this.ambient.intensity = MathUtils.lerp(0.3, 0.4, day)
 
     // moon
-    this.moon.intensity = MathUtils.lerp(0.35, 0.02, day)
+    this.moon.intensity = MathUtils.lerp(0.55, 0.02, day)
 
     // --- single-scatter sky uniforms (shared sun direction) ---
     this.sky.setSunDirection(this.sunDirection.x, this.sunDirection.y, this.sunDirection.z)
     this.sky.uniforms.sunColor.value.copy(this.sun.color)
     // radiance scale: bright at noon, a dim moonlit glow at night
-    this.sky.uniforms.intensity.value = MathUtils.lerp(1.2, 26, day)
+    this.sky.uniforms.intensity.value = MathUtils.lerp(3.0, 15, day)
     this.sky.uniforms.exposure.value = 1.0
   }
 }

@@ -161,39 +161,58 @@ export function generateChunk(cx: number, cz: number): ChunkContent {
         }
       }
 
-      // --- street furniture & vegetation scattered within this chunk ---
-      // trees along the road/sidewalk strip
-      const treeCount = 1 + Math.floor(rng() * 4)
-      for (let t = 0; t < treeCount; t++) {
-        const tx = worldMinX + rng() * CHUNK_SIZE
-        const tz = worldMinZ + rng() * CHUNK_SIZE
-        if (!inRoad(tx, tz)) continue
-        props.push({ kind: 'tree', x: tx, z: tz, rot: rng() * Math.PI * 2 })
-      }
-
-      // bushes inside blocks (not on roads)
-      const bushCount = 1 + Math.floor(rng() * 4)
-      for (let b = 0; b < bushCount; b++) {
-        const tx = worldMinX + rng() * CHUNK_SIZE
-        const tz = worldMinZ + rng() * CHUNK_SIZE
-        if (inRoad(tx, tz)) continue
-        props.push({ kind: 'bush', x: tx, z: tz, rot: rng() * Math.PI * 2 })
-      }
-
-      // occasional rock in open block areas
-      if (rng() < 0.4) {
-        const tx = worldMinX + rng() * CHUNK_SIZE
-        const tz = worldMinZ + rng() * CHUNK_SIZE
-        if (!inRoad(tx, tz)) props.push({ kind: 'rock', x: tx, z: tz, rot: rng() * Math.PI * 2 })
-      }
-
-      // occasional bench along the sidewalk
-      if (rng() < 0.3) {
-        const tx = worldMinX + rng() * CHUNK_SIZE
-        const tz = worldMinZ + rng() * CHUNK_SIZE
-        if (inRoad(tx, tz)) props.push({ kind: 'bench', x: tx, z: tz, rot: rng() * Math.PI * 2 })
-      }
     }
+  }
+
+  // --- scatter once per chunk (ponytail: was inside bc/bz loop → 9x density, now 1x + minDist) ---
+  // ponytail: O(n²) naive tooClose scan, spatial hash if >50 trees/chunk
+  const tooClose = (x: number, z: number, min: number): boolean => {
+    const m2 = min * min
+    for (const p of props) if ((p.x - x) ** 2 + (p.z - z) ** 2 < m2) return true
+    return false
+  }
+
+  // trees on sidewalk edge (leave road center for vehicles)
+  const treeCount = 2 + Math.floor(rng() * 3) // 2-4 per chunk
+  for (let t = 0, tries = 0; t < treeCount && tries < 30; tries++) {
+    let tx = worldMinX + rng() * CHUNK_SIZE
+    let tz = worldMinZ + rng() * CHUNK_SIZE
+    if (!inRoad(tx, tz)) continue
+    // snap to 1-2.5m sidewalk strip next to block
+    const bx = Math.floor((tx + CITY_HALF) / CELL)
+    const bz = Math.floor((tz + CITY_HALF) / CELL)
+    const lx = tx + CITY_HALF - bx * CELL
+    const lz = tz + CITY_HALF - bz * CELL
+    if (lx >= BLOCK_SIZE && lz >= BLOCK_SIZE) {
+      if (rng() < 0.5) tx = bx * CELL - CITY_HALF + BLOCK_SIZE + 1 + rng() * 1.5
+      else tz = bz * CELL - CITY_HALF + BLOCK_SIZE + 1 + rng() * 1.5
+    } else if (lx >= BLOCK_SIZE) tx = bx * CELL - CITY_HALF + BLOCK_SIZE + 1 + rng() * 1.5
+    else tz = bz * CELL - CITY_HALF + BLOCK_SIZE + 1 + rng() * 1.5
+    if (tooClose(tx, tz, 5)) continue
+    props.push({ kind: 'tree', x: tx, z: tz, rot: rng() * Math.PI * 2 })
+    t++
+  }
+
+  // bushes inside blocks (keep per-chunk to normalize frontier x9)
+  const bushCount = 2 + Math.floor(rng() * 2)
+  for (let b = 0, tries = 0; b < bushCount && tries < 20; tries++) {
+    const tx = worldMinX + rng() * CHUNK_SIZE
+    const tz = worldMinZ + rng() * CHUNK_SIZE
+    if (inRoad(tx, tz) || tooClose(tx, tz, 3)) continue
+    props.push({ kind: 'bush', x: tx, z: tz, rot: rng() * Math.PI * 2 })
+    b++
+  }
+
+  if (rng() < 0.35) {
+    const tx = worldMinX + rng() * CHUNK_SIZE
+    const tz = worldMinZ + rng() * CHUNK_SIZE
+    if (!inRoad(tx, tz) && !tooClose(tx, tz, 3)) props.push({ kind: 'rock', x: tx, z: tz, rot: rng() * Math.PI * 2 })
+  }
+
+  if (rng() < 0.25) {
+    const tx = worldMinX + rng() * CHUNK_SIZE
+    const tz = worldMinZ + rng() * CHUNK_SIZE
+    if (inRoad(tx, tz) && !tooClose(tx, tz, 4)) props.push({ kind: 'bench', x: tx, z: tz, rot: rng() * Math.PI * 2 })
   }
 
   return { buildings, props }

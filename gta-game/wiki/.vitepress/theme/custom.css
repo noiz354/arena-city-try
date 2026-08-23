@@ -1,0 +1,124 @@
+/* CITY RUSH wiki — dark-only theme (GitHub-dark inspired palette) */
+
+/* --- Page chrome ------------------------------------------------------ */
+:root,
+.dark {
+  --vp-c-bg: #0d1117;
+  --vp-c-bg-alt: #161b22; /* sidebar / nav background */
+  --vp-c-bg-elv: #161b22;
+  --vp-c-bg-soft: #161b22;
+  --vp-c-text-1: #e6edf3;
+  --vp-c-text-2: #8b949e;
+  --vp-c-text-3: #6e7681;
+  --vp-c-divider: #30363d;
+  --vp-c-border: #30363d;
+  --vp-c-gutter: #21262d;
+  --vp-c-brand-1: #6d5dfc;
+  --vp-c-brand-2: #8b7dff;
+  --vp-c-brand-3: #6d5dfc;
+  --vp-c-brand-soft: rgba(109, 93, 252, 0.14);
+  --vp-code-block-bg: #161b22;
+  --vp-code-tab-divider: #30363d;
+}
+
+body {
+  color: var(--vp-c-text-1);
+}
+
+.vp-doc a {
+  text-decoration-color: rgba(109, 93, 252, 0.5);
+}
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3 {
+  border-color: var(--vp-c-border);
+}
+
+/* --- Mermaid Layer 2: CSS overrides ----------------------------------- */
+.mermaid {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+  fill: #2d333b !important;
+  stroke: #6d5dfc !important;
+}
+
+.mermaid .cluster rect {
+  fill: #161b22 !important;
+  stroke: #30363d !important;
+}
+
+.mermaid .flowchart-link,
+.mermaid .edgePath path,
+.mermaid line {
+  stroke: #8b949e !important;
+}
+
+.mermaid .marker,
+.mermaid .marker circle,
+.mermaid .marker path {
+  fill: #8b949e !important;
+  stroke: #8b949e !important;
+}
+
+.mermaid .edgeLabel rect,
+.mermaid .edgeLabel p {
+  fill: #0d1117 !important;
+  background-color: #0d1117 !important;
+}
+
+.mermaid .edgeLabel {
+  background-color: #0d1117 !important;
+  color: #e6edf3 !important;
+}
+
+.mermaid text,
+.mermaid .label,
+.mermaid span.nodeLabel {
+  fill: #e6edf3 !important;
+  color: #e6edf3 !important;
+}
+
+.mermaid svg[aria-roledescription] > g {
+  font-family: inherit;
+}
+
+/* --- Mermaid click-to-zoom ------------------------------------------- */
+.mermaid svg[data-zoom-attached] {
+  cursor: zoom-in;
+}
+
+.mermaid-zoom-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 17, 23, 0.94);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: zoom-out;
+}
+
+.mermaid-zoom-modal svg {
+  width: min(92vw, 1600px);
+  height: auto;
+  max-height: 92vh;
+}
+
+/* --- medium-zoom backdrop -------------------------------------------- */
+.medium-zoom-overlay {
+  background: rgba(13, 17, 23, 0.92) !important;
+  z-index: 9998;
+}
+
+.medium-zoom-image--opened {
+  z-index: 9999;
+}

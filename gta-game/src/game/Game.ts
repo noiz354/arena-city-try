@@ -449,8 +449,8 @@ export class Game {
     this.particles.update(delta)
     this.updateExplosions()
     this.updateEngineAudio()
-    // single-owner exposure: scene-light model (day amount) → tone-map exposure
-    this.postfx.setExposure(0.55 + this.dayNight.day * 0.6)
+    // single-owner exposure: scene-light model (day amount) → tone-map exposure // ponytail: 0.70+0.35*day flatter than 0.55+0.6*day to avoid noon blow
+    this.postfx.setExposure(0.7 + this.dayNight.day * 0.35)
     this.postfx.update(delta)
     this.quality.frame()
     this.quality.update(delta)

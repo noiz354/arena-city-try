@@ -1,0 +1,697 @@
+{
+  "project": "CITY RUSH — Three.js open-world browser game",
+  "repoUrl": "https://github.com/noiz354/arena-city-try",
+  "branch": "main",
+  "citationFormat": "[file:line](https://github.com/noiz354/arena-city-try/blob/main/{path}#L{line})",
+  "primaryContentMap": "docs/wiki (hand-made implementation wiki, file:line verified) — use sourceDoc as the authoritative map before re-analyzing source",
+  "items": [
+    {
+      "title": "Getting Started",
+      "name": "getting-started",
+      "prompt": "On-ramp for humans and AI contributors: onboarding guides first, then overview, setup, usage, quick reference. Primary language TypeScript + Vite + Three.js; comparison language Python.",
+      "sourceDoc": null,
+      "children": [
+        {
+          "title": "Onboarding",
+          "name": "onboarding",
+          "prompt": "Role-based guides (Contributor, Staff Engineer, Executive, Product Manager). Ground every architecture claim in the existing implementation wiki at docs/wiki/index.md rather than re-analyzing source from zero.",
+          "sourceDoc": "docs/wiki/index.md",
+          "children": [
+            {
+              "title": "Contributor Guide — Zero to First PR in a Three.js Codebase",
+              "name": "contributor-guide",
+              "prompt": "Progressive guide for new contributors. Part I: TypeScript/Vite/Three.js foundations with cross-language comparisons to Python (classes vs prototypes, ES modules, requestAnimationFrame/setAnimationLoop vs Python loops). Part II: this codebase's architecture — bootstrap in [src/main.ts:30](https://github.com/noiz354/arena-city-try/blob/main/src/main.ts#L30), orchestrator [src/game/Game.ts:51](https://github.com/noiz354/arena-city-try/blob/main/src/game/Game.ts#L51), world builder [src/game/World.ts:37](https://github.com/noiz354/arena-city-try/blob/main/src/game/World.ts#L37), entities [src/entities/Player.ts:34](https://github.com/noiz354/arena-city-try/blob/main/src/entities/Player.ts#L34) / [src/entities/Vehicle.ts:29](https://github.com/noiz354/arena-city-try/blob/main/src/entities/Vehicle.ts#L29), 27 systems under src/systems/. Part III: dev setup, running/testing, codebase navigation. Appendices: glossary (40+ terms: chunk, LOD ring, hitscan, mulberry32, DPR, EffectComposer pass…) and key-file reference derived from docs/wiki/index.md tables.",
+              "sourceDoc": null,
+              "children": []
+            },
+            {
+              "title": "Staff Engineer Guide — One Insight: Lazy Build-Once Chunks Behind a Fixed Update Order",
+              "name": "staff-engineer-guide",
+              "prompt": "Dense, opinionated brief. Core architectural insight: the city is a lazy build-once chunk cache ([docs/wiki/systems/ChunkManager.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/systems/ChunkManager.md)) driven by a strict per-frame update sequence owned by [src/game/Game.ts:51](https://github.com/noiz354/arena-city-try/blob/main/src/game/Game.ts#L51); include the insight as Python pseudocode. Provide Mermaid system-architecture diagram (Game → World → 27 systems wiring per [docs/wiki/game-loop.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/game-loop.md)), ER-style domain model of Player/Vehicle/Mission/Wanted state machines ([docs/wiki/entities.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/entities.md)), design tradeoffs (no physics engine, hand-rolled collision; seeded mulberry32 determinism), decision log incl. known doc-vs-code findings listed in [docs/wiki/index.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/index.md), dependency rationale, and a 'where to go deep' reading order across the 31 wiki files.",
+              "sourceDoc": "docs/wiki/game-loop.md",
+              "children": []
+            },
+            {
+              "title": "Executive Guide — Capability, Risk & Investment View",
+              "name": "executive-guide",
+              "prompt": "VP/director-level summary with NO code snippets. Capability map of the shipped game (open world, traffic, pedestrians, combat/wanted, missions, save/load, mobile controls, auto quality). Risk assessment grounded in known doc-vs-code findings of [docs/wiki/index.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/index.md) (e.g. traffic turn-RNG quirk, shared-material bug in WetSurfaceSystem) as proxies for technical debt. Technology investment thesis (Three.js browser stack, zero-backend persistence via [src/systems/SaveManager.ts:20](https://github.com/noiz354/arena-city-try/blob/main/src/systems/SaveManager.ts#L20)), cost/scaling model (client-only, device-bound via AutoQuality), dependency map (Vite/TypeScript/three), actionable recommendations.",
+              "sourceDoc": "docs/wiki/index.md",
+              "children": []
+            },
+            {
+              "title": "Product Manager Guide — Player Journey Without the Jargon",
+              "name": "product-manager-guide",
+              "prompt": "Zero engineering jargon. User journey maps: spawn → walk/drive → wanted stars → police chase → mission completion (mission roster and zone radii from [docs/wiki/systems/MissionSystem.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/systems/MissionSystem.md)). Feature capability map (weapons, pickups, day/night, weather, minimap, mobile touch support per [docs/wiki/systems/MobileControls.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/systems/MobileControls.md)), known limitations (no HP regen caller, walk-speed mismatch — see Unresolved sections). Data/privacy overview: what telemetry collects via [src/analytics/tracker.ts:34](https://github.com/noiz354/arena-city-try/blob/main/src/analytics/tracker.ts#L34) and [src/analytics/gameTelemetry.ts:8](https://github.com/noiz354/arena-city-try/blob/main/src/analytics/gameTelemetry.ts#L8). Configuration/feature flags (postfx toggle, collider debug overlay). FAQ.",
+              "sourceDoc": "docs/wiki/utils-and-data.md",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Project Overview & Architecture at a Glance",
+          "name": "overview",
+          "prompt": "What CITY RUSH is and how it is put together: entry flow [src/main.ts:30](https://github.com/noiz354/arena-city-try/blob/main/src/main.ts#L30) → orchestrator [src/game/Game.ts:51](https://github.com/noiz354/arena-city-try/blob/main/src/game/Game.ts#L51) → world assembly [src/game/World.ts:37](https://github.com/noiz354/arena-city-try/blob/main/src/game/World.ts#L37) → layer diagram of entities/, 27 systems/, ui/, utils/, data/, analytics/. Use the cluster tables in [docs/wiki/index.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/index.md) as the content map.",
+          "sourceDoc": "docs/wiki/index.md",
+          "children": []
+        },
+        {
+          "title": "Dev Setup & Build (Vite + TypeScript)",
+          "name": "setup",
+          "prompt": "Prerequisites, install, dev server, production build, typecheck. Source ground truth: package.json scripts, vite config, tsconfig.json at repo root. No existing wiki page covers tooling — analyze build files directly.",
+          "sourceDoc": null,
+          "children": []
+        },
+        {
+          "title": "Running & Playing CITY RUSH (Controls & Modes)",
+          "name": "usage",
+          "prompt": "How to play: keyboard/mouse bindings from InputManager ([src/utils/InputManager.ts:5](https://github.com/noiz354/arena-city-try/blob/main/src/utils/InputManager.ts#L5), binding table in [docs/wiki/utils-and-data.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/utils-and-data.md)), foot↔vehicle mode switching ([docs/wiki/systems/ModeController.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/systems/ModeController.md)), pause menu [src/ui/pauseMenu.ts:13](https://github.com/noiz354/arena-city-try/blob/main/src/ui/pauseMenu.ts#L13), touch controls on mobile.",
+          "sourceDoc": "docs/wiki/utils-and-data.md",
+          "children": []
+        },
+        {
+          "title": "Quick Reference — Debug Console & QA Entry Points",
+          "name": "quick-reference",
+          "prompt": "One-page cheat sheet of window.game QA hooks (colliderDebug.toggle(), wanted.reportCrime(), modeCtrl, vehicles.getNearest) exactly as catalogued under 'Runtime Debug Console' in [docs/wiki/index.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/index.md), plus pointer to the F3 collider overlay ([docs/wiki/systems/ColliderDebug.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/systems/ColliderDebug.md)).",
+          "sourceDoc": "docs/wiki/index.md",
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Deep Dive",
+      "name": "deep-dive",
+      "prompt": "Architecture → subsystems → components. Every page must start from its sourceDoc wiki file (already file:line verified) and only open the cited source files to extend or challenge claims. Preserve the Known Doc-vs-Code Findings from docs/wiki/index.md.",
+      "sourceDoc": "docs/wiki/index.md",
+      "children": [
+        {
+          "title": "Core Loop, Orchestration & Entities",
+          "name": "core-loop",
+          "prompt": "Bootstrap order, frame update sequence, entity physics/state machines, input/data plumbing, HUD rendering path.",
+          "sourceDoc": "docs/wiki/game-loop.md",
+          "children": [
+            {
+              "title": "Game Bootstrap & the Per-Frame Update Loop",
+              "name": "game-loop",
+              "prompt": "Startup order, exact update sequence per frame, delta handling, resize, how Game wires all 27 subsystems and World builds the scene. Anchor: [src/main.ts:30](https://github.com/noiz354/arena-city-try/blob/main/src/main.ts#L30), [src/game/Game.ts:51](https://github.com/noiz354/arena-city-try/blob/main/src/game/Game.ts#L51), [src/game/World.ts:37](https://github.com/noiz354/arena-city-try/blob/main/src/game/World.ts#L37).",
+              "sourceDoc": "docs/wiki/game-loop.md",
+              "children": []
+            },
+            {
+              "title": "Entities — Player & Vehicle Physics, Damage, Enter/Exit State Machines",
+              "name": "entities",
+              "prompt": "Physics constants, damage/death/respawn flow, enter/exit vehicle transitions, plus flagged anomalies (heal() has zero callers, observed walk speed exceeds WALK_SPEED=5.5). Anchors: [src/entities/Player.ts:34](https://github.com/noiz354/arena-city-try/blob/main/src/entities/Player.ts#L34), [src/entities/Vehicle.ts:29](https://github.com/noiz354/arena-city-try/blob/main/src/entities/Vehicle.ts#L29).",
+              "sourceDoc": "docs/wiki/entities.md",
+              "children": []
+            },
+            {
+              "title": "Input, Utilities & Data Tables",
+              "name": "utils-and-data",
+              "prompt": "InputManager bindings ([src/utils/InputManager.ts:5](https://github.com/noiz354/arena-city-try/blob/main/src/utils/InputManager.ts#L5)), raycast/texel/logger/errors helpers in src/utils/, full data tables missions/vehicles/weapons in src/data/, telemetry pipeline in src/analytics/. Map: [docs/wiki/utils-and-data.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/utils-and-data.md).",
+              "sourceDoc": "docs/wiki/utils-and-data.md",
+              "children": []
+            },
+            {
+              "title": "UI Layer — HUD Read Path & Pause Menu",
+              "name": "ui-layer",
+              "prompt": "How [src/ui/hud.ts:8](https://github.com/noiz354/arena-city-try/blob/main/src/ui/hud.ts#L8) polls player/vehicle/mode state each frame (documented read list src/ui/hud.ts:91-131 in [docs/wiki/game-loop.md](https://github.com/noiz354/arena-city-try/blob/main/docs/wiki/game-loop.md)) and how [src/ui/pauseMenu.ts:13](https://github.com/noiz354/arena-city-try/blob/main/src/ui/pauseMenu.ts#L13) suspends the loop. Extend beyond the partial coverage in game-loop.md where needed.",
+              "sourceDoc": "docs/wiki/game-loop.md",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "World Generation",
+          "name": "world-generation",
+          "prompt": "How the infinite-feeling city is laid out, chunked, and dressed. All three pages share the seeded-mulberry32 determinism story.",
+          "sourceDoc": "docs/wiki/systems/ChunkManager.md",
+          "children": [
+            {
+              "title": "ChunkManager — LOD Rings & Build-Once Chunk Cache",
+              "name": "chunk-manager",
+              "prompt": "FULL_RADIUS=1/SIMPLE_RADIUS=2 → 5×5 active chunks, lazy build-once model explaining ~1798 geometries. Anchor: [src/systems/ChunkManager.ts:98](https://github.com/noiz354/arena-city-try/blob/main/src/systems/ChunkManager.ts#L98).",
+              "sourceDoc": "docs/wiki/systems/ChunkManager.md",
+              "children": []
+            },
+            {
+              "title": "CityGenerator — Seeded Layout Rules Per Chunk",
+              "name": "city-generator",
+              "prompt": "CELL=40 layout constants, mulberry32 seeded RNG per chunk, plot/in-road scatter rules. Anchor: [src/systems/CityGenerator.ts](https://github.com/noiz354/arena-city-try/blob/main/src/systems/CityGenerator.ts).",
+              "sourceDoc": "docs/wiki/systems/CityGenerator.md",
+              "children": []
+            },
+            {
+              "title": "Vegetation — 24k Grass Blades in One Draw Call",
+              "name": "vegetation",
+              "prompt": "Rejection sampling ring 280–760 m, single-draw-call instancing, wind vertex shader. Anchor: [src/systems/Vegetation.ts:28](https://github.com/noiz354/arena-city-try/blob/main/src/systems/Vegetation.ts#L28).",
+              "sourceDoc": "docs/wiki/systems/Vegetation.md",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Rendering & Post-Processing",
+          "name": "rendering-postfx",
+          "prompt": "Everything between scene and screen pixels: composer chain, grading, adaptive quality, particles, camera rig.",
+          "sourceDoc": "docs/wiki/systems/PostFX.md",
+          "children": [
+            {
+              "title": "PostFX — EffectComposer Pass Chain",
+              "name": "postfx",
+              "prompt": "Pass chain composition, postfx on/off toggle, DPR handling. Anchor: [src/systems/PostFX.ts:26](https://github.com/noiz354/arena-city-try/blob/main/src/systems/PostFX.ts#L26).",
+              "sourceDoc": "docs/wiki/systems/PostFX.md",
+              "children": []
+            },
+            {
+              "title": "ColorGrade — Full-Screen Grading Pass",
+              "name": "color-grade",
+              "prompt": "Linear contrast implementation consumed by PostFX; include flagged gap between docstring promises (S-curve/split-toning) and code. Anchor: [src/systems/ColorGrade.ts](https://github.com/noiz354/arena-city-try/blob/main/src/systems/ColorGrade.ts).",
+              "sourceDoc": "docs/wiki/systems/ColorGrade.md",
+              "children": []
+            },
+            {
+              "title": "AutoQuality — Frame-Timing-Driven Quality Tiers",
+              "name": "auto-quality",
+              "prompt": "Automatic tier adjustment from frame timing; interplay with PostFX DPR. Anchor: [src/systems/AutoQuality.ts:13](https://github.com/noiz354/arena-city-try/blob/main/src/systems/AutoQuality.ts#L13).",
+              "sourceDoc": "docs/wiki/systems/AutoQuality.md",
+              "children": []
+            },
+            {
+              "title": "ParticleSystem — 140-Particle Pool & Explosion Recipe",
+              "name": "particle-system",
+              "prompt": "Pool design, explosion recipe (26/14/10), smoke emission. Anchor: [src/systems/ParticleSystem.ts:20](https://github.com/noiz354/arena-city-try/blob/main/src/systems/ParticleSystem.ts#L20).",
+              "sourceDoc": "docs/wiki/systems/ParticleSystem.md",
+              "children": []
+            },
+            {
+              "title": "CameraRig — Follow & Orbit Behavior",
+              "name": "camera-rig",
+              "prompt": "Follow/orbit camera driven by mode + input. Anchor: [src/systems/CameraRig.ts:22](https://github.com/noiz354/arena-city-try/blob/main/src/systems/CameraRig.ts#L22).",
+              "sourceDoc": "docs/wiki/systems/CameraRig.md",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Environment & Weather",
+          "name": "environment",
+          "prompt": "Atmosphere simulation: time-of-day sun contract, weather machine, wet surfaces. Emphasize the fog color/near-far ownership split between DayNightSystem and WeatherSystem.",
+          "sourceDoc": "docs/wiki/systems/DayNightSystem.md",
+          "children": [
+            {
+              "title": "SkySystem — Sky Dome Consuming Shared Sun Direction",
+              "name": "sky-system",
+              "prompt": "Sky dome shading fed by DayNightSystem's sun direction. Anchor: [src/systems/SkySystem.ts:16](https://github.com/noiz354/arena-city-try/blob/main/src/systems/SkySystem.ts#L16).",
+              "sourceDoc": "docs/wiki/systems/SkySystem.md",
+              "children": []
+            },
+            {
+              "title": "DayNightSystem — Time-of-Day Cycle & Sun Direction Contract",
+              "name": "day-night-system",
+              "prompt": "Cycle math, sun direction contract with World/Sky, ownership of fog color channel. Anchor: [src/systems/DayNightSystem.ts:29](https://github.com/noiz354/arena-city-try/blob/main/src/systems/DayNightSystem.ts#L29).",
+              "sourceDoc": "docs/wiki/systems/DayNightSystem.md",
+              "children": []
+            },
+            {
+              "title": "WeatherSystem — Weather State Machine & Fog Ownership",
+              "name": "weather-system",
+              "prompt": "State machine transitions; owns fog near/far while color comes from DayNight. Anchor: [src/systems/WeatherSystem.ts:11](https://github.com/noiz354/arena-city-try/blob/main/src/systems/WeatherSystem.ts#L11).",
+              "sourceDoc": "docs/wiki/systems/WeatherSystem.md",
+              "children": []
+            },
+            {
+              "title": "WetSurfaceSystem — Rain Wetness & Ripple Surfaces",
+              "name": "wet-surface-system",
+              "prompt": "Wetness/ripple effect plus flagged shared-material quirk making per-ripple opacity writes ineffective. Anchor: [src/systems/WetSurfaceSystem.ts:35](https://github.com/noiz354/arena-city-try/blob/main/src/systems/WetSurfaceSystem.ts#L35).",
+              "sourceDoc": "docs/wiki/systems/WetSurfaceSystem.md",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Gameplay Core & AI",
+          "name": "gameplay-core",
+          "prompt": "Player-facing mode logic, ambient life, crime heat, and enemy AI with tuned perception/combat constants.",
+          "sourceDoc": "docs/wiki/systems/ModeController.md",
+          "children": [
+            {
+              "title": "ModeController — Foot↔Vehicle Mode State Machine",
+              "name": "mode-controller",
+              "prompt": "States and enter/exit transition choreography. Anchor: [src/systems/ModeController.ts:49](https://github.com/noiz354/arena-city-try/blob/main/src/systems/ModeController.ts#L49).",
+              "sourceDoc": "docs/wiki/systems/ModeController.md",
+              "children": []
+            },
+            {
+              "title": "PedestrianSystem — Spawn, Walk, Flee",
+              "name": "pedestrian-system",
+              "prompt": "Pedestrian lifecycle (Pedestrian agent class + spawner). Anchors: [src/systems/PedestrianSystem.ts:42](https://github.com/noiz354/arena-city-try/blob/main/src/systems/PedestrianSystem.ts#L42), [src/systems/PedestrianSystem.ts:233](https://github.com/noiz354/arena-city-try/blob/main/src/systems/PedestrianSystem.ts#L233).",
+              "sourceDoc": "docs/wiki/systems/PedestrianSystem.md",
+              "children": []
+            },
+            {
+              "title": "WantedSystem — Star Math, Decay & Cop Cadence",
+              "name": "wanted-system",
+              "prompt": "reportCrime(severity) → +severity−1 stars, 14 s/8 s decay, 6 s cop spawn cadence, road-snapped spawn ring 50–80 m; include reportCrime(3)-from-0★ yields 2★ finding. Anchor: [src/systems/WantedSystem.ts:19](https://github.com/noiz354/arena-city-try/blob/main/src/systems/WantedSystem.ts#L19).",
+              "sourceDoc": "docs/wiki/systems/WantedSystem.md",
+              "children": []
+            },
+            {
+              "title": "EnemySystem — Thugs & Cops: LOS, Chase & Melee Combat",
+              "name": "enemy-system",
+              "prompt": "Enemy agent + manager: LOS raycast, chase/lose radii 34/55 m, melee damage 8/5 @1.15 s cooldown. Anchors: [src/systems/EnemySystem.ts:25](https://github.com/noiz354/arena-city-try/blob/main/src/systems/EnemySystem.ts#L25), [src/systems/EnemySystem.ts:255](https://github.com/noiz354/arena-city-try/blob/main/src/systems/EnemySystem.ts#L255).",
+              "sourceDoc": "docs/wiki/systems/EnemySystem.md",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Vehicles & Traffic",
+          "name": "vehicles-traffic",
+          "prompt": "Player-adjacent car management and autonomous AI driving, including the documented turn-RNG quirk.",
+          "sourceDoc": "docs/wiki/systems/VehicleManager.md",
+          "children": [
+            {
+              "title": "VehicleManager — Spawned/Parked Cars & Enter Thresholds",
+              "name": "vehicle-manager",
+              "prompt": "Fleet management, getNearest with ENTER_DIST²=12.96 (3.6 m) threshold. Anchor: [src/systems/VehicleManager.ts:16](https://github.com/noiz354/arena-city-try/blob/main/src/systems/VehicleManager.ts#L16).",
+              "sourceDoc": "docs/wiki/systems/VehicleManager.md",
+              "children": []
+            },
+            {
+              "title": "TrafficSystem — AI Driving & the Right-Turn RNG Quirk",
+              "name": "traffic-system",
+              "prompt": "AI cars following roads; document turn-RNG quirk (right turns unreachable). Anchor: [src/systems/TrafficSystem.ts:55](https://github.com/noiz354/arena-city-try/blob/main/src/systems/TrafficSystem.ts#L55).",
+              "sourceDoc": "docs/wiki/systems/TrafficSystem.md",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Combat, Missions & Pickups",
+          "name": "combat-missions",
+          "prompt": "The action layer: hitscan weapons and view model, mission graph, pickup economy feeding weapons.",
+          "sourceDoc": "docs/wiki/systems/WeaponSystem.md",
+          "children": [
+            {
+              "title": "WeaponSystem — Hitscan Shooting & Ammo Economy",
+              "name": "weapon-system",
+              "prompt": "Hitscan model, per-weapon stats from src/data/weapons.ts, ammo economy cross-check (pistol 11/48). Anchor: [src/systems/WeaponSystem.ts:55](https://github.com/noiz354/arena-city-try/blob/main/src/systems/WeaponSystem.ts#L55).",
+              "sourceDoc": "docs/wiki/systems/WeaponSystem.md",
+              "children": []
+            },
+            {
+              "title": "WeaponView — First-Person Hold Pose, Recoil & Muzzle Flash",
+              "name": "weapon-view",
+              "prompt": "View-model pose and feedback constants (recoil/bob/muzzle flash). Anchor: [src/systems/WeaponView.ts:22](https://github.com/noiz354/arena-city-try/blob/main/src/systems/WeaponView.ts#L22).",
+              "sourceDoc": "docs/wiki/systems/WeaponView.md",
+              "children": []
+            },
+            {
+              "title": "MissionSystem — 4 Missions, Markers & XP Progression",
+              "name": "mission-system",
+              "prompt": "All 4 missions from src/data/missions.ts, zone radius 4.5 m, waypoint 6 m, XP-per-level 100, marker diffing. Anchor: [src/systems/MissionSystem.ts:44](https://github.com/noiz354/arena-city-try/blob/main/src/systems/MissionSystem.ts#L44).",
+              "sourceDoc": "docs/wiki/systems/MissionSystem.md",
+              "children": []
+            },
+            {
+              "title": "PickupSystem — Radius, Bob Animation & Weapon Hooks",
+              "name": "pickup-system",
+              "prompt": "1.9 m pickup radius, bob/pop animation, WeaponSystem integration. Anchor: [src/systems/PickupSystem.ts:25](https://github.com/noiz354/arena-city-try/blob/main/src/systems/PickupSystem.ts#L25).",
+              "sourceDoc": "docs/wiki/systems/PickupSystem.md",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "UI Systems, Audio, Persistence & Support",
+          "name": "ui-audio-support",
+          "prompt": "Cross-cutting support systems: on-screen map, sound, saves, touch input, collision debugging.",
+          "sourceDoc": "docs/wiki/systems/MinimapSystem.md",
+          "children": [
+            {
+              "title": "MinimapSystem — North-Up Projection & Blip Logic",
+              "name": "minimap-system",
+              "prompt": "Projection math, draw order, blips fed by MissionSystem. Anchor: [src/systems/MinimapSystem.ts:11](https://github.com/noiz354/arena-city-try/blob/main/src/systems/MinimapSystem.ts#L11).",
+              "sourceDoc": "docs/wiki/systems/MinimapSystem.md",
+              "children": []
+            },
+            {
+              "title": "AudioManager — Sound Playback & Pooling",
+              "name": "audio-manager",
+              "prompt": "Playback paths and pooling strategy. Anchor: [src/systems/AudioManager.ts:12](https://github.com/noiz354/arena-city-try/blob/main/src/systems/AudioManager.ts#L12).",
+              "sourceDoc": "docs/wiki/systems/AudioManager.md",
+              "children": []
+            },
+            {
+              "title": "SaveManager — Persistence Keys & Save/Load Flow",
+              "name": "save-manager",
+              "prompt": "Storage keys and save/load call path through Game. Anchor: [src/systems/SaveManager.ts:20](https://github.com/noiz354/arena-city-try/blob/main/src/systems/SaveManager.ts#L20).",
+              "sourceDoc": "docs/wiki/systems/SaveManager.md",
+              "children": []
+            },
+            {
+              "title": "MobileControls — Touch Wiring into InputManager",
+              "name": "mobile-controls",
+              "prompt": "Virtual controls mapping onto InputManager actions. Anchor: [src/systems/MobileControls.ts:15](https://github.com/noiz354/arena-city-try/blob/main/src/systems/MobileControls.ts#L15).",
+              "sourceDoc": "docs/wiki/systems/MobileControls.md",
+              "children": []
+            },
+            {
+              "title": "ColliderDebug — F3 Overlay & Box3Helper Rebuild",
+              "name": "collider-debug",
+              "prompt": "F3/window.game.colliderDebug.toggle() overlay, 0.25 s Box3Helper rebuild cadence. Anchor: [src/systems/ColliderDebug.ts:16](https://github.com/noiz354/arena-city-try/blob/main/src/systems/ColliderDebug.ts#L16).",
+              "sourceDoc": "docs/wiki/systems/ColliderDebug.md",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Reference Imports",
+      "name": "reference",
+      "prompt": "Addy Osmani workflow for 13 reference repos: Audit -> Pattern classify (Module/Observer/Mediator/State/Command/Pool/Strategy) -> Scaffold (Vite/Yeoman) -> PRPL/Measure -> Document. Each repo page maps architecture, file:line citations into reference/<slug>/, performance budget, and extension playbook (Load when:) mirroring skills/*.md. Cites keep arena-city-try/main per user choice.",
+      "sourceDoc": "MASTER_PROMPT.md",
+      "children": [
+        {
+          "title": "Langenium — Aircraft, Scanners & NPC Pursuit",
+          "name": "langenium",
+          "prompt": "Aircraft physics, YUKA NPC patrol/pursue, scanner vision-cone state machine. Addy: Observer + State + Strategy.",
+          "sourceDoc": "repos/Langenium/game/src/actors/pirate.ts",
+          "children": [
+            {
+              "title": "Aircraft Physics — Base & Raven",
+              "name": "aircraft",
+              "prompt": "Velocity/throttle/drag/heading from repos/Langenium/game/src/objects/aircraft/base.ts and raven.ts. Addy Module + Strategy overrides.",
+              "sourceDoc": "repos/Langenium/game/src/objects/aircraft/base.ts",
+              "children": []
+            },
+            {
+              "title": "Actors & Pirate AI — Patrol to Pursue",
+              "name": "actors",
+              "prompt": "Actor entity + pirate patrol/pursue with YUKA vehicle/mesh/scanners/weapons. Addy Observer + State machine.",
+              "sourceDoc": "repos/Langenium/game/src/actors/pirate.ts",
+              "children": []
+            },
+            {
+              "title": "Scanners & Weapons — Vision Cone & Auto-fire",
+              "name": "scanners-weapons",
+              "prompt": "Scanners vision cone scan/lock/track + weapons cooldown auto-fire. Addy Observer + Command.",
+              "sourceDoc": "repos/Langenium/game/src/systems/scanners.ts",
+              "children": []
+            },
+            {
+              "title": "Missiles & Camera — Hit Detection & Chase Cam",
+              "name": "missiles-camera",
+              "prompt": "Missile 5m hit detection + 3rd-person chase camera. Addy Strategy + Observer.",
+              "sourceDoc": "repos/Langenium/game/src/objects/projectiles/missile.ts",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "bloodwave-fps-game — Weapons, Enemies & HUD",
+          "name": "bloodwave-fps-game",
+          "prompt": "4 weapons, raycast shooting, zombie AI, waves, HUD audio. Addy Module + PubSub.",
+          "sourceDoc": "repos/bloodwave-fps-game/js/shooting.js",
+          "children": [
+            {
+              "title": "Shooting & Player — WEAPONS Table & FPS Controller",
+              "name": "shooting",
+              "prompt": "WEAPONS data definitions (M4/MP5/SPAS/AWP), viewmodel, raycast, muzzle flash + FPS controller WASD/jump/sprint. Addy Module.",
+              "sourceDoc": "repos/bloodwave-fps-game/js/shooting.js",
+              "children": []
+            },
+            {
+              "title": "Enemies & Waves — Zombie Chase & Difficulty",
+              "name": "enemies-waves",
+              "prompt": "Zombie AI spawn/chase/attack + 8 wave configs scaling. Addy Observer + Strategy.",
+              "sourceDoc": "repos/bloodwave-fps-game/js/enemies.js",
+              "children": []
+            },
+            {
+              "title": "Scene, HUD & Audio — Terrain, Health & Sound",
+              "name": "scene-hud-audio",
+              "prompt": "Procedural terrain/buildings/trees + HUD health/vignette + Web Audio pooling. Addy Facade + Observer.",
+              "sourceDoc": "repos/bloodwave-fps-game/js/scene.js",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "SYNTHBLAST-threejs-game — Projectiles, Destruction & Drone",
+          "name": "synthblast",
+          "prompt": "Gun/Bullet pooling, destructible buildings, homing AI, camera toggle. Addy Factory/Pool + Strategy.",
+          "sourceDoc": "repos/SYNTHBLAST-threejs-game/js/classes/Gun.js",
+          "children": [
+            {
+              "title": "Gun & Bullet — Pooling & Cooldown",
+              "name": "gun-bullet",
+              "prompt": "Gun fire-rate/bullet spawn/pooling lifetime. Addy Factory + Pool.",
+              "sourceDoc": "repos/SYNTHBLAST-threejs-game/js/classes/Gun.js",
+              "children": []
+            },
+            {
+              "title": "Enemy & Drone — Homing & Formation",
+              "name": "enemy-drone",
+              "prompt": "Homing pursuit + drone formation follow/hover. Addy Strategy + Observer.",
+              "sourceDoc": "repos/SYNTHBLAST-threejs-game/js/classes/Enemy.js",
+              "children": []
+            },
+            {
+              "title": "Level, Building & Particles — Grid & Collapse",
+              "name": "level-building",
+              "prompt": "Grid placement/collision + height-based HP collapse + explosion particles. Addy Composite + Pool.",
+              "sourceDoc": "repos/SYNTHBLAST-threejs-game/js/classes/Level.js",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "openworld-js — Chunk Streaming & Hooks",
+          "name": "openworld-js",
+          "prompt": "DPZ spatial grid multi-LOD chunk activate, FPS controller, dual-loop. Addy Mediator + Facade.",
+          "sourceDoc": "repos/openworld-js/src/obj/chunkManager.js",
+          "children": [
+            {
+              "title": "ChunkManager — DPZ Grid & LOD Activate",
+              "name": "chunk-manager",
+              "prompt": "DPZ levels 0-5, spatial grid, 3x3 activate, hook extensibility. Addy Facade + Mediator.",
+              "sourceDoc": "repos/openworld-js/src/obj/chunkManager.js",
+              "children": []
+            },
+            {
+              "title": "Core, Hooks & Controls — Dual Loop & Pointer Lock",
+              "name": "core-hooks",
+              "prompt": "Cannon.js world, animate loop, hooks event system, FPS WASD/pointer lock. Addy Mediator.",
+              "sourceDoc": "repos/openworld-js/src/common/hooks.js",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "mavonengine-core — Server, State Stack & Sync",
+          "name": "mavonengine-core",
+          "prompt": "Authoritative server, Geckos/WebRTC, Rapier, state stack, entity hierarchy. Addy Command + State.",
+          "sourceDoc": "repos/mavonengine-core/packages/core/src/BaseGame.ts",
+          "children": [
+            {
+              "title": "BaseGame & Game — Headless Loop & Client Shell",
+              "name": "base-game",
+              "prompt": "Physics step/world update/tick + canvas/renderer/camera/input. Addy Facade + Template.",
+              "sourceDoc": "repos/mavonengine-core/packages/core/src/BaseGame.ts",
+              "children": []
+            },
+            {
+              "title": "Actor Hierarchy — State Stack",
+              "name": "actors",
+              "prompt": "GameObject->Actor->LivingActor->NetworkedActor->Player state suspend/enter/leave. Addy State.",
+              "sourceDoc": "repos/mavonengine-core/packages/core/src/World/Actor.ts",
+              "children": []
+            },
+            {
+              "title": "Networking — Server, Commands & SyncState",
+              "name": "networking",
+              "prompt": "Geckos server, command buffer, Client/World, NetworkedEntity, syncState reconciliation. Addy Command + Observer.",
+              "sourceDoc": "repos/mavonengine-core/packages/core/src/Networking/Server/Server.ts",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "interstellar-armada — Physics, Weapons & AI Pilots",
+          "name": "interstellar-armada",
+          "prompt": "Newtonian force/torque/drag, cooldowns, pooling, AI attack runs, missions. Addy Strategy + Pool.",
+          "sourceDoc": "repos/interstellar-armada/src/js/modules/physics.js",
+          "children": [
+            {
+              "title": "Physics & Equipment — Force/Torque & Cooldowns",
+              "name": "physics-equipment",
+              "prompt": "Newtonian physics + weapon/missile targeting hit-check. Addy Strategy.",
+              "sourceDoc": "repos/interstellar-armada/src/js/modules/physics.js",
+              "children": []
+            },
+            {
+              "title": "AI, Pools & Camera — Pilots & 6DOF",
+              "name": "ai-pools",
+              "prompt": "AI fighter/ship/station attack runs + pools + velocity 6DOF camera. Addy Strategy + Pool.",
+              "sourceDoc": "repos/interstellar-armada/src/js/armada/logic/ai.js",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "3d-game — Camera, Physics & Multiplayer Sync",
+          "name": "3d-game",
+          "prompt": "Wall-clipping 3rd-person camera, Cannon.js, socket.io sync. Addy Observer + Strategy. Alias covers repos/3d-game/.",
+          "sourceDoc": "repos/3d-game/js/game/components/camera.js",
+          "children": [
+            {
+              "title": "Camera, Controls & Scene — Clipping & Input",
+              "name": "camera-scene",
+              "prompt": "Wall-clipping camera, input, scene bootstrap, engine main. Addy Strategy.",
+              "sourceDoc": "repos/3d-game/js/game/components/camera.js",
+              "children": []
+            },
+            {
+              "title": "Physics & Network — Cannon & Socket.io",
+              "name": "physics-network",
+              "prompt": "Cannon setup + socket.io client/engine sync + player entities. Addy Observer.",
+              "sourceDoc": "repos/3d-game/js/game/components/physics.js",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "racing — Vehicle, Track & CPU AI",
+          "name": "racing",
+          "prompt": "Velocity/friction/gravity, Catmull-Rom track, checkpoints, chase cam. Addy Strategy + Data-driven.",
+          "sourceDoc": "repos/racing/src/objects/Vehicle.ts",
+          "children": [
+            {
+              "title": "Vehicle & Player — Physics & Chase Cam",
+              "name": "vehicle-player",
+              "prompt": "Velocity/gravity/raycast collision/turning + thrust/chase cam/sound. Addy Strategy.",
+              "sourceDoc": "repos/racing/src/objects/Vehicle.ts",
+              "children": []
+            },
+            {
+              "title": "Track & CPU — Spline & Path Following",
+              "name": "track-cpu",
+              "prompt": "Catmull-Rom/ellipse spline, checkpoints + CPU vector path-following. Addy Strategy.",
+              "sourceDoc": "repos/racing/src/objects/Track.ts",
+              "children": []
+            },
+            {
+              "title": "GameScene & Config — Race Loop & Data",
+              "name": "scene-config",
+              "prompt": "Countdown/race state/Bloom pass + VehicleData/TrackData interfaces + speeder_1 config. Addy Data-driven.",
+              "sourceDoc": "repos/racing/src/scenes/GameScene.ts",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Edelweiss — Controller, Camera & Streaming",
+          "name": "edelweiss",
+          "prompt": "Inertia, wall-climb/glide, stamina, wall-avoid camera, GLB streaming, FPS optimizer. Addy Controller + Optimizer.",
+          "sourceDoc": "repos/Edelweiss/public/js/controler.js",
+          "children": [
+            {
+              "title": "Controller & Atlas — Movement & AABB",
+              "name": "controller",
+              "prompt": "Inertia, climbing/gliding/wall-jump + AABB ground/wall. Addy Controller.",
+              "sourceDoc": "repos/Edelweiss/public/js/controler.js",
+              "children": []
+            },
+            {
+              "title": "Camera & Stamina — Wall Avoid & Bars",
+              "name": "camera-stamina",
+              "prompt": "3rd-person wall-avoid yaw/dodge + sections/DOM bar. Addy Strategy.",
+              "sourceDoc": "repos/Edelweiss/public/js/CameraControl.js",
+              "children": []
+            },
+            {
+              "title": "MapManager & Optimizer — GLB Chunks & FPS Tiers",
+              "name": "streaming",
+              "prompt": "Runtime GLB chunk/zone + FPS 4-tier quality. Addy Optimizer + PRPL.",
+              "sourceDoc": "repos/Edelweiss/public/js/MapManager.js",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "Multiplayer-Browser-FPS — ECS, Shooting & Editor",
+          "name": "multiplayer-browser-fps",
+          "prompt": "ECS dispatch/subscribe, AABB hitscan, Socket.IO, 3D level editor. Addy ECS + Mediator.",
+          "sourceDoc": "repos/Multiplayer-Browser-FPS/src/game/game.js",
+          "children": [
+            {
+              "title": "ECS & Update — Dispatch/Subscribe & Systems",
+              "name": "ecs-update",
+              "prompt": "ECS dispatch/subscribe + physics/shooting/camera systems. Addy Mediator.",
+              "sourceDoc": "repos/Multiplayer-Browser-FPS/src/game/game.js",
+              "children": []
+            },
+            {
+              "title": "Utils, Entities & Actions — AABB Hitscan",
+              "name": "utils",
+              "prompt": "AABB collision + hitScan ray-aabb + Player/Wall entities + reducers. Addy Strategy.",
+              "sourceDoc": "repos/Multiplayer-Browser-FPS/src/game/utils.js",
+              "children": []
+            },
+            {
+              "title": "Client, Server & Editor — Socket & 3D Edit",
+              "name": "network-editor",
+              "prompt": "Client renderer/pointer lock + Express/Socket server + tile export/import editor. Addy Observer.",
+              "sourceDoc": "repos/Multiplayer-Browser-FPS/src/client/js/game.js",
+              "children": []
+            }
+          ]
+        },
+        {
+          "title": "threejs-minecraft-clone — Vite Scaffold",
+          "name": "threejs-minecraft-clone",
+          "prompt": "Vite+TS scaffold, toolbar overlay, vanilla-ts starter. Addy Scaffold (Yeoman).",
+          "sourceDoc": "repos/threejs-minecraft-clone/index.html",
+          "children": []
+        },
+        {
+          "title": "Astray — Maze & State Machine",
+          "name": "astray",
+          "prompt": "Recursive backtracker maze, merged geometry, smooth follow, state machine. Addy Generator + State.",
+          "sourceDoc": "repos/Astray/maze.js",
+          "children": []
+        },
+        {
+          "title": "3D_racing_game — Racing Variant (evanbillet fork, copy penuh)",
+          "name": "3D_racing_game",
+          "prompt": "Whole clone repos/3D_racing_game — evanbillet fork byte-identical to leslieyip02/racing (46/46 files same, three 0.147 webpack mode:none). Copy penuh mirror racing: Vehicle/Track/CPU/GameScene + VehicleData/TrackData. Addy Data-driven + Strategy. Alias leslieyip02/racing — keep both for 13-repo penutup.",
+          "sourceDoc": "repos/3D_racing_game/src/objects/Vehicle.ts",
+          "children": [
+            {
+              "title": "Vehicle & Player — Physics & Chase Cam",
+              "name": "vehicle-player",
+              "prompt": "Velocity/gravity/raycast collision/turning + thrust/chase cam/sound — repos/3D_racing_game/src/objects/Vehicle.ts. Addy Strategy. Copy penuh dari racing.",
+              "sourceDoc": "repos/3D_racing_game/src/objects/Vehicle.ts",
+              "children": []
+            },
+            {
+              "title": "Track & CPU — Spline & Path Following",
+              "name": "track-cpu",
+              "prompt": "Catmull-Rom/ellipse spline, checkpoints + CPU vector path-following — repos/3D_racing_game/src/objects/Track.ts. Addy Strategy. Copy penuh dari racing.",
+              "sourceDoc": "repos/3D_racing_game/src/objects/Track.ts",
+              "children": []
+            },
+            {
+              "title": "GameScene & Config — Race Loop & Data",
+              "name": "scene-config",
+              "prompt": "Countdown/race state/Bloom pass + VehicleData/TrackData interfaces + speeder_1 config — repos/3D_racing_game/src/scenes/GameScene.ts. Addy Data-driven. Copy penuh dari racing.",
+              "sourceDoc": "repos/3D_racing_game/src/scenes/GameScene.ts",
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

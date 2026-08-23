@@ -227,6 +227,8 @@ export class ChunkManager {
     const content = generateChunk(chunk.cx, chunk.cz)
     const originX = this.chunkWorldX(chunk.cx)
     const originZ = this.chunkWorldZ(chunk.cz)
+    // place the chunk group at its grid corner so local mesh coords resolve to world space
+    chunk.group.position.set(originX, 0, originZ)
 
     // full-detail building meshes (level 2) + collidables
     for (const spec of content.buildings) {

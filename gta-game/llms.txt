@@ -1,0 +1,83 @@
+# CITY RUSH
+
+> CITY RUSH is an open-world browser game built with TypeScript strict mode, Vite and Three.js r185. It ships a chunk-streamed procedural city (~1798 live geometries), ambient traffic and pedestrians, a GTA-style six-star wanted/police loop, hitscan combat across four missions, localStorage save/load, mobile touch controls and automatic quality scaling - entirely client-only: no backend and no physics engine.
+
+This wiki documents an intentionally constrained architecture. There is no physics engine: collision and entity motion are hand-rolled kinematics under src/entities/ and src/systems/. The city is deterministic - each chunk's layout comes from its own mulberry32-seeded RNG stream - and chunks are lazily built once and cached (FULL_RADIUS=1, SIMPLE_RADIUS=2 gives a 5x5 active grid). The entire frame runs through one fixed, readable update sequence owned by Game.update in src/game/Game.ts; reordering it is a behavior change, not a refactor. Pages preserve deliberate "Unresolved" findings where documentation disagrees with code (e.g. heal() has zero callers, AI cars never take right turns due to a turn-RNG quirk, WetSurfaceSystem writes per-ripple opacity through a shared material); treat these as known quirks, not errors in the wiki. Every architecture claim is cited as [file:line](https://github.com/noiz354/arena-city-try/blob/main/...) against the main branch. A runtime debug API is exposed on window.game / window.tracker (see the Quick Reference page).
+
+## Onboarding Guides
+
+- [Onboarding — Role-Based Guides](./wiki/getting-started/onboarding/index.md): Four audience-tailored entry points into CITY RUSH: Contributor, Staff Engineer, Executive, and Product Manager. Every claim grounded in the file:line-verified implementation wiki at docs/wiki/.
+- [Contributor Guide — Zero to First PR in a Three.js Codebase](./wiki/getting-started/onboarding/contributor-guide.md): Progressive onboarding for new contributors: TypeScript/Three.js foundations compared to Python, this codebase's architecture, dev setup, your first task, testing, debugging and pitfalls — every claim cited to file:line.
+- [Staff Engineer Guide — One Insight: Lazy Build-Once Chunks Behind a Fixed Update Order](./wiki/getting-started/onboarding/staff-engineer-guide.md): Dense architectural brief for staff/principal engineers: the core insight, system architecture, domain invariants, decision log, dependency rationale, failure modes, performance envelope, security posture, testing strategy, and an honest technical-debt register. Every claim cited to file:line.
+- [Executive Guide — Capability, Risk & Investment View](./wiki/getting-started/onboarding/executive-guide.md): VP/director-level brief for CITY RUSH: what the system does today, where it is immature, what it costs to run, what could hurt, and where the next dollar of engineering goes. No code.
+- [Product Manager Guide — Player Journey Without the Jargon](./wiki/getting-started/onboarding/product-manager-guide.md): Feature-first onboarding for product managers and non-engineering stakeholders: what CITY RUSH does, how players move through it, what is built vs missing, what it collects and keeps, and honest known limitations. No engineering jargon.
+
+## Project Overview & Architecture
+
+- [CITY RUSH — Implementation Wiki](./wiki/index.md): Developer wiki for the CITY RUSH Three.js open-world browser game — architecture, systems, and contribution guides.
+- [Project Overview & Architecture at a Glance](./wiki/getting-started/overview.md): What CITY RUSH is, how it boots, and how its source tree is layered — entry flow from main.ts through the Game orchestrator to the 27 systems.
+
+## Getting Started
+
+- [Dev Setup & Build (Vite + TypeScript)](./wiki/getting-started/setup.md): Prerequisites, install, dev server on port 7777, production build, typecheck and test commands — every command taken verbatim from package.json scripts.
+- [Running & Playing CITY RUSH (Controls & Modes)](./wiki/getting-started/usage.md): Keyboard, mouse and touch bindings, foot-vs-vehicle mode switching, the pause menu, missions and wanted stars — all traced to InputManager consumers in source.
+- [Quick Reference — Debug Console & QA Entry Points](./wiki/getting-started/quick-reference.md): One-page cheat sheet of the window.game QA hooks — colliderDebug.toggle(), wanted.reportCrime(), modeCtrl, vehicles.getNearest(), and the renderer.info measurement trick.
+
+## Core Loop, Orchestration & Entities
+
+- [Game Bootstrap & the Per-Frame Update Loop](./wiki/deep-dive/core-loop/game-loop.md): How CITY RUSH boots (main.ts → Game constructor → World assembly), the exact per-frame update order of all ~27 subsystems, delta clamping, pause, resize and autosave.
+- [Entities — Player & Vehicle Physics, Damage, Enter/Exit State Machines](./wiki/deep-dive/core-loop/entities.md): The only two gameplay entity classes: Player camera-relative movement with inertia, stamina and capsule collision; Vehicle scalar-speed driving model with impact damage; death/respawn flow and flagged anomalies.
+- [UI Layer — HUD Read Path & Pause Menu](./wiki/deep-dive/core-loop/ui-layer.md): How hud.ts polls player/vehicle/mode/gameplay state every frame as a pure DOM overlay, its event-hook flashes and compass math, and how pauseMenu.ts suspends the loop through Game.setPaused.
+- [Input, Utilities & Data Tables](./wiki/deep-dive/core-loop/utils-and-data.md): InputManager key bindings and frame lifecycle, raycast/texel/logger/error helpers in src/utils, the full missions/vehicles/weapons data tables in src/data, and the two-layer telemetry pipeline in src/analytics.
+
+## World Generation
+
+- [ChunkManager — LOD Rings & Build-Once Chunk Cache](./wiki/world-generation/chunk-manager.md): Spatial-hash chunk streaming for the static city: Chebyshev LOD rings, lazy build-once chunk construction, and the active-collidable spatial index.
+- [CityGenerator — Seeded Layout Rules Per Chunk](./wiki/world-generation/city-generator.md): Pure deterministic chunk-content generation: mulberry32 seeding from chunk coordinates, plot and building rules, prop scatter rates, and exported city-layout constants.
+- [Vegetation — 24k Grass Blades in One Draw Call](./wiki/world-generation/vegetation.md): Single InstancedMesh grass annulus ringing the city: area-uniform rejection sampling, GPU-side wind animation, zero textures or assets.
+
+## Environment & Weather
+
+- [SkySystem — Sky Dome Consuming Shared Sun Direction](./wiki/environment/sky-system.md): BackSide atmospheric dome doing Rayleigh + Mie single scattering, animated purely by DayNightSystem uniform pokes each frame.
+- [DayNightSystem — Time-of-Day Cycle & Sun Direction Contract](./wiki/environment/day-night-system.md): 180-second day cycle producing one shared sun direction plus all light/fog/sky colors; owns fog color, never fog distances.
+- [WeatherSystem — Weather State Machine & Fog Ownership](./wiki/environment/weather-system.md): Clear-rain timer machine with a smoothed rainAmount envelope, camera-following rain streaks, and exclusive ownership of fog near/far.
+- [WetSurfaceSystem — Rain Wetness & Ripple Surfaces](./wiki/environment/wet-surface-system.md): Turns the weather rainAmount envelope into ground gloss via a puddle roughnessMap and pooled additive ripple rings — including the shared-material opacity quirk.
+
+## Rendering & Post-Processing
+
+- [PostFX — EffectComposer Pass Chain](./wiki/rendering-postfx/postfx.md): How CITY RUSH renders every frame through a single-owner HDR post-processing chain: RenderPass → GTAO → bloom → LUT grade → OutputPass, plus screen shake and quality tiers.
+- [ColorGrade — Full-Screen Grading Pass](./wiki/rendering-postfx/color-grade.md): A generated 33-cube RGBA8 LUT encoding a subtle scene-referred grade — pure data, no GL needed to build — applied by PostFX before tone mapping.
+- [AutoQuality — Frame-Timing-Driven Quality Tiers](./wiki/rendering-postfx/auto-quality.md): A 3-level FPS-based auto-quality scaler that samples frame rate every 2 seconds and steps pixel ratio, shadow maps, and post effects up or down with hysteresis.
+- [ParticleSystem — 140-Particle Pool & Explosion Recipe](./wiki/rendering-postfx/particle-system.md): A pooled additive-blended quad system with a LIFO free list: 140 pre-allocated particles, a 3-layer 26/14/10 explosion recipe, and probabilistic wreck smoke — zero allocation on the hot path.
+- [CameraRig — Follow & Orbit Behavior](./wiki/rendering-postfx/camera-rig.md): GTA-style third-person chase camera: spherical boom with mouse orbit, scroll zoom, ray-vs-AABB wall avoidance, and a dual yaw model that switches between free orbit and vehicle follow.
+
+## Gameplay Systems & AI
+
+- [ModeController — Foot↔Vehicle Mode State Machine](./wiki/gameplay-core/mode-controller.md): How CITY RUSH switches the player between foot and driving modes: enter/exit choreography, on-foot input ownership, melee reception, E-key arbitration and the death/respawn timer.
+- [PedestrianSystem — Spawn, Walk, Flee](./wiki/gameplay-core/pedestrian-system.md): Ambient city life in CITY RUSH: a fixed pool of 22 procedural civilians with a walk/idle/flee state machine, car-impact damage, gunfire panic and player-proximity dialogue.
+- [WantedSystem — Star Math, Decay & Cop Cadence](./wiki/gameplay-core/wanted-system.md): GTA-style 6-star wanted meter: crime intake math (with the flagged severity-3 quirk), 14 s/8 s decay, and the 6-second road-snapped police spawn cadence.
+- [EnemySystem — Thugs & Cops: LOS, Chase & Melee Combat](./wiki/gameplay-core/enemy-system.md): The hostile NPC layer of CITY RUSH: 14 seeded thugs with LOS-gated chase AI plus on-demand cops, melee combat at 1.15 s cadence, hitscan capsules and 20-second respawns.
+
+## Vehicles & Traffic
+
+- [VehicleManager — Spawned/Parked Cars & Enter Thresholds](./wiki/vehicles-traffic/vehicle-manager.md): Deterministic parked-car placement with a seeded mulberry32 PRNG, 95 m visibility culling, the hard 3.6 m enter threshold behind the E key, and solid collidables for physics, camera and raycasts.
+- [TrafficSystem — AI Driving & the Right-Turn RNG Quirk](./wiki/vehicles-traffic/traffic-system.md): A fixed pool of 10 AI cars driving the road grid with turn choices at intersections, obstacle braking, culling and hijacking — including the documented quirk that makes right turns unreachable.
+
+## Combat, Missions & Pickups
+
+- [WeaponSystem — Hitscan Shooting & Ammo Economy](./wiki/combat-missions/weapon-system.md): Hitscan shooting in CITY RUSH: camera-crosshair raycasts vs environment AABBs and enemy/pedestrian capsules, data-driven weapon stats, per-weapon ammo, timed reloads and self-managed tracers.
+- [WeaponView — First-Person Hold Pose, Recoil & Muzzle Flash](./wiki/combat-missions/weapon-view.md): The cosmetic weapon layer of CITY RUSH: procedural box-gun viewmodels parented to the player's right hand, recoil kick on fire, movement bob and an additive muzzle flash.
+- [MissionSystem — 4 Missions, Markers & XP Progression](./wiki/combat-missions/mission-system.md): Data-driven missions in CITY RUSH: four objective types (delivery, race, assassination, chase), start zones at 4.5 m, waypoints at 6 m, allocation-free marker diffing and XP-per-level-100 progression.
+- [PickupSystem — Radius, Bob Animation & Weapon Hooks](./wiki/combat-missions/pickup-system.md): Ground pickups in CITY RUSH: weapon crates color-coded per weapon, ammo boxes dropped by dead enemies, walk-over collection at 1.9 m, bob/rotate animation and a scale-down pop removal.
+
+## UI Systems, Audio, Persistence & Support
+
+- [MinimapSystem — North-Up Projection & Blip Logic](./wiki/deep-dive/ui-audio-support/minimap-system.md): How the 168px canvas minimap projects the world north-up each frame — draw order, blip sources from MissionSystem, constants, and flagged limitations.
+- [AudioManager — Sound Playback & Pooling](./wiki/deep-dive/ui-audio-support/audio-manager.md): Procedural Web Audio: lazy AudioContext unlock on first gesture, oscillator/noise SFX recipes, speed-pitched engine drone, and camera-relative 3D panning.
+- [SaveManager — Persistence Keys & Save/Load Flow](./wiki/deep-dive/ui-audio-support/save-manager.md): Single-key localStorage persistence: the SaveData payload schema, the three save triggers, defensive load-time restore, and why there is no migration machinery.
+- [MobileControls — Touch Wiring into InputManager](./wiki/deep-dive/ui-audio-support/mobile-controls.md): How the virtual joystick, look-drag and four action buttons translate multi-touch gestures into the same virtual-key API keyboard players use.
+- [ColliderDebug — F3 Overlay & Box3Helper Rebuild](./wiki/deep-dive/ui-audio-support/collider-debug.md): The F3-toggled diagnostic overlay: green Box3Helper wireframes for every active collidable, throttled to one full rebuild per 0.25 seconds.
+
+## Optional
+
+- [Changelog](./wiki/changelog.md): 
