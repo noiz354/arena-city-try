@@ -3,6 +3,7 @@ import { VEHICLE_CONFIGS } from '../data/vehicles'
 import { BLOCK_COUNT, BLOCK_SIZE, CELL, CITY_HALF, ROAD_WIDTH, seededRng } from './CityGenerator'
 import type { Collidable } from '../game/World'
 import { Mesh, type Material } from 'three'
+// import { createPath, nextPointIndex } from './TrackSpline' // ponytail: Lite A3 spline hook (racing Track.ts:94) off by default, enable when race mission needs CatmullRom
 
 /** Road center lines per axis (one road between each pair of blocks). */
 function roadLines(): number[] {
@@ -120,7 +121,7 @@ export class TrafficSystem {
       // visibility culling
       const dx = v.position.x - playerX
       const dz = v.position.z - playerZ
-      v.group.visible = dx * dx + dz * dz < 100 * 100
+      v.group.visible = dx * dx + dz * dz < 120 * 120 // ponytail: Lite A2 traffic prefetch +20m (openworld-js DPZ pattern), revert to 100 if visible cars >budget
 
       if (v.occupied || v.stolen) continue // hijacked — player controls now
 

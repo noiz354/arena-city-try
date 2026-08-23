@@ -31,7 +31,7 @@ import type { Collidable } from '../game/World'
 //   d == 2  → level 1: simple (single InstancedMesh per chunk — 1 draw call)
 //   d >  2  → level 0: hidden
 const FULL_RADIUS = 1
-const SIMPLE_RADIUS = 2
+const SIMPLE_RADIUS = 3 // ponytail: prefetch Lite A2 2->3 (+24 chunks 25->49) rollback if gzip +2kB blows budget
 
 interface Chunk {
   key: string
@@ -101,6 +101,9 @@ export class ChunkManager {
   private activeCollidables: Collidable[] = []
   /** Static building collidables indexed by chunk cell (rebuilt on activation change). */
   private readonly grid = new Map<string, Collidable[]>()
+  // ponytail: DPZ dirty-flag — skip ring recompute when player stays in same chunk cell
+  private lastCx = 9999
+  private lastCz = 9999
 
   constructor() {
     for (let cx = 0; cx < CHUNK_COUNT; cx++) {
@@ -145,6 +148,8 @@ export class ChunkManager {
   /** Recompute activation rings around the player; returns true if anything changed. */
   update(playerX: number, playerZ: number): boolean {
     const { cx, cz } = this.worldToChunk(playerX, playerZ)
+    if (cx === this.lastCx && cz === this.lastCz) return false
+    this.lastCx = cx; this.lastCz = cz
     let changed = false
 
     for (const chunk of this.chunks.values()) {

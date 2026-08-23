@@ -37,6 +37,9 @@ import { PauseMenu } from '../ui/pauseMenu'
 import { ModeController, SPAWN_X, SPAWN_Z } from '../systems/ModeController'
 import type { GameTelemetry } from '../analytics/gameTelemetry'
 import { WEAPON_LIST } from '../data/weapons'
+import { ecsWorld } from '../ecs/world'
+import { updateBullets } from '../ecs/systems'
+import { SpatialHash } from '../utils/SpatialHash'
 
 export interface GameOptions {
   container: HTMLElement
@@ -53,6 +56,7 @@ export class Game {
   readonly scene = new Scene()
   readonly camera: PerspectiveCamera
   readonly renderer: WebGLRenderer
+  readonly ecs = ecsWorld
   readonly world: World
   readonly player: Player
   readonly cameraRig: CameraRig
@@ -85,6 +89,7 @@ export class Game {
   paused = false
   private saveTimer = 30
   private readonly exploded = new Set<Vehicle>()
+  private readonly trafficHash = new SpatialHash()
   private lastWantedStars = 0
   /** Analytics wiring — set from main.ts. */
   telemetry?: GameTelemetry
@@ -406,10 +411,19 @@ export class Game {
     this.enemies.update(delta, this.player.position, losBuildings)
     this.pedestrians.update(delta, buildings)
     this.traffic.update(delta, pos.x, pos.z, allCollidables)
+    // rebuild spatial hash for traffic cars (O(n), cell 16) — ponytail: 3x3 scan
+    this.trafficHash.clear()
+    for (let i = 0; i < this.traffic.cars.length; i++) {
+      const c = this.traffic.cars[i]
+      if (!c.vehicle.group.visible) continue
+      this.trafficHash.insert(i, c.vehicle.position.x, c.vehicle.position.z)
+    }
     this.checkCarPedestrianCollisions()
     this.checkTrafficPlayerCollision()
     this.pickups.update(delta)
     this.weapons.update(delta)
+    this.ecs.dt = delta; this.ecs.time += delta
+    updateBullets(delta)
 
     // player mode state machine (foot/driving + enter/exit + death/respawn)
     this.modeCtrl.update(delta, buildings)
@@ -546,7 +560,9 @@ export class Game {
     if (now - this.lastTrafficHit < 400) return
 
     const p = this.player.position
-    for (const car of this.traffic.cars) {
+    const cand = this.trafficHash.queryRadius(p.x, p.z, 12)
+    for (const idx of cand) {
+      const car = this.traffic.cars[idx]; if (!car) continue
       const v = car.vehicle
       if (!v.group.visible) continue
       const speed = Math.abs(v.speed)

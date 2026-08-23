@@ -2,7 +2,7 @@
 
 **Proyek:** `gta-game/` · Three.js r185 + TypeScript strict + Vite 8
 **Branch kerja:** `arena/01a027e8-arena-city-try` (PR #1 → `main`)
-**Terakhir diperbarui:** 2026-08-23
+**Terakhir diperbarui:** 2026-08-23 — Sesi 9 ECS+Networking (76 tests, SoA + Colyseus stub)
 
 ---
 
@@ -12,9 +12,9 @@
 |---|---|---|
 | 7 Fase build (master prompt) | ✅ **100%** | Phase 0–7 selesai & ter-commit |
 | Hasil audit (P0–P3) | ✅ **100%** | 17 item diperbaiki |
-| Test otomatis | ✅ **65/65** | `npm run check` (tsc --noEmit + tsx smoke.mjs) |
+| Test otomatis | ✅ **76/76** | `npm run check` (tsc --noEmit + tsx smoke.mjs) — +11 T2+T13 (SpatialHash/Pool/Save v2/pileup) |
 | Type-check | ✅ Bersih | `npx tsc --noEmit` |
-| Production build | ✅ OK | 182 kB gzip (697 kB JS) |
+| Production build | ✅ OK | 199.50 kB gzip (763.14 kB JS, 72 modules) |
 | Wiki build | ✅ OK | `npx vitepress build wiki` 29s, 45 md, `ignoreDeadLinks:true` |
 | Dev server | ✅ Live | `0.0.0.0:5173` (sandbox preview) |
 | CI/CD | 🟡 Siap | Workflow tersimpan; Pages tinggal 1 klik |
@@ -27,7 +27,7 @@
 | Metrik | Nilai |
 |---|---|
 | Total kode | ~6.740 baris (41 file src + test) |
-| Bundle (gzip) | 182 kB JS + ~1.93 kB CSS (697 kB raw) |
+| Bundle (gzip) | 199.50 kB gzip (763.14 kB JS, 72 modules) |
 | Chunk | 484 (16 m, LOD 3 level) |
 | Draw call bangunan | ~70 (sebelum instancing ~200) |
 | Entitas hidup | ±46 (player, 24 mobil parkir, 10 lalu lintas, 14 thug, 22 ped, polisi dinamis) |
@@ -101,6 +101,16 @@ dari origin (semua commit sudah ter-push), script diperbaiki (kini kerja di temp
 - **Wiki generation:** `wiki/reference/` `42→45 md` (13 overview `repo.md` + 31 subpage + `index.md`) via `temp_gen` dengan `repos/<slug>/file#L1` keep `arena-city-try/main`; `wiki/index.md` tabel 13 baris + cross-link subpage; `wiki/.vitepress/config.mts` `toSidebarItem()` auto dari catalogue
 - **Copy penuh:** `wiki/reference/3D_racing_game/` 3 md mirror `racing/*` (evanbillet vs leslieyip02), overview diperluas audit 6 file + PRPL; `gta-game-toolkit/reference/` dibiarkan read-only
 - **Verifikasi:** `npm run check` 65 passed, `vite build` 65 modules 182 kB gzip, `vitepress build wiki` 29s
+
+### Sesi 9 — ECS + Networking + Hazard (2026-08-23)
+- **ECS (SoA, bitECS 0.3.40)** `src/ecs/` — `world.ts` `ecsWorld {time,dt}`, `components.ts` SoA f32/ui8 (Position/Velocity/Health/VehicleComp...), `queries.ts` 6 queries, `prefabs.ts`, `systems.ts` `updateBullets()` O(n) + `Game.ts:58,418` wire `ecs={dt,time}` — shim `window.game.ecs`
+- **SpatialHash + Pool** `src/utils/SpatialHash.ts` cell16 3×3, `PoolManager.ts` `PoolManager` eid reuse + `ObjectPool<T>` mesh — `Game.ts:92,414` `trafficHash` 12m query `checkTrafficPlayerCollision` O(k) vs O(n)
+- **Save v2** `SaveManager.ts` zod 3.23.8 `SaveSchema` v:2 `health 0-100` `migration v1→v2` side-persist `cityrush_save_v2`
+- **TrackSpline** `src/systems/TrackSpline.ts` CatmullRom baked 100 pts + `nextPointIndex` copy `repos/racing/src/objects/Track.ts`/`CPU.ts` (`D:/Downloads/22-8-26-threejs/repos/racing/src/objects/Track.ts#L94`) — ponytail: no extrusion until visual needed
+- **Networking stub** `src/network/client.ts` `NetClient` colyseus.js 0.15.26 20Hz JSON snapshot + `predict()`, `server.ts` `CityRushRoomStub` 50ms tick — deps `colyseus 0.15.17` (server) + `bitecs` + `zod`
+- **Emergent** `tests/smoke.mjs` +11 →76: rain pileup `Vehicle.aiDrive` damage, wanted chase cops, `panicNear` — ponytail: no per-entity suites, single assert chain
+- **Verifikasi:** `npx tsc --noEmit` 0, `npm run check` 76/76, `vite build` 72 modules 199.50kB gzip (Lite: SIMPLE_RADIUS 2→3 + traffic 100→120)
+- **Worldmap Lite (A1-A3):** `ChunkManager.ts:151` DPZ + `SIMPLE_RADIUS 2→3` (+24 chunks), `TrafficSystem.ts:123` cull 100→120, `TrackSpline.ts:1` hook comment off — smoke 25→49 fix, gzip +3kB budget OK
 
 ---
 
